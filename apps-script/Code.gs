@@ -1,5 +1,6 @@
 /**
- * Boldt Marketing Dashboard: shared storage for the marketing project calendar.
+ * Boldt Marketing Dashboard: shared storage for the marketing project calendar,
+ * read-only budget figures for the dashboard assistant, and the assistant's question log.
  * Paste this whole file into Extensions > Apps Script in the
  * "Marketing Project Tracker (live)" Google Sheet, then Deploy > New deployment >
  * Web app (Execute as: Me, Who has access: Anyone). Copy the web app URL.
@@ -8,6 +9,9 @@
  * and every call must carry the token below.
  */
 const TOKEN = '67Q0AM827EdY7BYQKfZ3vkJwbY33bRdR';
+const BUDGET_ID = '19SXdl16vuH4QP9wFv7X8kaXk1MfuV9VW67YUEqZOHD0';   // 2026 Marketing Budget - Google Sheets (read only)
+const BUDGET_TABS = { inputs: 'Inputs', healthcare_budget: 'Healthcare Budget', healthcare_roi: 'Healthcare ROI', healthcare_variables: 'Healthcare Variables' };
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 const ITEM_COLS = ['id','title','ws','owners','due','prec','status','waiting','notes','src','recurring','group','target','subtasks','completedAt','updatedAt','updatedBy','extra'];
 const ARCH_COLS = ['id','title','type','market','date','status','link','editLink','owners','tags','notes','fromItem','auto','updatedAt','updatedBy','thumb','thumb2','extra'];
@@ -25,6 +29,7 @@ function doGet(e) {
   if (p.token !== TOKEN) return json_({ ok: false, error: 'unauthorized' });
   try {
     if (p.action === 'tracker') return json_(readTracker_());
+    if (p.action === 'budget') return json_(readBudget_(p.view || 'lines'));
     return json_({ ok: false, error: 'unknown action' });
   } catch (err) {
     return json_({ ok: false, error: String(err) });
@@ -35,6 +40,7 @@ function doPost(e) {
   let body;
   try { body = JSON.parse(e.postData.contents); } catch (err) { return json_({ ok: false, error: 'bad json' }); }
   if (body.token !== TOKEN) return json_({ ok: false, error: 'unauthorized' });
+  if (body.action === 'log') return json_(logQuestion_(body));
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
@@ -146,4 +152,42 @@ function setMeta_(k, val) {
   const rows = sh.getDataRange().getValues();
   const i = rows.findIndex(r => r[0] === k);
   if (i >= 0) sh.getRange(i + 1, 2).setValue(val); else sh.appendRow([k, val]);
+}
+
+/* ---------- budget, read only (senior living lines are never returned) ---------- */
+function num_(v) { const n = Number(String(v).replace(/[$,%\s]/g, '')); return isFinite(n) ? n : null; }
+function readBudget_(view) {
+  const ss = SpreadsheetApp.openById(BUDGET_ID);
+  if (view === 'lines') {
+    const sh = ss.getSheetByName('2026 Actual Marketing Budget');
+    const vals = sh.getRange(1, 1, sh.getLastRow(), 49).getValues();
+    const lines = [];
+    let category = '';
+    for (let r = 3; r < vals.length; r++) {
+      const name = String(vals[r][0] || '').trim();
+      if (!name) continue;
+      const actual = [], budget = [];
+      for (let m = 0; m < 12; m++) { actual.push(num_(vals[r][1 + 4 * m])); budget.push(num_(vals[r][2 + 4 * m])); }
+      const hasNumbers = actual.concat(budget).some(v => v !== null && v !== 0);
+      if (!hasNumbers) { category = name; continue; }
+      if (/senior/i.test(name) || /total/i.test(name)) continue;
+      lines.push({ line: name, category: category, actual: actual, budget: budget });
+    }
+    return { ok: true, view: view, months: MONTHS, note: 'Healthcare and shared lines only. Actual and budget by month in USD.', lines: lines };
+  }
+  const tab = BUDGET_TABS[view];
+  if (!tab) return { ok: false, error: 'unknown view', views: ['lines'].concat(Object.keys(BUDGET_TABS)) };
+  const sh = ss.getSheetByName(tab);
+  const rows = sh.getRange(1, 1, Math.min(sh.getLastRow(), 120), Math.min(sh.getLastColumn(), 30)).getDisplayValues()
+    .filter(r => r.some(c => String(c).trim()) && !r.some(c => /senior/i.test(String(c))))
+    .map(r => { let e = r.length; while (e > 0 && !String(r[e - 1]).trim()) e--; return r.slice(0, e); });
+  return { ok: true, view: view, tab: tab, rows: rows };
+}
+
+/* ---------- question log for the dashboard assistant ---------- */
+function logQuestion_(b) {
+  const sh = sheet_('Questions', ['askedAt', 'user', 'question', 'answer', 'sources']);
+  sh.appendRow([new Date().toISOString(), String(b.user || '').slice(0, 60), String(b.question || '').slice(0, 2000),
+                String(b.answer || '').slice(0, 5000), String(b.sources || '').slice(0, 500)]);
+  return { ok: true };
 }

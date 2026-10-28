@@ -11,7 +11,7 @@ export default async (req: Request, context: Context) => {
   const token = Netlify.env.get("SCRIPT_TOKEN");
   if (!base || !token) return json({ ok: false, error: "not configured" }, 503);
 
-  const what = context.params.what;
+  const what = "tracker";
   try {
     if (req.method === "GET") {
       if (what !== "tracker") return json({ ok: false, error: "not found" }, 404);
@@ -36,4 +36,4 @@ export default async (req: Request, context: Context) => {
   }
 };
 
-export const config: Config = { path: "/api/:what", method: ["GET", "POST"] };
+export const config: Config = { path: "/api/tracker", method: ["GET", "POST"] };
