@@ -232,7 +232,7 @@ function chart({labels,bars=[],lines=[],refs=[],fmt=N,h=230,stacked=false,partia
   if(bars.length){const gw=bw*.68, each=stacked?gw:gw/bars.length;
     labels.forEach((_,i)=>{let base=0;bars.forEach((b,j)=>{const v=b.values[i];if(v==null)return;const x=L+bw*i+(bw-gw)/2+(stacked?0:j*each);
       const y0=stacked?y(base+v):y(v), hh=stacked?y(base)-y(base+v):T+ih-y(v); base+=stacked?v:0;
-      const partial=partialLast&&i===CM()-1;
+      const partial=partialLast&&!DONE()&&i===CM()-1;
       g+=`<rect x="${x}" y="${y0}" width="${Math.max(each-2,1)}" height="${Math.max(hh,0)}" rx="2" fill="${b.color}" ${partial?'fill-opacity=".45"':''}><title>${b.name} ${labels[i]}: ${fmt(v)}</title></rect>`;});});}
   refs.forEach(r=>{g+=`<line x1="${L}" x2="${W-R}" y1="${y(r.value)}" y2="${y(r.value)}" stroke="${r.color}" stroke-dasharray="5 4" stroke-width="1.5"/><text x="${W-R}" y="${y(r.value)-5}" text-anchor="end" class="lbl" style="fill:${r.color}">${r.name}</text>`;});
   lines.forEach(l=>{const pts=l.values.map((v,i)=>v==null?null:[L+bw*i+bw/2,y(v)]);let d="";pts.forEach((p,i)=>{if(!p)return;d+=(d&&pts[i-1]?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1);});
@@ -278,7 +278,8 @@ function hbars(items,{fmt=N,color=css("--c-hc"),label="k",value="v",max=null}={}
 function pacing(){
   const cm=CM(), dim=new Date(2026,cm,0).getDate(), day=DONE()?dim:Math.min(+D.asOf.slice(8,10),dim), pace=day/dim;
   const map=[["LinkedIn - Healthcare","LinkedIn","HC"],["Google - (50% healthcare)","Google Ads","HC"]];
-  const rows=map.map(([line,pl,dv])=>{const l=D.budget.lines.find(x=>x.line===line);return {pl,dv,a:l.actual[cm-1]||0,b:l.budget[cm-1]||0};});
+  /* actual = platform spend (LinkedIn healthcare; Google healthcare + half of shared), budget = the line in the budget Sheet */
+  const rows=map.map(([line,pl,dv])=>{const l=D.budget.lines.find(x=>x.line===line);return {pl,dv,a:paidSeries(pl==="LinkedIn"?"linkedin":"google","spend")[cm-1]||0,b:l.budget[cm-1]||0};});
   return {pace,day,dim,rows};
 }
 function pacingPanel(){
@@ -621,7 +622,7 @@ async function loadMonth(m){try{boot(await getJSON(`data/${m}.json`));return tru
     sel.innerHTML=months.map(m=>`<option value="${m}">${MONTHS_LONG[+m.slice(5,7)-1]} ${m.slice(0,4)}</option>`).join("");
     sel.addEventListener("change",async()=>{LATEST=sel.value===months[0];await loadMonth(sel.value);});
     document.getElementById("asof").after(sel);}
-  try{const j=await getJSON("/api/tracker"); TRK=j.items||null; render();}catch(e){}
+  try{const j=await getJSON("/api/tracker"); TRK=(j.items&&j.items.length)?j.items:null; render();}catch(e){}
 })();
 })();
 </script>
