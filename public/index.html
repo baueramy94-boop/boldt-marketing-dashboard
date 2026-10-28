@@ -43,6 +43,7 @@ h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
 .scope{display:inline-flex;font-size:13px;font-weight:600;padding:6px 14px;border-radius:999px;background:var(--yellow);color:#1B1B1B}
 .tabs{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:calc(env(safe-area-inset-top,0px) + 63px);z-index:4}
 .tabs .wrap{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.tabs a.cal-link{margin-left:auto;color:var(--ink)}
 .tabs a{white-space:nowrap;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;padding:12px 12px 10px;border-bottom:3px solid transparent}
 .tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--yellow)}
 .tabs a:focus-visible{outline:2px solid var(--yellow);outline-offset:-2px}
@@ -192,7 +193,7 @@ footer{color:var(--muted);font-size:12.5px;padding-block:0 32px}
 
 <script>
 (function(){
-const PAGES=[["exec","Executive summary"],["summary","Dashboard"],["trends","Month over month"],["paid","Paid media"],["creative","Ads & creative"],["website","Website"],["leads","Leads"],["accounts","Known accounts & MQLs"],["roi","ROI & variables"],["budget","Budget"],["plan","Plan & next steps"]];
+const PAGES=[["exec","Executive summary"],["summary","Dashboard"],["trends","Month over month"],["paid","Paid media"],["creative","Ads & creative"],["website","Website"],["leads","Leads"],["accounts","Known accounts & MQLs"],["roi","ROI & variables"],["budget","Budget"]];
 let D=null; const DIV="HC";   /* healthcare only; senior living removed Oct 28 */
 
 /* ---------- formatting ---------- */
@@ -389,11 +390,15 @@ R.accounts=()=>{
   h+=`<div class="grid g-2"><div class="panel"><h3>HubSpot companies visiting by day</h3><p class="sub">Companies in HubSpot with at least one session</p>${chart({labels:A.knownVisitsDaily.map(d=>d.day.replace("Oct ","Oct ")),bars:[{name:"Companies",color:css("--c-hc"),values:A.knownVisitsDaily.map(d=>d.count)}],h:220,half:true})}</div>
     <div class="panel"><h3>Companies that visited after seeing LinkedIn ads</h3><p class="sub">Healthcare LinkedIn ads, ${A.window}</p><ul class="list-2">${vis.map(v=>`<li><span>${esc(v.name)}</span>${v.hubspotLead?'<span class="chip good">HubSpot lead</span>':`<span class="note" style="margin:0">${esc(v.domain)}</span>`}</li>`).join("")}</ul></div></div>`;
   if(JT){
-    const L=JT.levels.map(x=>({k:x.k,v:x.impr})), F=JT.functions.map(x=>({k:x.k,v:x.impr}));
-    h+=`<div class="panel"><h3>Who LinkedIn ads reached</h3><p class="sub">${N(JT.impr)} ${DIVNAME[DIV].toLowerCase()} impressions with a reported job title, ${JT.clicks} clicks. Grouped by title keywords.</p>
+    const L=JT.levels.map(x=>({k:x.k,v:x.impr})), F=JT.functions.map(x=>({k:x.k,v:x.impr})), TR=D.jobTitleTrend;
+    if(TR) h+=`<div class="panel"><h3>Decision makers engaging with LinkedIn ads</h3><p class="sub">Clicks on healthcare LinkedIn ads by the viewer's job title, ${TR.months[0]} to ${TR.months[TR.months.length-1]}</p>
+      ${legend([{name:"VP and C-suite",color:css("--c-hc"),box:1},{name:"Real estate, finance & strategy roles",color:css("--c-ga"),box:1}])}
+      ${chart({labels:TR.months,bars:[{name:"VP and C-suite",color:css("--c-hc"),values:TR.cvpClicks},{name:"Real estate, finance & strategy",color:css("--c-ga"),values:TR.dmClicks}],h:220})}
+      ${TXT("audienceNote","")?`<p class="note">${TXT("audienceNote")}</p>`:""}</div>`;
+    h+=`<div class="panel"><h3>Who LinkedIn ads reached${JT.window?`, ${JT.window}`:""}</h3><p class="sub">${N(JT.impr)} healthcare impressions with a reported job title, ${JT.clicks} clicks. Grouped by title keywords.</p>
      <div class="grid g-3"><div><div class="eyebrow">Seniority</div>${hbars(L,{max:JT.impr})}</div><div><div class="eyebrow">Function</div>${hbars(F,{max:JT.impr})}</div>
      <div><div class="eyebrow">Top titles</div>${hbars(JT.top.slice(0,8).map(x=>({k:x.k,v:x.impr})))}</div></div>
-     ${`<p class="note">Clinical titles took ${P(JT.functions.find(f=>f.k==="Clinical").impr/JT.impr,0)} of healthcare impressions; real estate, facilities and development roles took ${P(JT.functions.find(f=>f.k.startsWith("Real estate")).impr/JT.impr,0)}. Tightening job function targeting toward real estate, finance and strategy would put more spend in front of decision makers.</p>`}</div>`;
+     <p class="note">${P(JT.levels.filter(l=>/C-suite|Vice|Director/.test(l.k)).reduce((s,l)=>s+l.impr,0)/JT.impr,0)} of these impressions reached directors and above.</p></div>`;
   }
   return h;
 };
@@ -540,7 +545,7 @@ R.trends=()=>{
 };
 
 /* ---------- project calendar (live tracker on the published site) ---------- */
-let TRK=null, LATEST=true;
+let TRK=null, LATEST=true, CAL=false;
 const ymOf=s=>String(s||"").slice(0,7);
 function reportYM(){return `2026-${String(CM()).padStart(2,"0")}`;}
 function nextYM(){const m=CM()%12+1, y=CM()===12?2027:2026;return `${y}-${String(m).padStart(2,"0")}`;}
@@ -582,7 +587,7 @@ R.exec=()=>{
   h+=`<article class="panel ex-doc">`;
   if(E.headline) h+=`<p class="ex-lede">${E.headline}</p>`;
   (E.sections||[]).forEach(sec=>{h+=`<section><h3>${sec.title}</h3>${sec.body?`<p>${sec.body}</p>`:""}${sec.bullets?list(sec.bullets):""}</section>`;});
-  if(T.done.length) h+=`<section><h3>Delivered in ${RM()}</h3>${list(T.done.slice(0,12).map(p=>esc(p.project)))}${T.done.length>12?`<p class="note">Plus ${T.done.length-12} more on the Plan page.</p>`:""}</section>`;
+  if(T.done.length) h+=`<section><h3>Delivered in ${RM()}</h3>${list(T.done.slice(0,12).map(p=>esc(p.project)))}${T.done.length>12?`<p class="note">Plus ${T.done.length-12} more.</p>`:""}${CAL?`<p class="note"><a href="tracker.html">Open the project calendar</a> to see or edit every project.</p>`:""}</section>`;
   if(E.nextMonth) h+=`<section><h3>Focus for ${NM()}</h3>${list(E.nextMonth)}</section>`;
   h+=`</article>`;
   return h;
@@ -593,7 +598,7 @@ function current(){const h=(location.hash||"").slice(1);return PAGES.some(p=>p[0
 function render(){
   if(!D)return;
   const pg=current();
-  document.getElementById("tabs").innerHTML=PAGES.map(([id,n])=>`<a href="#${id}" ${id===pg?'aria-current="page"':''}>${n}</a>`).join("");
+  document.getElementById("tabs").innerHTML=PAGES.map(([id,n])=>`<a href="#${id}" ${id===pg?'aria-current="page"':''}>${n}</a>`).join("")+(CAL?`<a href="tracker.html" class="cal-link">Project calendar ↗</a>`:"");
   let html=R[pg]();
   if(NARR[pg]){const [w,i]=NARR[pg]();const k=html.indexOf("</div>",html.indexOf("page-head"))+6;html=html.slice(0,k)+narrative(w,i)+html.slice(k);}
   document.getElementById("view").innerHTML=html;
@@ -622,6 +627,7 @@ async function loadMonth(m){try{boot(await getJSON(`data/${m}.json`));return tru
     sel.innerHTML=months.map(m=>`<option value="${m}">${MONTHS_LONG[+m.slice(5,7)-1]} ${m.slice(0,4)}</option>`).join("");
     sel.addEventListener("change",async()=>{LATEST=sel.value===months[0];await loadMonth(sel.value);});
     document.getElementById("asof").after(sel);}
+  try{const r=await fetch("tracker.html",{method:"HEAD"}); if(r.ok&&/html/.test(r.headers.get("content-type")||"")){CAL=true; render();}}catch(e){}
   try{const j=await getJSON("/api/tracker"); TRK=(j.items&&j.items.length)?j.items:null; render();}catch(e){}
 })();
 })();
