@@ -1,0 +1,13 @@
+# Boldt Marketing Dashboard
+# Static site in /public, a password gate (edge function) in front of everything,
+# and one serverless function (/api/*) that talks to the Google Sheet through Apps Script.
+[build]
+  publish = "public"
+  command = "echo 'no build step'"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "same-origin"

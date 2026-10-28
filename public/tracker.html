@@ -1,0 +1,1112 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marketing Project Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&amp;display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#033D51; --navy2:#063E53; --slate:#57788F; --green:#296C51; --olive:#70924C;
+  --gold:#D19000; --yellow:#EBBC4E; --gray:#616266; --lgray:#DCDDE0; --ink:#111417;
+  --bg:#F4F5F6; --card:#FFFFFF; --line:#E3E4E7; --brick:#B5452F; --muted:#7A7C80;
+  --radius:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:Archivo,"Helvetica Neue",Arial,sans-serif;font-size:14px;line-height:1.4;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+.cond{font-stretch:72%;font-weight:800;letter-spacing:.01em}
+
+/* Header */
+header.top{background:var(--navy);color:#fff;padding:18px 24px 0}
+.top-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between}
+.title{margin:0;font-size:30px;line-height:1;font-stretch:70%;font-weight:900;letter-spacing:.005em}
+.title .hl{text-decoration:underline;text-decoration-color:var(--yellow);text-decoration-thickness:5px;text-underline-offset:7px}
+.sub{color:#BFD0D8;font-size:13px;margin-top:6px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:600;white-space:nowrap}
+.btn:hover{background:rgba(255,255,255,.1)}
+.btn.primary{background:var(--yellow);border-color:var(--yellow);color:var(--navy)}
+.btn.primary:hover{background:#f2c962}
+.menu{position:relative}
+.menu-pop{position:absolute;right:0;top:calc(100% + 6px);background:#fff;color:var(--ink);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.18);min-width:230px;padding:6px;z-index:40;display:none}
+.menu-pop.open{display:block}
+.menu-pop button{display:block;width:100%;text-align:left;border:0;background:none;padding:9px 10px;border-radius:7px;cursor:pointer}
+.menu-pop button:hover{background:var(--bg)}
+.menu-pop hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+.tabs{display:flex;gap:2px;margin-top:16px;overflow-x:auto}
+.tab{border:0;background:transparent;color:#BFD0D8;padding:10px 16px;font-weight:700;cursor:pointer;border-radius:8px 8px 0 0;white-space:nowrap;font-stretch:85%;font-size:15px}
+.tab[aria-selected="true"]{background:var(--bg);color:var(--navy)}
+.tab:not([aria-selected="true"]):hover{color:#fff}
+
+main{padding:18px 24px 48px;max-width:1600px;margin:0 auto}
+
+/* banner */
+.banner{display:none;background:#FFF6DD;border:1px solid #F1D88F;color:#5a4300;padding:9px 12px;border-radius:8px;margin-bottom:14px;font-size:13px}
+.banner.show{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.banner button{border:0;background:var(--navy);color:#fff;border-radius:6px;padding:5px 10px;cursor:pointer;font-weight:600}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;cursor:pointer;text-align:left;position:relative;overflow:hidden}
+.kpi:hover{border-color:var(--slate)}
+.kpi.active{border-color:var(--navy);box-shadow:inset 0 -3px 0 var(--yellow)}
+.kpi .n{font-size:30px;font-stretch:70%;font-weight:900;line-height:1;color:var(--navy)}
+.kpi .l{font-size:12px;color:var(--muted);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.kpi.warn .n{color:var(--brick)}
+.kpi.gold .n{color:var(--gold)}
+
+/* Filters */
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px}
+.filters input[type=search]{flex:1 1 220px;min-width:180px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 10px}
+.filters select{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 10px;max-width:220px}
+.toggle{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--gray);user-select:none;cursor:pointer;padding:0 4px}
+.clear{border:0;background:none;color:var(--slate);cursor:pointer;font-weight:600;text-decoration:underline;padding:4px}
+.count{margin-left:auto;color:var(--muted);font-size:13px}
+
+/* Now view */
+.lanes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.lane{background:#EBEDEF;border-radius:12px;padding:10px;min-height:120px;max-height:680px;overflow:auto}
+.lane h3{margin:2px 4px 10px;font-size:15px;font-stretch:75%;font-weight:800;color:var(--navy);display:flex;justify-content:space-between;align-items:center;text-transform:uppercase;letter-spacing:.03em}
+.lane h3 .badge{background:var(--navy);color:#fff;border-radius:20px;padding:1px 9px;font-size:12px;font-stretch:100%}
+.lane.overdue h3{color:var(--brick)} .lane.overdue h3 .badge{background:var(--brick)}
+.lane .hint{font-size:12px;color:var(--muted);margin:-6px 4px 10px}
+.lanes.second{margin-top:14px}
+.empty{color:var(--muted);font-size:13px;padding:10px 6px}
+
+.card{background:#fff;border:1px solid var(--line);border-left:4px solid var(--c,var(--slate));border-radius:8px;padding:9px 10px;margin-bottom:8px;cursor:pointer;transition:box-shadow .15s, transform .15s}
+.card:hover{box-shadow:0 4px 14px rgba(3,61,81,.12);transform:translateY(-1px)}
+.card .t{font-weight:700;font-size:14px;line-height:1.25}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:7px;font-size:12px}
+.ws{display:inline-flex;align-items:center;gap:5px;color:var(--gray)}
+.ws i{width:8px;height:8px;border-radius:50%;background:var(--c);display:inline-block}
+.owner{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:20px;padding:1px 8px;white-space:nowrap;display:inline-block;margin:1px 0}
+.due{border-radius:20px;padding:1px 8px;background:#EEF2F4;color:var(--navy);font-weight:600;white-space:nowrap}
+.due.over{background:#F6E1DC;color:var(--brick)}
+.due.soon{background:#FBF0D6;color:#8a5f00}
+.due .tg{font-weight:400;font-style:italic;opacity:.8}
+.wait{color:#8a5f00;font-size:12px;margin-top:5px}
+.pill{display:inline-block;border-radius:20px;padding:1px 9px;font-size:12px;font-weight:600;white-space:nowrap;border:1px solid transparent}
+.s-not-started{background:#fff;border-color:#BDBFC4;color:var(--gray)}
+.s-in-progress{background:var(--navy);color:#fff}
+.s-in-review{background:var(--slate);color:#fff}
+.s-waiting-on-others{background:#FBF0D6;color:#7a5400;border-color:#EBCB86}
+.s-on-hold{background:#E9EAEC;color:var(--gray)}
+.s-ongoing{background:#DCEBE3;color:var(--green)}
+.s-complete{background:#E7EEDD;color:#4c6a2c}
+.s-confirm-status{background:var(--yellow);color:#3d2c00}
+.subprog{font-size:12px;color:var(--muted)}
+details.grp{background:#fff;border:1px dashed #BFC3C8;border-radius:8px;margin-bottom:8px}
+details.grp summary{cursor:pointer;padding:9px 10px;font-weight:700;list-style:none;display:flex;gap:6px;align-items:center}
+details.grp summary .sm{margin-left:auto;text-align:right}
+details.grp summary::-webkit-details-marker{display:none}
+details.grp summary::before{content:"\25B8";color:var(--slate);margin-right:6px}
+details.grp[open] summary::before{content:"\25BE"}
+details.grp summary .sm{font-weight:400;color:var(--muted);font-size:12px}
+details.grp .inner{padding:0 8px 2px}
+
+/* Timeline */
+.tl-wrap{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:auto;max-height:calc(100vh - 140px)}
+table.tl{border-collapse:separate;border-spacing:0;min-width:100%}
+.tl th,.tl td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);vertical-align:top;padding:6px}
+.tl thead th{position:sticky;top:0;background:#fff;z-index:3;font-stretch:75%;font-weight:800;text-transform:uppercase;font-size:13px;color:var(--navy);letter-spacing:.04em;padding:10px 6px;text-align:left;min-width:170px}
+.tl thead th.cur{background:var(--navy);color:#fff;box-shadow:inset 0 -4px 0 var(--yellow)}
+.tl thead th .yr{display:block;font-weight:500;font-size:11px;opacity:.7;letter-spacing:0}
+.tl th.rowh{position:sticky;left:0;background:#FAFAFB;z-index:2;min-width:150px;max-width:170px;text-align:left;font-size:13px;font-weight:700;color:var(--ink)}
+.tl thead th.rowh{z-index:4;background:#fff}
+.tl th.rowh i{width:9px;height:9px;border-radius:50%;background:var(--c);display:inline-block;margin-right:6px}
+.tl td.cur{background:#F7FAFB}
+.chip{display:block;background:#fff;border:1px solid var(--line);border-left:3px solid var(--sc);border-radius:6px;padding:4px 6px;margin-bottom:4px;font-size:12px;line-height:1.25;cursor:pointer}
+.chip:hover{border-color:var(--slate)}
+.chip.over{background:#FBEEEA}
+.chip.done{opacity:.55;text-decoration:line-through}
+.chip .o{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.tl details.grp summary{padding:5px 6px;font-size:12px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 10px;font-size:12px;color:var(--gray)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend b{width:10px;height:10px;border-radius:2px;background:var(--sc);display:inline-block}
+
+/* Owners */
+.owners{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.ocard{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.ocard header{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ocard h3{margin:0;font-size:19px;font-stretch:72%;font-weight:900;color:var(--navy)}
+.ocard .stats{display:flex;gap:10px;font-size:12px;color:var(--muted)}
+.ocard .stats b{color:var(--ink)}
+.ocard .stats .ov b{color:var(--brick)}
+.ocard .body{padding:10px;max-height:460px;overflow:auto}
+.orow{display:grid;grid-template-columns:1fr auto;gap:8px;padding:7px 6px;border-bottom:1px solid #F0F1F2;cursor:pointer;border-radius:6px}
+.orow:hover{background:var(--bg)}
+.orow .t{font-weight:600;font-size:13px}
+.orow .r{text-align:right;display:flex;flex-direction:column;gap:3px;align-items:flex-end}
+
+/* Table */
+.tbl-wrap{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:auto}
+table.list{width:100%;border-collapse:collapse;min-width:900px}
+.list th{position:sticky;top:0;background:#fff;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--gray);padding:10px;border-bottom:2px solid var(--navy);cursor:pointer;white-space:nowrap;user-select:none}
+.list th .ar{opacity:.4}
+.list th.sorted .ar{opacity:1;color:var(--navy)}
+.list td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.list tr:hover td{background:#FAFBFC}
+.list td.tt{font-weight:600;cursor:pointer;min-width:260px}
+.list td.tt:hover{color:var(--navy);text-decoration:underline}
+.list td.nt{color:var(--gray);font-size:12px;max-width:360px}
+.list select{border:1px solid var(--line);border-radius:6px;padding:4px 6px;background:#fff;font-size:12px}
+
+/* Drawer */
+.scrim{position:fixed;inset:0;background:rgba(3,20,28,.4);opacity:0;pointer-events:none;transition:opacity .2s;z-index:50}
+.scrim.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(520px,100%);background:#fff;z-index:60;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column;box-shadow:-10px 0 40px rgba(0,0,0,.15)}
+.drawer.open{transform:none}
+.drawer header{background:var(--navy);color:#fff;padding:16px 18px;display:flex;justify-content:space-between;align-items:center}
+.drawer header h2{margin:0;font-size:20px;font-stretch:72%;font-weight:900}
+.drawer .x{border:0;background:none;color:#fff;font-size:24px;cursor:pointer;line-height:1}
+.drawer form{padding:16px 18px;overflow:auto;flex:1;display:grid;gap:12px;align-content:start}
+.fld label{display:block;font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.fld input,.fld select,.fld textarea{width:100%;border:1px solid #CDD0D4;border-radius:8px;padding:8px 10px;background:#fff}
+.fld textarea{min-height:80px;resize:vertical}
+.fld .help{font-size:12px;color:var(--muted);margin-top:4px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.subs{display:grid;gap:4px}
+.subs label{display:flex;gap:8px;align-items:flex-start;font-size:13px;text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink);margin:0}
+.subs label.done span{text-decoration:line-through;color:var(--muted)}
+.subs .addsub{display:flex;gap:6px;margin-top:4px}
+.subs .addsub input{flex:1}
+.drawer footer{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap}
+.b2{border:1px solid #CDD0D4;background:#fff;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600}
+.b2.pri{background:var(--navy);border-color:var(--navy);color:#fff}
+.b2.ok{background:var(--olive);border-color:var(--olive);color:#fff}
+.b2.del{color:var(--brick);border-color:#E6C2BA}
+.src{font-size:12px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;opacity:0;transition:all .25s;z-index:80;font-size:13px}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.view{display:none}
+.view.active{display:block}
+footer.note{margin-top:22px;color:var(--muted);font-size:12px}
+
+/* Collateral archive */
+body[data-view="archive"] #kpis, body[data-view="archive"] section.filters, body[data-view="archive"] #footnote{display:none}
+.akpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+.drop{border:2px dashed #BFC3C8;border-radius:12px;background:#fff;padding:14px 16px;margin-bottom:14px;display:flex;gap:10px 14px;align-items:center;flex-wrap:wrap;color:var(--gray);font-size:13px;transition:background .15s,border-color .15s}
+.drop .dt{flex:1 1 320px;min-width:0}
+.drop strong{color:var(--navy);font-size:15px;display:block;font-stretch:80%;font-weight:800;margin-bottom:2px}
+.drop.over{background:#EEF4F7;border-color:var(--navy)}
+.drop .btns{display:flex;gap:8px;flex-wrap:wrap}
+.abar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.abar input[type=search]{flex:1 1 220px;min-width:180px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 10px}
+.abar select{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 10px;max-width:220px}
+.tchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.tchip{border:1px solid var(--line);background:#fff;border-radius:20px;padding:4px 11px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;gap:6px;align-items:center;color:var(--ink)}
+.tchip i{width:8px;height:8px;border-radius:50%;background:var(--tc);display:inline-block}
+.tchip b{font-weight:500;color:var(--muted)}
+.tchip:hover{border-color:var(--slate)}
+.tchip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.tchip[aria-pressed="true"] b{color:#BFD0D8}
+.agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.acard{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:box-shadow .15s, transform .15s;min-width:0}
+.acard:hover,.acard:focus-visible{box-shadow:0 6px 18px rgba(3,61,81,.14);transform:translateY(-2px);outline:none}
+.acard.retired{opacity:.6}
+.thumb{aspect-ratio:4/3;background:var(--tc);position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.thumb img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block;background:#fff}
+.thumb .ph{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:14px 14px 16px;color:#fff;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 2px,transparent 2px 14px)}
+.thumb .ph span{font-size:28px;line-height:1;font-stretch:66%;font-weight:900;text-transform:uppercase;letter-spacing:.01em}
+.thumb .ph span::after{content:"";display:block;width:38px;height:4px;background:var(--yellow);margin-top:9px}
+.thumb .ph small{position:absolute;top:12px;left:14px;font-size:11px;opacity:.75;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.thumb .ty{position:absolute;left:8px;top:8px;background:rgba(255,255,255,.95);color:var(--ink);border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700;display:inline-flex;gap:5px;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.thumb .ty i{width:7px;height:7px;border-radius:50%;background:var(--tc);display:inline-block}
+.abody{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;flex:1}
+.abody .at{font-weight:700;font-size:14px;line-height:1.25;overflow-wrap:anywhere}
+.abody .am{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 8px}
+.aact{margin-top:auto;padding-top:4px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.alink{font-size:12px;font-weight:700;color:var(--navy);text-decoration:none;border:1px solid #CDD0D4;border-radius:6px;padding:3px 9px;background:#fff}
+.alink:hover{border-color:var(--navy);background:#F4F8FA}
+.flag{font-size:11px;font-weight:700;border-radius:20px;padding:2px 8px;white-space:nowrap}
+.flag.nolink{background:#F6E1DC;color:var(--brick)}
+.flag.update{background:#FBF0D6;color:#7a5400}
+.flag.retired{background:#E9EAEC;color:var(--gray)}
+.cover{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.cover .pv{width:132px;aspect-ratio:4/3;border-radius:8px;border:1px solid var(--line);overflow:hidden;background:var(--tc,#57788F);flex:none;position:relative}
+.cover .pv.over{outline:3px solid var(--yellow)}
+.cover .pv img{width:100%;height:100%;object-fit:cover;object-position:top;display:block;background:#fff}
+.cover .pv .ph span{font-size:18px}
+.cover .pv .ph span::after{width:24px;height:3px;margin-top:6px}
+.cover .cb{display:flex;flex-direction:column;gap:6px;flex:1;min-width:160px}
+.cover .cb div{display:flex;gap:6px;flex-wrap:wrap}
+.src a{color:var(--navy);font-weight:600;cursor:pointer}
+@media (max-width:700px){ .akpis{grid-template-columns:repeat(2,minmax(0,1fr))} .agrid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px} .thumb .ph span{font-size:22px} }
+
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.lanes{grid-template-columns:1fr 1fr}}
+@media (max-width:700px){
+  header.top{padding:14px 16px 0} main{padding:14px 16px 40px}
+  .title{font-size:26px}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lanes{grid-template-columns:1fr}
+  .row2{grid-template-columns:1fr}
+  .count{margin-left:0;width:100%}
+}
+@media print{
+  header.top .actions,.tabs,.filters,.banner{display:none}
+  body{background:#fff}
+  .tl-wrap{max-height:none;overflow:visible}
+}
+[hidden]{display:none!important}
+.sync{font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;white-space:nowrap;align-self:center}.sync.ok::before{content:"✓ "}.sync.busy{opacity:.8}.sync.err{background:#B5452F;color:#fff}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-row">
+    <div>
+      <h1 class="title"><span class="hl">Marketing</span> Project Tracker</h1>
+      <div class="sub" id="subline">Boldt Real Estate · shared calendar, changes save for everyone</div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="addBtn" type="button">+ Add item</button>
+      <a class="btn" href="/" style="text-decoration:none">← Dashboard</a><span id="syncPill" class="sync">Loading…</span><button class="btn" id="saveCopyBtn" type="button" hidden>Save shareable copy</button>
+      <div class="menu">
+        <button class="btn" id="moreBtn" type="button" aria-haspopup="true">More ▾</button>
+        <div class="menu-pop" id="morePop">
+          <button type="button" data-act="csv">Export to Excel (CSV)</button>
+          <button type="button" data-act="acsv">Export collateral archive (CSV)</button>
+          <button type="button" data-act="json">Export data (JSON)</button>
+          <button type="button" data-act="import">Import data (JSON)</button>
+          <hr>
+          <button type="button" data-act="print">Print current view</button>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" data-view="now" aria-selected="true">Now + next</button>
+    <button class="tab" role="tab" data-view="timeline" aria-selected="false">Timeline</button>
+    <button class="tab" role="tab" data-view="owners" aria-selected="false">By owner</button>
+    <button class="tab" role="tab" data-view="table" aria-selected="false">All items</button>
+    <button class="tab" role="tab" data-view="archive" aria-selected="false">Collateral archive</button>
+  </nav>
+</header>
+
+<main>
+  <div class="banner" id="banner"><span id="bannerText"></span><button type="button" id="bannerSave">Save shareable copy</button></div>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="filters">
+    <input type="search" id="q" placeholder="Search items, notes, contacts">
+    <select id="fOwner"><option value="">All owners</option></select>
+    <select id="fWs"><option value="">All workstreams</option></select>
+    <select id="fStatus"><option value="">All statuses</option></select>
+    <label class="toggle"><input type="checkbox" id="fDone"> Show completed</label>
+    <button class="clear" id="clearF" type="button">Clear filters</button>
+    <span class="count" id="count"></span>
+  </section>
+
+  <section class="view active" id="v-now"></section>
+  <section class="view" id="v-timeline"></section>
+  <section class="view" id="v-owners"></section>
+  <section class="view" id="v-table"></section>
+  <section class="view" id="v-archive">
+    <section class="kpis akpis" id="akpis"></section>
+    <div class="drop" id="aDrop">
+      <div class="dt"><strong>Drop finished pieces here</strong>PDFs, images, and screenshots of emails or ads. Each file becomes a card with a cover preview. Tracker items in collateral workstreams show up here on their own once they're marked complete.</div>
+      <div class="btns"><button class="b2" type="button" id="aPick">Choose files</button><button class="b2 pri" type="button" id="aNew">+ Add piece</button></div>
+    </div>
+    <div class="abar">
+      <input type="search" id="aq" placeholder="Search titles, clients, tags, notes">
+      <select id="aMarket" aria-label="Market"></select>
+      <select id="aStatus" aria-label="Brand status"></select>
+      <select id="aYear" aria-label="Year"></select>
+      <select id="aSort" aria-label="Sort"><option value="new">Newest first</option><option value="old">Oldest first</option><option value="title">Title A to Z</option><option value="type">Type</option></select>
+      <button class="clear" id="aClear" type="button">Clear filters</button>
+      <span class="count" id="acount"></span>
+    </div>
+    <div class="tchips" id="achips"></div>
+    <div class="agrid" id="agrid"></div>
+    <footer class="note">Cover images are saved inside this file, so they travel with every shareable copy. The files themselves stay where they live now (SharePoint, OneDrive, HubSpot, Canva), and each card links out to them. Deleting a card that came from the tracker keeps it from being added back.</footer>
+  </section>
+
+  <footer class="note" id="footnote"></footer>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <header><h2 id="dTitle">Edit item</h2><button class="x" id="dClose" type="button" aria-label="Close">×</button></header>
+  <form id="dForm" autocomplete="off">
+    <div class="fld"><label for="eTitle">Item</label><input id="eTitle" required=""></div>
+    <div class="row2">
+      <div class="fld"><label for="eStatus">Status</label><select id="eStatus"></select></div>
+      <div class="fld"><label for="eWs">Workstream</label><input id="eWs" list="wsList"></div>
+    </div>
+    <div class="fld"><label for="eOwners">Responsible</label><input id="eOwners" list="ownerList"><div class="help">Separate multiple owners with commas.</div></div>
+    <div class="row2">
+      <div class="fld"><label for="eDue">Due date</label><input id="eDue" type="date"></div>
+      <div class="fld"><label for="ePrec">Date type</label>
+        <select id="ePrec"><option value="day">Exact day</option><option value="month">Sometime that month</option></select></div>
+    </div>
+    <div class="fld"><label for="eWait">Waiting on / key contact</label><input id="eWait"></div>
+    <div class="fld"><label for="eNotes">Notes</label><textarea id="eNotes"></textarea></div>
+    <div class="fld"><label>Checklist</label><div class="subs" id="eSubs"></div></div>
+    <div class="src" id="eSrc"></div>
+  </form>
+  <footer>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="b2 del" id="dDel" type="button">Delete</button><button class="b2" id="dArch" type="button">Add to archive</button></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="b2 ok" id="dDone" type="button">Mark complete</button><button class="b2" id="dCancel" type="button">Cancel</button><button class="b2 pri" id="dSave" type="button">Save</button></div>
+  </footer>
+</aside>
+<aside class="drawer" id="aDrawer" aria-hidden="true">
+  <header><h2 id="aTitle">Archive piece</h2><button class="x" id="aClose" type="button" aria-label="Close">×</button></header>
+  <form id="aForm" autocomplete="off">
+    <div class="fld"><label for="xTitle">Title</label><input id="xTitle" required=""></div>
+    <div class="row2">
+      <div class="fld"><label for="xType">Type</label><select id="xType"></select></div>
+      <div class="fld"><label for="xMarket">Market</label><select id="xMarket"></select></div>
+    </div>
+    <div class="row2">
+      <div class="fld"><label for="xDate">Date finished</label><input id="xDate" type="date"></div>
+      <div class="fld"><label for="xStatus">Brand status</label><select id="xStatus"></select></div>
+    </div>
+    <div class="fld"><label for="xLink">File link</label><input id="xLink" type="url" placeholder="https://"><div class="help">SharePoint, OneDrive, HubSpot or website link to the final file.</div></div>
+    <div class="fld"><label for="xEdit">Editable source link</label><input id="xEdit" type="url" placeholder="https://"><div class="help">Optional. Canva design, InDesign package, Google Doc.</div></div>
+    <div class="fld"><label>Cover image</label>
+      <div class="cover"><div class="pv" id="xPv"></div>
+        <div class="cb"><div><button class="b2" type="button" id="xUp">Upload image or PDF</button><button class="b2" type="button" id="xRm">Remove</button></div>
+        <div class="help" style="display:block">Drop a file on the preview, or paste a screenshot (Ctrl+V) while this panel is open. PDFs use their first page.</div></div>
+      </div></div>
+    <div class="fld"><label for="xOwners">Owner</label><input id="xOwners" list="ownerList"></div>
+    <div class="fld"><label for="xTags">Tags</label><input id="xTags"><div class="help">Separate with commas. Client, campaign, project, ad variant.</div></div>
+    <div class="fld"><label for="xNotes">Notes</label><textarea id="xNotes"></textarea></div>
+    <div class="src" id="xSrc"></div>
+  </form>
+  <footer>
+    <div style="display:flex;gap:8px"><button class="b2 del" id="aDel" type="button">Delete</button></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="b2" id="aCancel" type="button">Cancel</button><button class="b2 pri" id="aSave" type="button">Save</button></div>
+  </footer>
+</aside>
+<input type="file" id="aFiles" multiple hidden="">
+<input type="file" id="aCover" accept="image/*,application/pdf,.pdf" hidden="">
+<datalist id="ownerList"></datalist><datalist id="wsList"></datalist>
+<input type="file" id="importFile" accept=".json,application/json" hidden="">
+<div class="toast" id="toast"></div>
+
+<script id="seed" type="application/json">{"savedAt":"2026-10-15T18:58:47.957Z","source":"2026_Marketing_Calendar.xlsx","items":[{"id":"t001","title":"Ongoing ad campaign management (LinkedIn, Google)","ws":"Advertising","owners":["Amy"],"due":"2026-10-31","prec":"month","status":"Ongoing","notes":"Monthly management of live campaigns. See 2026 Ads tab.","waiting":"","src":"Annual Planning","recurring":"monthly","subtasks":[],"target":false},{"id":"t002","title":"Monthly leasing emails","ws":"Email & Mail","owners":["Leslie"],"due":"2026-10-31","prec":"month","status":"Ongoing","notes":"","waiting":"","src":"Annual Planning","recurring":"monthly","subtasks":[],"target":false},{"id":"t003","title":"Monthly KPI report","ws":"AI & Analytics","owners":["Amy"],"due":"2026-10-31","prec":"month","status":"Ongoing","notes":"","waiting":"","src":"Annual Planning","recurring":"monthly","subtasks":[],"target":false},{"id":"t004","title":"Customer outreach","ws":"Operations","owners":["Amy"],"due":"2026-10-31","prec":"month","status":"Ongoing","notes":"","waiting":"","src":"Annual Planning","recurring":"monthly","subtasks":[],"target":false},{"id":"t005","title":"Quarterly leasing/tenant review with John","ws":"Operations","owners":["Leslie","John"],"due":"2026-12-31","prec":"month","status":"Ongoing","notes":"Meet quarterly to review leasing and tenants.","waiting":"","src":"Meeting Notes 5/19","recurring":"quarterly","subtasks":[],"target":false},{"id":"t007","title":"Ad copy review: JV / Co-Invest (10 variants)","ws":"Advertising","owners":["Amy"],"due":null,"prec":null,"status":"In review","notes":"LinkedIn static image ads, healthcare awareness.","waiting":"","src":"2026 Ads","recurring":null,"subtasks":[],"target":false},{"id":"t008","title":"Ad copy review: Short-Term / Bridge Financing (10 variants)","ws":"Advertising","owners":["Amy"],"due":null,"prec":null,"status":"In review","notes":"LinkedIn static image ads, healthcare awareness.","waiting":"","src":"2026 Ads","recurring":null,"subtasks":[],"target":false},{"id":"t009","title":"Ad copy review: Right of Use Asset (10 variants)","ws":"Advertising","owners":["Amy"],"due":null,"prec":null,"status":"In review","notes":"LinkedIn static image ads, healthcare awareness.","waiting":"","src":"2026 Ads","recurring":null,"subtasks":[],"target":false},{"id":"t011","title":"Ad copy review: Ownership Reversion (10 variants)","ws":"Advertising","owners":["Amy"],"due":null,"prec":null,"status":"In review","notes":"LinkedIn static image ads, healthcare awareness.","waiting":"","src":"2026 Ads","recurring":null,"subtasks":[],"target":false},{"id":"t012","title":"Ad copy review: Tell Us About Your Project CTA (6 variants)","ws":"Advertising","owners":["Amy"],"due":null,"prec":null,"status":"In review","notes":"Includes landing page form fields: market, square footage, facility type, decision timeline, ownership preference.","waiting":"","src":"2026 Ads","recurring":null,"subtasks":[],"target":false},{"id":"t014","title":"Launch approved Deal Customization + Aligned Incentives ads (10)","ws":"Advertising","owners":["Amy"],"due":null,"prec":null,"status":"In progress","notes":"Copy approved, not yet in the Live section.","waiting":"","src":"2026 Ads","recurring":null,"subtasks":[],"target":false},{"id":"t018","title":"Fall mailer (General Healthcare Mailer)","ws":"Email & Mail","owners":["Amy"],"due":"2026-10-31","prec":"month","status":"In progress","notes":"On the Oct calendar weeks 1 and 2.","waiting":"","src":"Annual Planning / Oct Calendar","recurring":null,"subtasks":[],"target":false},{"id":"t020","title":"Financial Services brochure","ws":"Collateral","owners":["Amy"],"due":"2026-09-30","prec":"month","status":"In progress","notes":"Amy making updates (10/13 meeting).","waiting":"","src":"Annual Planning / Meeting Notes 10/13","recurring":null,"subtasks":[],"target":false},{"id":"t021","title":"Load updated guides and brochures into HubSpot","ws":"Collateral","owners":["Amy","Leslie"],"due":null,"prec":null,"status":"In progress","notes":"","waiting":"","src":"Meeting Notes 10/13","recurring":null,"subtasks":[],"target":false},{"id":"t022","title":"Seniors Off-Market brochure","ws":"Collateral","owners":["Amy"],"due":"2026-09-30","prec":"month","status":"Confirm status","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t024","title":"Financial Services PDFs (downloadables)","ws":"Collateral","owners":["Amy"],"due":"2026-09-30","prec":"month","status":"Confirm status","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t026","title":"Check Abbie Miller Photography for current needs","ws":"Collateral","owners":["Amy"],"due":null,"prec":null,"status":"Not started","notes":"","waiting":"","src":"Meeting Notes 10/13","recurring":null,"subtasks":[],"target":false},{"id":"t027","title":"New Google Ads + Bing Ads landing pages","ws":"Web & Landing Pages","owners":["Amy"],"due":"2026-09-30","prec":"month","status":"Confirm status","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t028","title":"Seniors Off-Market landing pages","ws":"Web & Landing Pages","owners":["Amy"],"due":"2026-09-30","prec":"month","status":"Confirm status","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t029","title":"Financial Services landing pages","ws":"Web & Landing Pages","owners":["Amy"],"due":"2026-09-30","prec":"month","status":"Confirm status","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t030","title":"Custom landing pages for top SQLs","ws":"Web & Landing Pages","owners":["Amy"],"due":"2026-10-31","prec":"month","status":"Not started","notes":"Get the top 5 SQLs from Chris.","waiting":"Chris B.","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t031","title":"Review and update project profiles","ws":"Web & Landing Pages","owners":["Leslie"],"due":"2026-06-30","prec":"month","status":"Confirm status","notes":"Annual review. Open question: all program management profiles? Add Physician Ownership to the Baptist profile (check with Ryan).","waiting":"","src":"Annual Planning / Meeting Notes 6/9, 3/3","recurring":null,"subtasks":[],"target":false},{"id":"t032","title":"Transparency blog","ws":"Content & Social","owners":["Amy"],"due":"2026-09-30","prec":"month","status":"Confirm status","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t033","title":"Seniors blog","ws":"Content & Social","owners":["Amy"],"due":"2026-09-30","prec":"month","status":"Confirm status","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t034","title":"PIH videography creative brief (future Gillespie project video)","ws":"Content & Social","owners":["Amy"],"due":"2026-09-30","prec":"month","status":"In progress","notes":"PIH on the 10/13 agenda.","waiting":"","src":"Annual Planning / Meeting Notes","recurring":null,"subtasks":[],"target":false},{"id":"t036","title":"Social post: Intuitive Health Prosper ribbon cutting","ws":"Content & Social","owners":["Amy"],"due":"2026-10-12","prec":"day","status":"Confirm status","notes":"Oct calendar, week 3.","waiting":"","src":"Oct Calendar","recurring":null,"subtasks":[],"target":false},{"id":"t038","title":"\"2027 Outlook\" article","ws":"Content & Social","owners":["Amy"],"due":"2026-10-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[{"t":"Send items to Chris B.","done":false}],"target":false},{"id":"t040","title":"Bridge the Gap Senior Living podcast","ws":"Content & Social","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t046","title":"PIH Health Whittier MOB topping out article","ws":"Content & Social","owners":["Amy"],"due":"2026-06-11","prec":"day","status":"Complete","notes":"","waiting":"","src":"Annual Planning / Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t047","title":"2026 Healthcare Real Estate Outlook blog","ws":"Content & Social","owners":["Amy"],"due":"2026-01-31","prec":"month","status":"Complete","notes":"Retargeting ads now live.","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t048","title":"Baptist case study","ws":"Content & Social","owners":["Amy"],"due":"2026-02-28","prec":"month","status":"Complete","notes":"Retargeting ad live.","waiting":"","src":"Annual Planning / 2026 Ads","recurring":null,"subtasks":[],"target":false},{"id":"t049","title":"TUKHS RadioPharmacy proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-10-02","prec":"day","status":"Confirm status","notes":"Due end of Sept / early Oct.","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false},{"id":"t050","title":"Proposal/presentation template revamp","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-11-30","prec":"month","status":"Not started","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t051","title":"Mercy Hospital Pittsburg On-Campus MOB proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-09-23","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t052","title":"Adventist presentation (with Bildt)","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-09-23","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t053","title":"Stevens Point Orthopedics Redevelopment proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-08-04","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t054","title":"Penn Med proposal (revised after meeting)","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-07-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t055","title":"Catawba Valley Health System interview","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-06-03","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t056","title":"UPMC proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-06-19","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t057","title":"NorthBay MOB Portfolio Acquisition proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-06-19","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t058","title":"University of Vermont Health presentation","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-06-15","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t059","title":"RTG presentation","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-06-25","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t060","title":"UPMC presentation","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-06-29","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t061","title":"Catawba Valley Health System proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-05-08","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t062","title":"Emerus / Prisma Health proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-05-08","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t063","title":"Emerus / CommonSpirit proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-05-29","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t064","title":"NorthBay Health presentation","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-05-06","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t065","title":"Penn Medicine presentation","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-05-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t066","title":"Select Health presentation","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-05-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t067","title":"Methodist presentation","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-05-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t068","title":"Methodist / IH (TX) proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-04-13","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t069","title":"Centra / IH (VA) proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-04-16","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t070","title":"Sinai Chicago presentation","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-04-15","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t071","title":"Mercy proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-03-05","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t072","title":"MUSC proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-03-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t073","title":"UAMS / IH Little Rock FSED proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-03-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t074","title":"UF Health / IH St. Augustine / San Jose proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-03-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t075","title":"SIH Marion MOB proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-03-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t076","title":"Deaconess / IH repackage","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-03-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t077","title":"Prime Healthcare presentation","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-03-12","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t078","title":"UF Health Central FL presentation","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-03-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t079","title":"Select Medical presentation","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-03-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t080","title":"UF Health / IH Jacksonville proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-02-28","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t081","title":"VMFH Lake City Way proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-02-28","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t082","title":"Encompass presentation","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-02-04","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t083","title":"Southern Illinois Healthcare proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-01-14","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t084","title":"UNC Development-for-Fee proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-01-27","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t085","title":"Okatie updates","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-01-28","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t086","title":"UC Davis Health Folsom MOB proposal","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-01-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t087","title":"UNC Rex presentation","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-01-12","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t088","title":"SIH presentation","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-01-30","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t089","title":"VMFH equity book","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-01-30","prec":"day","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t090","title":"SQ: Valley Health","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-01-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t091","title":"SQ: NewYork-Presbyterian","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-01-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t092","title":"SQ: UVA Health","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-02-28","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t093","title":"SQ: Augusta Health","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-02-28","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t094","title":"SQ: University of Kansas Health System","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-02-28","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t095","title":"SQ: Lakeland Regional","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-03-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t096","title":"SQ: Yale New Haven","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-03-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t097","title":"SQ: Prime Healthcare","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-04-30","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t098","title":"SQ: Premier Healthcare","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-04-30","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t099","title":"SQ: Firelands","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-05-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t100","title":"SQ: Ochsner Health","ws":"Proposals & SQs","owners":["Amy"],"due":"2026-05-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Proposals and Presentations","recurring":null,"subtasks":[],"target":false,"group":"Past proposals, presentations + SQs"},{"id":"t101","title":"UF Health Wildwood: send photo authorization form","ws":"Project Milestones","owners":["Amy"],"due":"2026-10-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t102","title":"UF Health Wildwood / Intracoastal: grand opening + completion photos","ws":"Project Milestones","owners":["Amy"],"due":null,"prec":null,"status":"Waiting on others","notes":"Oxford name change. No UF approval to post yet. Ryan/Faeq finding out when they meet with UF.","waiting":"Ryan / Faeq, UF","src":"Project Marketing / Meeting Notes 9/29","recurring":null,"subtasks":[],"target":false},{"id":"t103","title":"UF Health Wildwood: Certificate of Occupancy","ws":"Project Milestones","owners":["Project team"],"due":"2026-11-24","prec":"day","status":"Not started","notes":"Milestone.","waiting":"","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t104","title":"UF Health Wildwood: groundbreaking / ribbon cutting ceremony","ws":"Project Milestones","owners":["Amy"],"due":"2026-12-16","prec":"day","status":"Not started","notes":"1 to 3 PM EST.","waiting":"","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t105","title":"UF Health Jacksonville: send photo authorization form","ws":"Project Milestones","owners":["Amy"],"due":"2026-10-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t106","title":"UF Health Jacksonville: Certificate of Occupancy","ws":"Project Milestones","owners":["Project team"],"due":"2026-12-10","prec":"day","status":"Not started","notes":"Milestone. Grand opening details pending from Ryan/Faeq.","waiting":"Ryan / Faeq","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t107","title":"UF Health Jacksonville: professional portfolio photography","ws":"Project Milestones","owners":["Amy"],"due":"2027-01-15","prec":"day","status":"Waiting on others","notes":"Marand and Boldt hiring their own photographer for stills. Paige (Marand) getting back with findings.","waiting":"Paige (Marand)","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t108","title":"Beaufort Memorial Hilton Head: send photo authorization form","ws":"Project Milestones","owners":["Amy"],"due":"2026-10-31","prec":"month","status":"Not started","notes":"Julie Bellino (MOREgroup) is reaching out to a photographer; cost share.","waiting":"Julie Bellino (MOREgroup)","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t109","title":"Beaufort Memorial Hilton Head: estimated completion","ws":"Project Milestones","owners":["Project team"],"due":"2026-12-01","prec":"day","status":"Not started","notes":"Photography targeted after the first week of Dec (CO). Grand opening ceremony not yet scheduled; BMH will set timing.","waiting":"BMH","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t110","title":"Beaufort Memorial Hilton Head: first patient","ws":"Project Milestones","owners":["Project team"],"due":"2027-01-12","prec":"day","status":"Not started","notes":"Milestone.","waiting":"","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t111","title":"VMFH West Seattle: estimated completion + rendering","ws":"Project Milestones","owners":["Amy"],"due":"2026-11-16","prec":"day","status":"Waiting on others","notes":"Completion date marked tentative. Ask for rendering after county feedback on exterior.","waiting":"Catherine","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t112","title":"VMFH Puyallup: grand opening event","ws":"Project Milestones","owners":["Amy"],"due":"2027-07-31","prec":"month","status":"On hold","notes":"CommonSpirit wants no coming soon signage, press release, or groundbreaking until they announce. Grand opening only.","waiting":"CommonSpirit","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t113","title":"HonorHealth: grand opening / physician event support","ws":"Project Milestones","owners":["Amy"],"due":"2026-12-01","prec":"day","status":"On hold","notes":"Per Heidi 9/30, wait until end of year to follow up. Hold photos until pool is open.","waiting":"Alex / Chris B.","src":"Project Marketing / Meeting Notes 9/29","recurring":null,"subtasks":[],"target":false},{"id":"t114","title":"SIH: groundbreaking event","ws":"Project Milestones","owners":["Amy"],"due":"2026-10-31","prec":"month","status":"In progress","notes":"Supporting Amanda Mosler with the event. Construction starts Jan or Feb 2027.","waiting":"Amanda Mosler","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t115","title":"Customer surveys","ws":"Project Milestones","owners":["Amy"],"due":null,"prec":null,"status":"Waiting on others","notes":"Sent 7/27, follow-ups 8/3. Jennifer will complete once project is further along.","waiting":"","src":"Meeting Notes 7/28","recurring":null,"subtasks":[],"target":false},{"id":"t116","title":"UNMC Bennington grand opening press release + social","ws":"Project Milestones","owners":["Amy"],"due":"2026-03-02","prec":"day","status":"Complete","notes":"","waiting":"","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t117","title":"PIH Health Foundation Annual Golf Tournament","ws":"Sponsorships & Events","owners":["Leslie"],"due":"2026-10-26","prec":"day","status":"Not started","notes":"Friendly Hills Country Club, Whittier, CA.","waiting":"","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t118","title":"PIH Health Foundation Donor Luncheon","ws":"Sponsorships & Events","owners":["Amy"],"due":"2026-11-30","prec":"month","status":"Not started","notes":"No date listed yet.","waiting":"","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t119","title":"BMH Valentine Ball","ws":"Sponsorships & Events","owners":["Amy"],"due":"2027-02-06","prec":"day","status":"Not started","notes":"","waiting":"","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t120","title":"UF Health Jacksonville NEFL Gala","ws":"Sponsorships & Events","owners":["Amy"],"due":"2027-02-27","prec":"day","status":"Not started","notes":"","waiting":"","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t121","title":"SIH Gala 2027","ws":"Sponsorships & Events","owners":["Amy"],"due":"2027-04-30","prec":"month","status":"Not started","notes":"Date TBD. Emailed Amanda Sheffer for more information.","waiting":"Amanda Sheffer","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t122","title":"PIH Health Foundation Biennial Gala","ws":"Sponsorships & Events","owners":["Amy"],"due":"2027-05-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t123","title":"Sponsorship tracker: put feelers out to attendees","ws":"Sponsorships & Events","owners":["Amy"],"due":null,"prec":null,"status":"Ongoing","notes":"Reach out a few months before each event. Sponsorships run through the Philanthropy Committee ($50k budget).","waiting":"","src":"Meeting Notes 3/3, 3/17","recurring":null,"subtasks":[],"target":false},{"id":"t124","title":"Baptist Cardiac Classic Golf Tournament","ws":"Sponsorships & Events","owners":["Amy"],"due":"2026-09-28","prec":"day","status":"Complete","notes":"","waiting":"","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t125","title":"SIH Slice of Life Golf Tournament","ws":"Sponsorships & Events","owners":["Amy"],"due":"2026-09-25","prec":"day","status":"Complete","notes":"","waiting":"","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t126","title":"HonorHealth NICU Tea and Luncheon","ws":"Sponsorships & Events","owners":["Amy"],"due":"2026-09-18","prec":"day","status":"Complete","notes":"","waiting":"","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t127","title":"VMFH Boeing Classic","ws":"Sponsorships & Events","owners":["Amy"],"due":"2026-08-14","prec":"day","status":"Complete","notes":"","waiting":"","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t128","title":"VMFH Invitational, Fircrest Golf Club","ws":"Sponsorships & Events","owners":["Amy"],"due":"2026-06-01","prec":"day","status":"Complete","notes":"","waiting":"","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t129","title":"HonorHealth Foundation ProAm","ws":"Sponsorships & Events","owners":["Amy"],"due":"2026-04-17","prec":"day","status":"Complete","notes":"","waiting":"","src":"Project Marketing","recurring":null,"subtasks":[],"target":false},{"id":"t130","title":"HREI Insights Awards","ws":"Awards & Conferences","owners":["Amy"],"due":"2027-09-01","prec":"month","status":"Not started","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t132","title":"Healthcare Facilities Symposium application opens","ws":"Awards & Conferences","owners":["Amy"],"due":"2026-11-30","prec":"month","status":"Not started","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t133","title":"Red Award nomination","ws":"Awards & Conferences","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t134","title":"BizTimes Notable Leaders nomination","ws":"Awards & Conferences","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t135","title":"Revista rankings submission","ws":"Awards & Conferences","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"Note from Feb: plan ahead for 2027 Revista outpatient developer rankings.","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t136","title":"Modern Healthcare Leadership Symposium","ws":"Awards & Conferences","owners":["Amy"],"due":"2026-09-30","prec":"month","status":"Complete","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t137","title":"AHA Leadership Summit","ws":"Awards & Conferences","owners":["Amy"],"due":"2026-08-31","prec":"month","status":"Complete","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t138","title":"Build Brand Agent for consistency","ws":"AI & Analytics","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t139","title":"Competitor intelligence + KPI agents","ws":"AI & Analytics","owners":["Amy"],"due":"2026-02-28","prec":"month","status":"Confirm status","notes":"Also: activate HubSpot intent signals, update old posts for AI readability.","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t141","title":"Competitor matrix recap","ws":"AI & Analytics","owners":["Amy"],"due":"2026-09-30","prec":"month","status":"Confirm status","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t142","title":"Canva / folder structure SOP","ws":"Operations","owners":["Amy"],"due":"2026-09-30","prec":"month","status":"Confirm status","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t145","title":"Zerobounce subscription (spam form-fill prevention)","ws":"Operations","owners":["Amy"],"due":null,"prec":null,"status":"Complete","notes":"Trial done. Recommended lowest tier: 2,000 credits at $17/mo.","waiting":"","src":"Meeting Notes 2/17","recurring":null,"subtasks":[],"target":false},{"id":"t146","title":"Rebrand: brand development + web creative concepting","ws":"Rebrand","owners":["Pivot Design","Core Task Force"],"due":"2026-10-31","prec":"month","status":"In progress","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t147","title":"Rebrand: finalize internal + external comms strategy","ws":"Rebrand","owners":["Core Task Force","Amy"],"due":"2026-10-31","prec":"month","status":"In progress","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t148","title":"Rebrand: engage PR firm","ws":"Rebrand","owners":["Core Task Force"],"due":"2026-10-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t149","title":"Rebrand: notify internal departments (HR, IT, Finance, Legal)","ws":"Rebrand","owners":["Core Task Force"],"due":"2026-10-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t150","title":"Rebrand: soft internal launch + social media strategy","ws":"Rebrand","owners":["Core Task Force","Amy"],"due":"2026-11-30","prec":"month","status":"Not started","notes":"Also: external comms strategy approval.","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t151","title":"Rebrand: production design of all materials","ws":"Rebrand","owners":["Pivot Design"],"due":"2026-11-30","prec":"month","status":"Not started","notes":"Including website.","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t152","title":"Rebrand: hard internal + external launch","ws":"Rebrand","owners":["Core Task Force"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t153","title":"Rebrand: order signage + promotional materials","ws":"Rebrand","owners":["Amy","Admin"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Annual Planning","recurring":null,"subtasks":[],"target":false},{"id":"t155","title":"Hire branding agency","ws":"Rebrand","owners":["Core Task Force"],"due":"2026-02-28","prec":"month","status":"Complete","notes":"","waiting":"","src":"Rebrand Checklist","recurring":null,"subtasks":[],"target":false,"group":"Rebrand checklist"},{"id":"t156","title":"Rebrand: Name","ws":"Rebrand","owners":["Pivot Design","Core Task Force"],"due":"2026-08-31","prec":"month","status":"In progress","notes":"Engage internal counsel for trademarking support.","waiting":"","src":"Rebrand Checklist (Design)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t157","title":"Rebrand: Logo","ws":"Rebrand","owners":["Pivot Design","Core Task Force"],"due":"2026-11-30","prec":"month","status":"Not started","notes":"Engage internal counsel for trademarking support.","waiting":"","src":"Rebrand Checklist (Design)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t158","title":"Rebrand: Typography","ws":"Rebrand","owners":["Pivot Design","Core Task Force"],"due":"2026-11-30","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Design)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t159","title":"Rebrand: Color palette","ws":"Rebrand","owners":["Pivot Design","Core Task Force"],"due":"2026-11-30","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Design)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t160","title":"Rebrand: Graphic elements","ws":"Rebrand","owners":["Pivot Design","Core Task Force"],"due":"2026-11-30","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Design)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t161","title":"Rebrand: Brand guidelines","ws":"Rebrand","owners":["Pivot Design","Core Task Force"],"due":"2026-11-30","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Design)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t162","title":"Rebrand: Brand story","ws":"Rebrand","owners":["Pivot Design","Core Task Force"],"due":"2026-11-30","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Tone)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t163","title":"Rebrand: Tone of voice","ws":"Rebrand","owners":["Pivot Design","Core Task Force"],"due":"2026-11-30","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Tone)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t164","title":"Rebrand: USPS change of address","ws":"Rebrand","owners":["Admin"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Address)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t165","title":"Rebrand: Mailbox","ws":"Rebrand","owners":["Admin"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Address)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t166","title":"Rebrand: Shipping accounts (Amazon, etc.)","ws":"Rebrand","owners":["Admin"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Address)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t167","title":"Rebrand: Email accounts","ws":"Rebrand","owners":["Boldt IT"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"How do we handle previous accounts that use @boldt.com for logins?","waiting":"","src":"Rebrand Checklist (Email)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t168","title":"Rebrand: Email signatures","ws":"Rebrand","owners":["Pivot Design","Amy","Boldt IT"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Email)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t169","title":"Rebrand: Utilities","ws":"Rebrand","owners":["Admin"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Utilities)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t170","title":"Rebrand: Internet","ws":"Rebrand","owners":["Boldt IT"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Utilities)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t171","title":"Rebrand: Phone","ws":"Rebrand","owners":["Boldt IT"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Utilities)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t172","title":"Rebrand: Voicemail","ws":"Rebrand","owners":["Boldt IT"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Phone)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t173","title":"Rebrand: Professional organizations","ws":"Rebrand","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"HREI annual listing ad. Any other org directories to update?","waiting":"","src":"Rebrand Checklist (Groups)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t174","title":"Rebrand: CMiC","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Software)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t175","title":"Rebrand: HubSpot","ws":"Rebrand","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"Notify account manager, update account links and branding.","waiting":"","src":"Rebrand Checklist (Software)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t176","title":"Rebrand: Microsoft Dynamics","ws":"Rebrand","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Software)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t177","title":"Rebrand: Accounting software","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Software)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t178","title":"Rebrand: Asset management (SponsorCloud)","ws":"Rebrand","owners":["Amy","Asset Management"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"Update branding in SponsorCloud.","waiting":"","src":"Rebrand Checklist (Software)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t179","title":"Rebrand: The Connector","ws":"Rebrand","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"Update our page (pending rollout strategy).","waiting":"","src":"Rebrand Checklist (Software)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t180","title":"Rebrand: Canva","ws":"Rebrand","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"Update branding.","waiting":"","src":"Rebrand Checklist (Software)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t181","title":"Rebrand: File sharing / Teams / OneDrive","ws":"Rebrand","owners":["Boldt IT"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Software)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t182","title":"Rebrand: Contracts","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Internal docs)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t183","title":"Rebrand: Job applications","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Internal docs)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t184","title":"Rebrand: PowerPoint templates","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"Engage IT for automatic template loads.","waiting":"","src":"Rebrand Checklist (Internal docs)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t185","title":"Rebrand: Word templates","ws":"Rebrand","owners":["Amy","Corporate Marketing","Boldt IT"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"Engage IT for automatic template loads.","waiting":"","src":"Rebrand Checklist (Internal docs)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t186","title":"Rebrand: Invoices","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Internal docs)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t187","title":"Rebrand: Customer notice","ws":"Rebrand","owners":["Unassigned"],"due":"2026-11-30","prec":"month","status":"Not started","notes":"See Communication Plan tab.","waiting":"","src":"Rebrand Checklist (Internal docs)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t188","title":"Rebrand: Vendor notice","ws":"Rebrand","owners":["Unassigned"],"due":"2026-11-30","prec":"month","status":"Not started","notes":"See Communication Plan tab.","waiting":"","src":"Rebrand Checklist (Internal docs)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t189","title":"Rebrand: NDAs","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Internal docs)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t190","title":"Rebrand: Business cards","ws":"Rebrand","owners":["Pivot Design","Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Office)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t191","title":"Rebrand: Stationery and letterhead","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Office)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t192","title":"Rebrand: Envelopes","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Office)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t193","title":"Rebrand: Mailing labels","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Office)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t194","title":"Rebrand: Return address stamp","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Office)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t195","title":"Rebrand: Folders","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Office)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t196","title":"Rebrand: Lobby signage","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Signage)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t197","title":"Rebrand: Door signage","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Signage)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t198","title":"Rebrand: Building directory","ws":"Rebrand","owners":["Admin"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Signage)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t199","title":"Rebrand: Parking lot signage","ws":"Rebrand","owners":["Admin"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Signage)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t200","title":"Rebrand: Bank accounts","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Legal & financial)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t201","title":"Rebrand: Credit cards","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Legal & financial)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t202","title":"Rebrand: Checks","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Legal & financial)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t203","title":"Rebrand: Business loans","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Legal & financial)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t204","title":"Rebrand: Business licensing and legality","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"What do we need to change?","waiting":"","src":"Rebrand Checklist (Legal & financial)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t205","title":"Rebrand: Government agencies","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Legal & financial)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t206","title":"Rebrand: Notify landlord","ws":"Rebrand","owners":["Admin"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Legal & financial)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t207","title":"Rebrand: Office lease","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Legal & financial)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t208","title":"Rebrand: Licensing agencies","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Legal & financial)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t209","title":"Rebrand: IRS name change","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Legal & financial)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t210","title":"Rebrand: Sales tax permit","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Legal & financial)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t211","title":"Rebrand: W-9","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Legal & financial)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t212","title":"Rebrand: 1099","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Legal & financial)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t213","title":"Rebrand: Incorporation articles","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Legal & financial)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t214","title":"Rebrand: Business registration","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Legal & financial)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t215","title":"Rebrand: SOPs","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (HR)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t216","title":"Rebrand: Training / onboarding materials","ws":"Rebrand","owners":["Amy","Boldt HR"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (HR)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t217","title":"Rebrand: LinkedIn profile","ws":"Rebrand","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Social)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t218","title":"Rebrand: Facebook profile","ws":"Rebrand","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Social)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t219","title":"Rebrand: X profile","ws":"Rebrand","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Social)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t220","title":"Rebrand: YouTube profile","ws":"Rebrand","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Social)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t221","title":"Rebrand: Instagram profile","ws":"Rebrand","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Social)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t222","title":"Rebrand: Update web directories","ws":"Rebrand","owners":["Corporate Marketing"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Web)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t223","title":"Rebrand: Update backlinks","ws":"Rebrand","owners":["Pivot Design"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Web)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t224","title":"Rebrand: Paid search ads","ws":"Rebrand","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"Update ads.","waiting":"","src":"Rebrand Checklist (Advertising)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t225","title":"Rebrand: Paid social ads","ws":"Rebrand","owners":["Pivot Design","Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"Update ads.","waiting":"","src":"Rebrand Checklist (Advertising)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t226","title":"Rebrand: Direct mail template","ws":"Rebrand","owners":["Pivot Design"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Collateral)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t227","title":"Rebrand: Brochures / white papers / case studies","ws":"Rebrand","owners":["Pivot Design","Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"Identify list of brochure, white paper and case study needs.","waiting":"","src":"Rebrand Checklist (Collateral)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t228","title":"Rebrand: High-value content / downloadable guides","ws":"Rebrand","owners":["Pivot Design","Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"Identify list of HVC needs.","waiting":"","src":"Rebrand Checklist (Collateral)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t229","title":"Rebrand: Presentation template","ws":"Rebrand","owners":["Pivot Design"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"Update staff meeting presentations and other recurring decks.","waiting":"","src":"Rebrand Checklist (Collateral)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t230","title":"Rebrand: Trade show displays","ws":"Rebrand","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"Identify trade show needs (tablecloth, popup banner, etc.).","waiting":"","src":"Rebrand Checklist (Collateral)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t231","title":"Rebrand: Promotional items / online store","ws":"Rebrand","owners":["Amy","Corporate Marketing"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"Identify promotional item needs.","waiting":"","src":"Rebrand Checklist (Collateral)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t232","title":"Rebrand: Newsletter / marketing email template","ws":"Rebrand","owners":["Pivot Design","Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Collateral)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t233","title":"Rebrand: Proposal template","ws":"Rebrand","owners":["Pivot Design","Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Collateral)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t234","title":"Rebrand: Resume template","ws":"Rebrand","owners":["Pivot Design","Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Collateral)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t235","title":"Rebrand: Jobsite signage","ws":"Rebrand","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Collateral)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t236","title":"Rebrand: Customer surveys","ws":"Rebrand","owners":["Amy"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Collateral)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t237","title":"Rebrand: LinkedIn cover images","ws":"Rebrand","owners":["Pivot Design"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Collateral)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t238","title":"Rebrand: Teams background images","ws":"Rebrand","owners":["Pivot Design"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Collateral)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t239","title":"Rebrand: Boilerplate PR copy","ws":"Rebrand","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Collateral)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t240","title":"Rebrand: Screensaver","ws":"Rebrand","owners":["Pivot Design"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Collateral)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t241","title":"Rebrand: Video intro / outro / lower thirds","ws":"Rebrand","owners":["Pivot Design"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"","waiting":"","src":"Rebrand Checklist (Collateral)","recurring":null,"subtasks":[],"target":true,"group":"Rebrand checklist"},{"id":"t242","title":"Website: Planning","ws":"Website Build","owners":["Unassigned"],"due":"2026-09-30","prec":"month","status":"Confirm status","notes":"Owner not set in the Website Development Checklist.","waiting":"","src":"Website Development Checklist","recurring":null,"subtasks":[{"t":"Competitor analysis (strengths, weaknesses, content strategy)","done":false},{"t":"Domain research, selection and purchase","done":false},{"t":"Select hosting provider","done":false},{"t":"Internal kickoff meeting to align stakeholders","done":false}],"target":true},{"id":"t243","title":"Website: Content preparation","ws":"Website Build","owners":["Unassigned"],"due":"2026-10-31","prec":"month","status":"Confirm status","notes":"Owner not set in the Website Development Checklist.","waiting":"","src":"Website Development Checklist","recurring":null,"subtasks":[{"t":"Audit existing site content for reuse or rewriting","done":false},{"t":"Sitemap, site structure and navigation","done":false},{"t":"SEO-optimized web content for all pages","done":false},{"t":"Source, edit and optimize images, video and graphics","done":false},{"t":"Define CTAs aligned with sales funnels","done":false}],"target":true},{"id":"t244","title":"Website: Design","ws":"Website Build","owners":["Unassigned"],"due":"2026-11-30","prec":"month","status":"Not started","notes":"Owner not set in the Website Development Checklist.","waiting":"","src":"Website Development Checklist","recurring":null,"subtasks":[{"t":"Wireframes for key pages and user journeys","done":false},{"t":"High-fidelity mockups","done":false},{"t":"Responsive design for mobile, tablet, desktop","done":false},{"t":"Stakeholder review and approval","done":false},{"t":"Finalize design prototypes","done":false}],"target":true},{"id":"t245","title":"Website: Development","ws":"Website Build","owners":["Unassigned"],"due":"2026-11-30","prec":"month","status":"Not started","notes":"Owner not set in the Website Development Checklist.","waiting":"","src":"Website Development Checklist","recurring":null,"subtasks":[{"t":"Set up CMS (WordPress with Elementor)","done":false},{"t":"Hosting configuration, SSL, server setup","done":false},{"t":"Select and customize theme or custom template","done":false},{"t":"Interactive components (calculators, animations, forms)","done":false},{"t":"Integrate plugins (SEO, analytics, HubSpot)","done":false},{"t":"Accessibility standards (WCAG 2.1)","done":false}],"target":true},{"id":"t246","title":"Website: Functionality + testing","ws":"Website Build","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"Owner not set in the Website Development Checklist.","waiting":"","src":"Website Development Checklist","recurring":null,"subtasks":[{"t":"GA4, Tag Manager, Search Console, tracking codes","done":false},{"t":"SEO: keywords, meta tags, alt tags","done":false},{"t":"Cross-browser checks (Chrome, Safari, Firefox, Edge)","done":false},{"t":"Mobile and tablet testing","done":false},{"t":"Functionality testing for links, forms, interactive elements","done":false},{"t":"Load speed optimization","done":false},{"t":"Security testing and SSL validation","done":false}],"target":true},{"id":"t247","title":"Website: Pre-launch","ws":"Website Build","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"Owner not set in the Website Development Checklist.","waiting":"","src":"Website Development Checklist","recurring":null,"subtasks":[{"t":"Final proofreading","done":false},{"t":"Implement and test 301 redirects","done":false},{"t":"Verify internal and external links","done":false},{"t":"Final metadata and SEO review","done":false},{"t":"Final stakeholder walkthrough and UX check","done":false},{"t":"Schedule launch communications","done":false}],"target":true},{"id":"t248","title":"Website: Launch","ws":"Website Build","owners":["Unassigned"],"due":"2026-12-31","prec":"month","status":"Not started","notes":"Owner not set in the Website Development Checklist.","waiting":"","src":"Website Development Checklist","recurring":null,"subtasks":[{"t":"Deploy to live environment","done":false},{"t":"Post-launch checks (links, forms, analytics)","done":false},{"t":"Submit sitemap to Google Search Console and Bing","done":false},{"t":"Announce launch via email and social","done":false}],"target":true},{"id":"umv9wafc2","title":"Leaderboard Updates","ws":"Operations","owners":["Amy"],"due":"2026-10-16","prec":"day","status":"Not started","notes":"","waiting":"","src":"Added in tracker","subtasks":[],"target":false},{"id":"umv9wflk8","title":"Ask Reagan about external file/folder sharing process","ws":"Operations","owners":["Amy"],"due":"2026-10-30","prec":"day","status":"Not started","notes":"","waiting":"","src":"Added in tracker","subtasks":[],"target":false}]}</script>
+<script>
+(function(){
+"use strict";
+const PRISTINE = "<!doctype html>\n" + document.documentElement.outerHTML;
+const SEED = JSON.parse(document.getElementById("seed").textContent);
+const KEY = "boldt-marketing-tracker-v1";
+const STATUSES = ["Not started","In progress","In review","Waiting on others","On hold","Ongoing","Confirm status","Complete"];
+const OPEN_WORK = new Set(["Not started","In progress","In review"]);
+const STATUS_COLOR = {"Not started":"#BDBFC4","In progress":"#033D51","In review":"#57788F","Waiting on others":"#D19000","On hold":"#9A9CA1","Ongoing":"#296C51","Confirm status":"#EBBC4E","Complete":"#70924C"};
+const WS_COLOR = {"Advertising":"#033D51","Email & Mail":"#57788F","Collateral":"#296C51","Content & Social":"#70924C","Web & Landing Pages":"#D19000","Proposals & SQs":"#EBBC4E","Project Milestones":"#063E53","Sponsorships & Events":"#8FA8B8","Rebrand":"#B5452F","Website Build":"#C77B5E","Awards & Conferences":"#A3B37F","AI & Analytics":"#616266","Operations":"#9A9CA1"};
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const slug = s => s.toLowerCase().replace(/[^a-z]+/g,"-").replace(/^-|-$/g,"");
+
+// today (allow ?today=YYYY-MM-DD for previewing)
+const qp = new URLSearchParams(location.search).get("today");
+const TODAY = qp ? parseD(qp) : (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); })();
+
+function parseD(s){ if(!s) return null; const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); }
+function fmtISO(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function monthEnd(y,m){ return new Date(y, m+1, 0); }
+const DAY = 864e5;
+
+// ---------- state ----------
+let state = { basedOn: SEED.savedAt, editedAt: null, items: SEED.items, archive: SEED.archive || [], archiveIgnore: SEED.archiveIgnore || [] };
+let localDirty = false, storageFull = false;
+/* ---------- shared storage (Google Sheet through /api/tracker) ---------- */
+const API = "/api/tracker";
+let synced = { items:{}, archive:{}, ignore:"[]" }, saving = false, again = false, online = false, lastSave = "";
+function snap(){
+  return { items: Object.fromEntries(state.items.map(i => [i.id, JSON.stringify(i)])),
+           archive: Object.fromEntries((state.archive||[]).map(a => [a.id, JSON.stringify(a)])),
+           ignore: JSON.stringify(state.archiveIgnore || []) };
+}
+function stampCompleted(){
+  const today = fmtISO(new Date());
+  state.items.forEach(it => {
+    const prev = synced.items[it.id] ? JSON.parse(synced.items[it.id]) : null;
+    if (it.status === "Complete" && !it.completedAt && (!prev || prev.status !== "Complete")) it.completedAt = today;
+    if (it.status !== "Complete" && it.completedAt) delete it.completedAt;
+  });
+}
+function setSync(kind, text){
+  const el = document.getElementById("syncPill"); if (!el) return;
+  el.className = "sync " + kind; el.textContent = text;
+}
+async function pushChanges(){
+  if (!online) { setSync("err", "Not connected. Changes are not saved."); return; }
+  if (saving) { again = true; return; }
+  const s = snap(), up = { items:[], archive:[] }, del = { items:[], archive:[] };
+  for (const k of ["items","archive"]) {
+    for (const id in s[k]) if (s[k][id] !== synced[k][id]) up[k].push(JSON.parse(s[k][id]));
+    for (const id in synced[k]) if (!(id in s[k])) del[k].push(id);
+  }
+  const ign = s.ignore !== synced.ignore;
+  if (!up.items.length && !up.archive.length && !del.items.length && !del.archive.length && !ign) return;
+  saving = true; setSync("busy", "Saving…");
+  try {
+    const r = await fetch(API, { method:"POST", headers:{ "content-type":"application/json" }, body: JSON.stringify({ upserts: up, deletes: del, archiveIgnore: ign ? state.archiveIgnore : undefined }) });
+    const j = await r.json(); if (!j.ok) throw j;
+    synced = s; lastSave = j.savedAt;
+    setSync("ok", "Saved " + new Date(j.savedAt).toLocaleTimeString([], { hour:"numeric", minute:"2-digit" }));
+  } catch(e) {
+    setSync("err", "Couldn't save. Retrying…"); setTimeout(pushChanges, 15000);
+  }
+  saving = false;
+  if (again) { again = false; pushChanges(); }
+}
+function persist(){
+  const added = syncArchive();
+  stampCompleted();
+  state.editedAt = new Date().toISOString(); localDirty = false;
+  renderAll();
+  pushChanges();
+  return added;
+}
+async function pull(first){
+  const r = await fetch(API, { cache:"no-store" }); const j = await r.json();
+  if (!j.ok) throw j;
+  if (!first && j.lastSave === lastSave) return;
+  if (!j.items.length && first) {           // empty sheet: load the built-in calendar into it
+    online = true; syncArchive(); renderAll(); pushChanges(); return;
+  }
+  state = { basedOn: SEED.savedAt, editedAt: null, items: j.items, archive: j.archive || [], archiveIgnore: j.archiveIgnore || [] };
+  synced = snap(); lastSave = j.lastSave; online = true;
+  if (syncArchive()) pushChanges();
+  renderAll();
+  setSync("ok", "Up to date");
+}
+async function boot(){
+  setSync("busy", "Loading…");
+  try { await pull(true); }
+  catch(e) { online = false; setSync("err", "Showing the built-in copy. Sign in again or check the connection."); }
+  setInterval(() => {
+    const busy = saving || document.querySelector("#drawer.open, #aDrawer.open");
+    if (online && !busy) pull(false).catch(() => {});
+  }, 60000);
+}
+
+// effective due date (recurring rolls forward to current period)
+function effDue(it){
+  if (it.recurring === "monthly" && it.status !== "Complete") return monthEnd(TODAY.getFullYear(), TODAY.getMonth());
+  if (it.recurring === "quarterly" && it.status !== "Complete") { const q = Math.floor(TODAY.getMonth()/3); return monthEnd(TODAY.getFullYear(), q*3+2); }
+  if (!it.due) return null;
+  const d = parseD(it.due);
+  return it.prec === "month" ? monthEnd(d.getFullYear(), d.getMonth()) : d;
+}
+function dueLabel(it){
+  const d = effDue(it); if (!d) return "No date";
+  if (it.recurring === "monthly") return "Every month";
+  if (it.recurring === "quarterly") return "Quarterly, next by "+MONTHS[d.getMonth()]+" "+d.getFullYear();
+  if (it.prec === "month") return MONTHS[d.getMonth()]+" "+d.getFullYear();
+  return MONTHS[d.getMonth()]+" "+d.getDate()+", "+d.getFullYear();
+}
+function daysOut(it){ const d = effDue(it); return d ? Math.round((d - TODAY)/DAY) : null; }
+function isOverdue(it){ const n = daysOut(it); return n !== null && n < 0 && OPEN_WORK.has(it.status); }
+function dueClass(it){
+  if (it.status === "Complete") return "";
+  const n = daysOut(it); if (n === null) return "";
+  if (n < 0 && OPEN_WORK.has(it.status)) return "over";
+  if (n <= 14 && n >= 0) return "soon";
+  return "";
+}
+
+// ---------- filters ----------
+const F = { q:"", owner:"", ws:"", status:"", done:false, kpi:"" };
+function passes(it, ignoreDone){
+  if (!F.done && !ignoreDone && it.status === "Complete") return false;
+  if (F.owner && !it.owners.includes(F.owner)) return false;
+  if (F.ws && it.ws !== F.ws) return false;
+  if (F.status && it.status !== F.status) return false;
+  if (F.q) {
+    const hay = (it.title+" "+it.notes+" "+it.waiting+" "+it.owners.join(" ")+" "+it.ws+" "+it.src).toLowerCase();
+    if (!F.q.toLowerCase().split(/\s+/).every(w => hay.includes(w))) return false;
+  }
+  if (F.kpi && !KPI_DEF.find(k => k.id === F.kpi).test(it)) return false;
+  return true;
+}
+const KPI_DEF = [
+  { id:"over", label:"Overdue", cls:"warn", test: it => isOverdue(it) },
+  { id:"d14", label:"Due in 14 days", cls:"gold", test: it => { const n = daysOut(it); return n !== null && n >= 0 && n <= 14 && it.status !== "Complete" && !it.recurring; } },
+  { id:"active", label:"In progress / review", cls:"", test: it => it.status === "In progress" || it.status === "In review" },
+  { id:"wait", label:"Waiting / on hold", cls:"", test: it => it.status === "Waiting on others" || it.status === "On hold" },
+  { id:"confirm", label:"Status to confirm", cls:"gold", test: it => it.status === "Confirm status" },
+  { id:"d90", label:"Due next 90 days", cls:"", test: it => { const n = daysOut(it); return n !== null && n >= 0 && n <= 90 && it.status !== "Complete" && !it.recurring; } },
+];
+
+// ---------- render helpers ----------
+function ownersHTML(it){ return it.owners.map(o => `<span class="owner">${esc(o)}</span>`).join(""); }
+function statusPill(s){ return `<span class="pill s-${slug(s)}">${esc(s)}</span>`; }
+function dueHTML(it){
+  return `<span class="due ${dueClass(it)}">${esc(dueLabel(it))}${it.target && it.due ? ' <span class="tg">target</span>' : ""}</span>`;
+}
+function subProg(it){
+  if (!it.subtasks || !it.subtasks.length) return "";
+  const d = it.subtasks.filter(s => s.done).length;
+  return `<span class="subprog">${d}/${it.subtasks.length} steps</span>`;
+}
+function cardHTML(it){
+  const c = WS_COLOR[it.ws] || "#57788F";
+  return `<div class="card" data-id="${it.id}" style="--c:${c}">
+    <div class="t">${esc(it.title)}</div>
+    <div class="meta">${dueHTML(it)} ${statusPill(it.status)} ${subProg(it)}</div>
+    <div class="meta"><span class="ws" style="--c:${c}"><i></i>${esc(it.ws)}</span> ${ownersHTML(it)}</div>
+    ${it.waiting ? `<div class="wait">Waiting on: ${esc(it.waiting)}</div>` : ""}
+  </div>`;
+}
+// collapse grouped items (eg rebrand checklist) into an expandable block
+function withGroups(list, render, labelFn){
+  const out = [], groups = new Map();
+  list.forEach(it => {
+    if (it.group) {
+      if (!groups.has(it.group)) { groups.set(it.group, []); out.push({ g: it.group }); }
+      groups.get(it.group).push(it);
+    } else out.push({ it });
+  });
+  return out.map(x => {
+    if (x.it) return render(x.it);
+    const arr = groups.get(x.g);
+    if (arr.length === 1) return render(arr[0]);
+    const owners = [...new Set(arr.flatMap(i => i.owners))];
+    return `<details class="grp"><summary><span>${esc(x.g)}</span><span class="sm">${arr.length} items${(() => { const l = labelFn ? labelFn(arr, owners) : ""; return l ? " · "+l : ""; })()}</span></summary><div class="inner">${arr.map(render).join("")}</div></details>`;
+  }).join("");
+}
+const sortByDue = (a,b) => { const da = effDue(a), db = effDue(b); if (!da && !db) return a.title.localeCompare(b.title); if (!da) return 1; if (!db) return -1; return da - db || a.title.localeCompare(b.title); };
+
+// ---------- KPIs ----------
+function renderKPIs(){
+  $("#kpis").innerHTML = KPI_DEF.map(k => {
+    const n = state.items.filter(it => passesNoKpi(it) && k.test(it)).length;
+    return `<button type="button" class="kpi ${k.cls} ${F.kpi===k.id?"active":""}" data-kpi="${k.id}"><div class="n">${n}</div><div class="l">${k.label}</div></button>`;
+  }).join("");
+}
+function passesNoKpi(it){ const k = F.kpi; F.kpi = ""; const r = passes(it, true); F.kpi = k; return r; }
+
+// ---------- Now view ----------
+function renderNow(){
+  const vis = state.items.filter(it => passes(it));
+  const over = vis.filter(isOverdue).sort(sortByDue);
+  const inN = (a,b) => it => { const n = daysOut(it); return n !== null && n >= a && n <= b && it.status !== "Complete" && it.status !== "Confirm status" && it.status !== "On hold"; };
+  const next30 = vis.filter(inN(0,30)).sort(sortByDue);
+  const later = vis.filter(inN(31,90)).sort(sortByDue);
+  const nodate = vis.filter(it => !effDue(it) && ["In progress","In review","Ongoing","Not started"].includes(it.status)).sort((a,b)=>a.title.localeCompare(b.title));
+  const waiting = vis.filter(it => it.status === "Waiting on others" || it.status === "On hold").sort(sortByDue);
+  const confirm = vis.filter(it => it.status === "Confirm status").sort(sortByDue);
+  const lane = (title, list, cls, hint) => `<div class="lane ${cls||""}"><h3>${title}<span class="badge">${list.length}</span></h3>${hint?`<div class="hint">${hint}</div>`:""}${list.length ? withGroups(list, cardHTML, (arr, o) => o.slice(0,3).join(", ")+(o.length>3?" +"+(o.length-3):"")) : '<div class="empty">Nothing here.</div>'}</div>`;
+  const done = F.done ? vis.filter(it => it.status === "Complete").sort((a,b)=>sortByDue(b,a)) : [];
+  $("#v-now").innerHTML =
+    `<div class="lanes">${lane("Overdue", over, "overdue", "Past due and not marked complete.")}${lane("Due in the next 30 days", next30, "", "Includes this month's recurring work.")}${lane("Coming up: 31 to 90 days", later, "")}</div>
+     <div class="lanes second">${lane("In flight, no date set", nodate, "", "Add a due date so these surface on the timeline.")}${lane("Waiting on others / on hold", waiting, "")}${lane("Status to confirm", confirm, "", "Planned in the calendar, but the file doesn't say where they stand.")}</div>
+     ${F.done ? `<div class="lanes second" style="grid-template-columns:1fr">${lane("Completed", done, "")}</div>` : ""}`;
+}
+
+// ---------- Timeline ----------
+let tlEarly = false;
+function renderTimeline(){
+  const vis = state.items.filter(it => passes(it));
+  const start = tlEarly ? new Date(2026,0,1) : new Date(TODAY.getFullYear(), TODAY.getMonth()-1, 1);
+  let maxD = new Date(start.getFullYear(), start.getMonth()+9, 1);
+  vis.forEach(it => { const d = effDue(it); if (d && d > maxD) maxD = d; });
+  const months = []; for (let d = new Date(start); d <= maxD; d = new Date(d.getFullYear(), d.getMonth()+1, 1)) months.push(new Date(d));
+  const curKey = TODAY.getFullYear()*12 + TODAY.getMonth();
+  const wsList = Object.keys(WS_COLOR).filter(w => vis.some(it => it.ws === w)).concat([...new Set(vis.map(i=>i.ws))].filter(w => !(w in WS_COLOR)));
+  const chip = it => `<span class="chip ${dueClass(it)==="over"?"over":""} ${it.status==="Complete"?"done":""}" data-id="${it.id}" style="--sc:${STATUS_COLOR[it.status]||"#999"}" title="${esc(it.title)} · ${esc(it.status)} · ${esc(it.owners.join(", "))}">${esc(it.title.replace(/^Rebrand: |^Website: /,""))}<span class="o">${esc(it.owners.join(", "))}${it.prec==="day"&&it.due?" · "+MONTHS[parseD(it.due).getMonth()]+" "+parseD(it.due).getDate():""}</span></span>`;
+  let earlierCount = 0, undated = 0;
+  const rows = wsList.map(w => {
+    const its = vis.filter(it => it.ws === w);
+    const cells = months.map(m => {
+      const key = m.getFullYear()*12 + m.getMonth();
+      const inCell = its.filter(it => { const d = effDue(it); return d && d.getFullYear()*12 + d.getMonth() === key; }).sort(sortByDue);
+      return `<td class="${key===curKey?"cur":""}">${withGroups(inCell, chip)}</td>`;
+    }).join("");
+    const before = its.filter(it => { const d = effDue(it); return d && d < start; });
+    earlierCount += before.length;
+    const nod = its.filter(it => !effDue(it));
+    undated += nod.length;
+    return `<tr><th class="rowh" style="--c:${WS_COLOR[w]||"#999"}"><i></i>${esc(w)}</th>${cells}</tr>`;
+  }).join("");
+  const head = months.map(m => `<th class="${m.getFullYear()*12+m.getMonth()===curKey?"cur":""}">${MONTHS[m.getMonth()]}<span class="yr">${m.getFullYear()}</span></th>`).join("");
+  $("#v-timeline").innerHTML = `
+    <div class="legend">${STATUSES.map(s => `<span style="--sc:${STATUS_COLOR[s]}"><b></b>${s}</span>`).join("")}
+      <label class="toggle" style="margin-left:auto"><input type="checkbox" id="tlEarly" ${tlEarly?"checked":""}> Show from Jan 2026</label></div>
+    <div class="hint" style="font-size:12px;color:var(--muted);margin:-4px 0 8px">${!tlEarly && earlierCount ? `${earlierCount} matching item${earlierCount>1?"s":""} dated before ${MONTHS[start.getMonth()]} ${start.getFullYear()} hidden (overdue ones still show on Now + next). ` : ""}${undated ? `${undated} item${undated>1?"s have":" has"} no due date yet; find them on Now + next or All items.` : ""}</div>
+    <div class="tl-wrap"><table class="tl"><thead><tr><th class="rowh">Workstream</th>${head}</tr></thead><tbody>${rows || `<tr><td class="empty">No items match these filters.</td></tr>`}</tbody></table></div>`;
+}
+
+// ---------- Owners ----------
+function renderOwners(){
+  const vis = state.items.filter(it => passes(it));
+  const owners = [...new Set(vis.flatMap(it => it.owners))];
+  const stat = o => { const its = vis.filter(it => it.owners.includes(o)); return { its, open: its.filter(i => i.status !== "Complete").length, over: its.filter(isOverdue).length }; };
+  owners.sort((a,b) => (a==="Unassigned") - (b==="Unassigned") || stat(b).open - stat(a).open || a.localeCompare(b));
+  const row = it => `<div class="orow" data-id="${it.id}"><div><div class="t">${esc(it.title)}</div><div class="meta"><span class="ws" style="--c:${WS_COLOR[it.ws]||"#999"}"><i></i>${esc(it.ws)}</span>${it.owners.length>1?`<span class="subprog">with ${esc(it.owners.filter(x=>x!==it._o).join(", "))}</span>`:""}</div></div><div class="r">${dueHTML(it)}${statusPill(it.status)}</div></div>`;
+  $("#v-owners").innerHTML = owners.length ? `<div class="owners">${owners.map(o => {
+    const s = stat(o);
+    const rank = it => isOverdue(it) ? 0 : (it.status === "Complete" ? 4 : ["Confirm status","Waiting on others","On hold"].includes(it.status) ? 2 : (effDue(it) ? 1 : 3));
+    const list = s.its.slice().sort((a,b) => rank(a) - rank(b) || sortByDue(a,b)).map(it => Object.assign({}, it, { _o: o }));
+    return `<div class="ocard"><header><h3>${esc(o)}</h3><div class="stats"><span><b>${s.open}</b> open</span>${s.over?`<span class="ov"><b>${s.over}</b> overdue</span>`:""}</div></header>
+      <div class="body">${withGroups(list, row, (arr) => { const n = arr.filter(isOverdue).length; return n ? n+" overdue" : ""; })}</div></div>`;
+  }).join("")}</div>` : '<div class="empty">No items match these filters.</div>';
+}
+
+// ---------- Table ----------
+let sortCol = "due", sortDir = 1;
+function renderTable(){
+  const vis = state.items.filter(it => passes(it));
+  const cols = [["title","Item"],["ws","Workstream"],["owners","Responsible"],["due","Due"],["status","Status"],["waiting","Waiting on"],["notes","Notes"]];
+  const val = (it,c) => c==="owners" ? it.owners.join(", ") : c==="due" ? (effDue(it)?.getTime() ?? 9e15) : c==="status" ? STATUSES.indexOf(it.status) : (it[c]||"").toLowerCase();
+  vis.sort((a,b) => { const x = val(a,sortCol), y = val(b,sortCol); return (x<y?-1:x>y?1:0)*sortDir || sortByDue(a,b); });
+  $("#v-table").innerHTML = `<div class="tbl-wrap"><table class="list"><thead><tr>${cols.map(([k,l]) => `<th data-sort="${k}" class="${sortCol===k?"sorted":""}">${l} <span class="ar">${sortCol===k?(sortDir>0?"▲":"▼"):"↕"}</span></th>`).join("")}</tr></thead><tbody>
+    ${vis.map(it => `<tr><td class="tt" data-id="${it.id}">${esc(it.title)} ${subProg(it)}</td><td><span class="ws" style="--c:${WS_COLOR[it.ws]||"#999"}"><i></i>${esc(it.ws)}</span></td><td>${ownersHTML(it)}</td><td>${dueHTML(it)}</td>
+      <td><select data-status="${it.id}">${STATUSES.map(s => `<option ${s===it.status?"selected":""}>${s}</option>`).join("")}</select></td><td class="nt">${esc(it.waiting)}</td><td class="nt">${esc(it.notes)}</td></tr>`).join("")}
+  </tbody></table></div>`;
+}
+
+// ---------- Filter controls ----------
+function fillSelects(){
+  const owners = [...new Set(state.items.flatMap(i => i.owners))].sort((a,b) => (a==="Unassigned")-(b==="Unassigned") || a.localeCompare(b));
+  const wss = [...new Set(state.items.map(i => i.ws))].sort();
+  const fill = (sel, arr, cur, first) => { $(sel).innerHTML = `<option value="">${first}</option>` + arr.map(v => `<option ${v===cur?"selected":""}>${esc(v)}</option>`).join(""); };
+  fill("#fOwner", owners, F.owner, "All owners");
+  fill("#fWs", wss, F.ws, "All workstreams");
+  fill("#fStatus", STATUSES, F.status, "All statuses");
+  $("#ownerList").innerHTML = owners.map(o => `<option value="${esc(o)}">`).join("");
+  $("#wsList").innerHTML = wss.map(o => `<option value="${esc(o)}">`).join("");
+  $("#eStatus").innerHTML = STATUSES.map(s => `<option>${s}</option>`).join("");
+}
+
+let view = "now";
+function renderAll(){
+  fillSelects(); renderKPIs();
+  const n = state.items.filter(it => passes(it)).length;
+  $("#count").textContent = `${n} of ${state.items.length} items`;
+  if (view === "now") renderNow(); else if (view === "timeline") renderTimeline(); else if (view === "owners") renderOwners(); else if (view === "archive") renderArchive(); else renderTable();
+  const ed = state.editedAt ? new Date(state.editedAt) : null;
+  $("#banner").classList.toggle("show", localDirty);
+  if (storageFull) $("#bannerText").textContent = "This browser ran out of room to hold your latest edits (cover images take space). Save a shareable copy now so nothing is lost.";
+  else if (ed) $("#bannerText").textContent = `You have edits saved in this browser (last ${ed.toLocaleDateString()} ${ed.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})}). Others won't see them until you save and share a copy.`;
+  $("#subline").textContent = `Boldt Real Estate · As of ${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()}, ${TODAY.getFullYear()} · Data from ${SEED.source}`;
+  $("#footnote").textContent = `Dates marked "target" come from the rebrand timeline, not a set deadline. Items with no named owner in the calendar are assigned to Amy; reassign them in the item editor. Last file save: ${new Date(SEED.savedAt).toLocaleString()}.`;
+}
+
+// ---------- Drawer ----------
+let editing = null, draftSubs = [];
+function openDrawer(id){
+  const it = id ? state.items.find(i => i.id === id) : { id:null, title:"", ws: F.ws || "Operations", owners:["Amy"], due:null, prec:"day", status:"Not started", notes:"", waiting:"", src:"Added in tracker", subtasks:[] };
+  editing = it; draftSubs = (it.subtasks||[]).map(s => ({...s}));
+  $("#dTitle").textContent = id ? "Edit item" : "New item";
+  $("#eTitle").value = it.title; $("#eStatus").value = it.status; $("#eWs").value = it.ws;
+  $("#eOwners").value = it.owners.join(", "); $("#eDue").value = it.due || ""; $("#ePrec").value = it.prec || "day";
+  $("#eWait").value = it.waiting || ""; $("#eNotes").value = it.notes || "";
+  $("#eSrc").textContent = it.src ? "Source: " + it.src + (it.recurring ? " · Repeats " + it.recurring : "") : "";
+  $("#dDel").style.display = id ? "" : "none"; $("#dDone").style.display = id && it.status !== "Complete" ? "" : "none";
+  $("#dArch").style.display = id ? "" : "none";
+  $("#dArch").textContent = id && state.archive.some(a => a.fromItem === id) ? "View in archive" : "Add to archive";
+  renderSubs();
+  $("#drawer").classList.add("open"); $("#scrim").classList.add("open"); $("#drawer").setAttribute("aria-hidden","false");
+  setTimeout(() => $("#eTitle").focus(), 60);
+}
+function renderSubs(){
+  $("#eSubs").innerHTML = draftSubs.map((s,i) => `<label class="${s.done?"done":""}"><input type="checkbox" data-sub="${i}" ${s.done?"checked":""}><span>${esc(s.t)}</span></label>`).join("") +
+    `<div class="addsub"><input id="newSub" placeholder="Add a step"><button class="b2" type="button" id="addSub">Add</button></div>`;
+}
+function closeDrawer(){ $("#drawer").classList.remove("open"); $("#scrim").classList.remove("open"); $("#drawer").setAttribute("aria-hidden","true"); editing = null; }
+function saveDrawer(markDone){
+  const title = $("#eTitle").value.trim(); if (!title) { $("#eTitle").focus(); return; }
+  const it = editing;
+  it.title = title; it.status = markDone ? "Complete" : $("#eStatus").value; it.ws = $("#eWs").value.trim() || "Operations";
+  it.owners = $("#eOwners").value.split(",").map(s => s.trim()).filter(Boolean); if (!it.owners.length) it.owners = ["Unassigned"];
+  const newDue = $("#eDue").value || null;
+  if (newDue !== it.due) it.target = false;
+  it.due = newDue; it.prec = newDue ? $("#ePrec").value : null; it.waiting = $("#eWait").value.trim(); it.notes = $("#eNotes").value.trim();
+  it.subtasks = draftSubs;
+  if (!it.id) { it.id = "u" + Date.now().toString(36); state.items.push(it); }
+  closeDrawer(); const added = persist();
+  toast(added ? (markDone ? "Marked complete and added to the collateral archive" : "Saved and added to the collateral archive") : (markDone ? "Marked complete" : "Saved"));
+}
+
+// ---------- export / save ----------
+function download(name, text, type){
+  const blob = new Blob([text], { type }); const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+function stamp(){ return fmtISO(new Date()); }
+function saveCopy(){
+  const seed = { savedAt: new Date().toISOString(), source: SEED.source, items: state.items, archive: state.archive, archiveIgnore: state.archiveIgnore };
+  const json = JSON.stringify(seed).replace(/</g, "\\u003c");
+  const html = PRISTINE.replace(/(<script id="seed" type="application\/json">)[\s\S]*?(<\/script>)/, (m, a, b) => a + json + b);
+  download(`Marketing_Project_Tracker_${stamp()}.html`, html, "text/html");
+  state.basedOn = seed.savedAt; state.editedAt = null; localDirty = false;
+  try { localStorage.setItem(KEY, JSON.stringify(state)); storageFull = false; } catch(e) {}
+  renderAll(); toast("Copy downloaded. Share that file with your team.");
+}
+function exportCSV(){
+  const cols = ["Item","Workstream","Responsible","Due","Date type","Status","Waiting on","Notes","Checklist","Source"];
+  const q = v => `"${String(v ?? "").replace(/"/g,'""')}"`;
+  const rows = state.items.filter(it => passes(it)).sort(sortByDue).map(it => [it.title, it.ws, it.owners.join("; "), it.due || "", it.recurring ? "Recurring ("+it.recurring+")" : it.due ? (it.prec==="month"?"Month":"Exact day")+(it.target?" (target)":"") : "", it.status, it.waiting, it.notes,
+    (it.subtasks||[]).map(s => (s.done?"[x] ":"[ ] ")+s.t).join(" | "), it.src].map(q).join(","));
+  download(`Marketing_Project_Tracker_${stamp()}.csv`, "﻿" + [cols.map(q).join(",")].concat(rows).join("\r\n"), "text/csv");
+}
+// ---------- collateral archive ----------
+const A_TYPES = ["Brochure","Case study","Guide / white paper","Proposal","Presentation","SQ / SOQ","Email","Direct mail","Ad","Landing page","Blog / article","Press release","Social post","Video / audio","Photography","Other"];
+const A_COLOR = {"Brochure":"#296C51","Case study":"#033D51","Guide / white paper":"#4F6B3A","Proposal":"#57788F","Presentation":"#3E5A6E","SQ / SOQ":"#063E53","Email":"#8A5F00","Direct mail":"#9C5B3F","Ad":"#B5452F","Landing page":"#6E6A2A","Blog / article":"#5E7C3F","Press release":"#616266","Social post":"#2F6F86","Video / audio":"#46494E","Photography":"#7A5C3E","Other":"#7A7C80"};
+const A_MARKETS = ["Healthcare","Senior living","Financial services","Multifamily","Corporate"];
+const A_STATUS = ["Current","Needs rebrand update","Retired"];
+const TYPE_RULES = [
+  [/case stud/i,"Case study"],
+  [/brochure|one[- ]?pager|flyer|sell sheet/i,"Brochure"],
+  [/white ?paper|guide|e-?book|downloadable|\bpdfs?\b/i,"Guide / white paper"],
+  [/mailer|direct mail|postcard/i,"Direct mail"],
+  [/newsletter|e-?mails?\b|eblast/i,"Email"],
+  [/\bsq\b|\bsoq\b|statement of qual/i,"SQ / SOQ"],
+  [/proposal|equity book|repackage|\brfp\b/i,"Proposal"],
+  [/presentation|\bdeck\b|interview|pitch/i,"Presentation"],
+  [/landing page|web ?page|microsite/i,"Landing page"],
+  [/press release|news release/i,"Press release"],
+  [/blog|article|outlook/i,"Blog / article"],
+  [/social|linkedin post/i,"Social post"],
+  [/video|podcast|\breel\b/i,"Video / audio"],
+  [/photo(graphy|s)\b/i,"Photography"],
+  [/\bads?\b|ad copy|retarget|banner/i,"Ad"],
+];
+const WS_TYPE = {"Advertising":"Ad","Email & Mail":"Email","Collateral":"Brochure","Content & Social":"Blog / article","Web & Landing Pages":"Landing page","Proposals & SQs":"Proposal"};
+const ARCH_WS = new Set(Object.keys(WS_TYPE));
+const NO_ARCH_WS = new Set(["Rebrand","Website Build","Operations","AI & Analytics","Awards & Conferences","Sponsorships & Events"]);
+const NOT_A_PIECE = /^(load|check|ask|send|schedule|order|hire|engage|notify|leaderboard|review and)\b/i;
+const PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+
+function guessType(text, ws){ for (const [re,t] of TYPE_RULES) if (re.test(text)) return t; return WS_TYPE[ws] || ""; }
+function guessMarket(text){ return /senior|memory care|assisted living/i.test(text) ? "Senior living" : /financ|co-invest|\bjv\b|right of use|reversion/i.test(text) ? "Financial services" : /multifamily|apartment/i.test(text) ? "Multifamily" : "Healthcare"; }
+function archivable(it){
+  if (it.status !== "Complete" || it.recurring || NOT_A_PIECE.test(it.title)) return false;
+  if (ARCH_WS.has(it.ws)) return true;
+  if (NO_ARCH_WS.has(it.ws)) return false;
+  return TYPE_RULES.some(([re]) => re.test(it.title));
+}
+function entryFromItem(it){
+  const d = effDue(it);
+  return { id: "a-"+it.id, title: it.title.replace(/^Ad copy review:\s*/i, "Ads: "), type: guessType(it.title, it.ws) || "Other", market: guessMarket(it.title+" "+(it.notes||"")),
+    date: fmtISO(d || TODAY), status: "Current", link: "", editLink: "", owners: it.owners.slice(), tags: [], notes: it.notes || "", thumb: "", fromItem: it.id, auto: true };
+}
+function blankEntry(){ return { id:null, title:"", type:"Brochure", market:"Healthcare", date: fmtISO(TODAY), status:"Current", link:"", editLink:"", owners:["Amy"], tags:[], notes:"", thumb:"", fromItem:null }; }
+// adds an archive card for every finished tracker item that produced a piece
+function syncArchive(){
+  if (!Array.isArray(state.archive)) state.archive = [];
+  if (!Array.isArray(state.archiveIgnore)) state.archiveIgnore = [];
+  const have = new Set(state.archive.map(a => a.fromItem).filter(Boolean)), ign = new Set(state.archiveIgnore);
+  const add = state.items.filter(it => archivable(it) && !have.has(it.id) && !ign.has(it.id)).map(entryFromItem);
+  state.archive.push(...add);
+  return add.length;
+}
+function safeUrl(u){
+  u = String(u || "").trim(); if (!u) return "";
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(u)) u = "https://" + u.replace(/^\/+/, "");
+  return /^https?:\/\//i.test(u) ? u : "";
+}
+function monthLabel(iso){ const d = parseD(iso); return d ? MONTHS[d.getMonth()]+" "+d.getFullYear() : "No date"; }
+
+// archive filters
+const AF = { q:"", type:"", market:"", status:"", year:"", sort:"new", nolink:false };
+function aMatch(a, skip){
+  skip = skip || {};
+  if (!skip.status) {
+    if (AF.status === "" && a.status === "Retired") return false;
+    if (AF.status && AF.status !== "all" && a.status !== AF.status) return false;
+    if (AF.nolink && a.link) return false;
+  } else if (a.status === "Retired") return false;
+  if (!skip.type && AF.type && a.type !== AF.type) return false;
+  if (AF.market && a.market !== AF.market) return false;
+  if (AF.year && (a.date || "").slice(0,4) !== AF.year) return false;
+  if (AF.q) {
+    const hay = [a.title, a.type, a.market, (a.tags||[]).join(" "), a.notes, (a.owners||[]).join(" ")].join(" ").toLowerCase();
+    if (!AF.q.toLowerCase().split(/\s+/).every(w => hay.includes(w))) return false;
+  }
+  return true;
+}
+function aSorter(a, b){
+  if (AF.sort === "title") return a.title.localeCompare(b.title);
+  if (AF.sort === "type") return A_TYPES.indexOf(a.type) - A_TYPES.indexOf(b.type) || (b.date||"").localeCompare(a.date||"");
+  const r = (a.date||"").localeCompare(b.date||"") || a.title.localeCompare(b.title);
+  return AF.sort === "old" ? r : -r;
+}
+function phHTML(a, small){ return `<div class="ph">${small ? "" : "<small>No preview yet</small>"}<span>${esc(a.type)}</span></div>`; }
+function acardHTML(a){
+  const tc = A_COLOR[a.type] || "#7A7C80", link = safeUrl(a.link), edit = safeUrl(a.editLink);
+  const flags = (a.status === "Needs rebrand update" ? '<span class="flag update">Needs rebrand update</span>' : a.status === "Retired" ? '<span class="flag retired">Retired</span>' : "") + (!link ? '<span class="flag nolink">No file link</span>' : "");
+  return `<div class="acard ${a.status==="Retired"?"retired":""}" data-aid="${esc(a.id)}" tabindex="0" style="--tc:${tc}">
+    <div class="thumb">${a.thumb ? `<img src="${a.thumb}" alt="" loading="lazy"><span class="ty"><i></i>${esc(a.type)}</span>` : phHTML(a)}</div>
+    <div class="abody"><div class="at">${esc(a.title)}</div>
+      <div class="am"><span>${esc(monthLabel(a.date))}</span><span>${esc(a.market||"")}</span>${(a.owners||[]).length ? `<span>${esc(a.owners.join(", "))}</span>` : ""}</div>
+      <div class="aact">${link ? `<a class="alink" href="${esc(link)}" target="_blank" rel="noopener">Open file</a>` : ""}${edit ? `<a class="alink" href="${esc(edit)}" target="_blank" rel="noopener">Edit source</a>` : ""}${flags}</div>
+    </div></div>`;
+}
+function fillSel(sel, opts, cur){ $(sel).innerHTML = opts.map(([v,l]) => `<option value="${esc(v)}" ${v===cur?"selected":""}>${esc(l)}</option>`).join(""); }
+function renderArchive(){
+  const all = state.archive;
+  // KPIs ignore brand-status filters so they always show the full picture
+  const base = all.filter(a => aMatch(a, { status:true }));
+  const k = [
+    { id:"all", n: base.length, l:"Pieces in archive", cls:"", on: !AF.status && !AF.nolink },
+    { id:"current", n: base.filter(a => a.status === "Current").length, l:"Current", cls:"", on: AF.status === "Current" },
+    { id:"update", n: base.filter(a => a.status === "Needs rebrand update").length, l:"Needs rebrand update", cls:"gold", on: AF.status === "Needs rebrand update" },
+    { id:"nolink", n: base.filter(a => !safeUrl(a.link)).length, l:"Missing file link", cls:"warn", on: AF.nolink },
+  ];
+  $("#akpis").innerHTML = k.map(x => `<button type="button" class="kpi ${x.cls} ${x.on && x.id!=="all" ? "active" : ""}" data-akpi="${x.id}"><div class="n">${x.n}</div><div class="l">${x.l}</div></button>`).join("");
+  const years = [...new Set(all.map(a => (a.date||"").slice(0,4)).filter(Boolean))].sort().reverse();
+  fillSel("#aMarket", [["","All markets"]].concat(A_MARKETS.map(m => [m,m])), AF.market);
+  fillSel("#aStatus", [["","Current + needs update"],["Current","Current only"],["Needs rebrand update","Needs rebrand update"],["Retired","Retired"],["all","Everything"]], AF.status);
+  fillSel("#aYear", [["","All years"]].concat(years.map(y => [y,y])), AF.year);
+  $("#aSort").value = AF.sort;
+  const forChips = all.filter(a => aMatch(a, { type:true }));
+  const counts = {}; forChips.forEach(a => counts[a.type] = (counts[a.type]||0) + 1);
+  $("#achips").innerHTML = `<button type="button" class="tchip" data-atype="" aria-pressed="${!AF.type}">All types <b>${forChips.length}</b></button>` +
+    A_TYPES.filter(t => counts[t] || AF.type === t).map(t => `<button type="button" class="tchip" data-atype="${esc(t)}" aria-pressed="${AF.type===t}" style="--tc:${A_COLOR[t]}"><i></i>${esc(t)} <b>${counts[t]||0}</b></button>`).join("");
+  const list = all.filter(a => aMatch(a)).sort(aSorter);
+  $("#acount").textContent = `${list.length} of ${all.length} pieces`;
+  $("#agrid").innerHTML = list.length ? list.map(acardHTML).join("") : `<div class="empty">${all.length ? "Nothing matches these filters." : "No pieces yet. Drop a file above or mark a collateral item complete."}</div>`;
+}
+
+// thumbnails (kept small so the file stays light)
+function imgToThumb(src){
+  return new Promise((res, rej) => {
+    const im = new Image();
+    im.onload = () => {
+      const W = 300, maxH = 400, s = Math.min(1, W / im.width);
+      const sh = Math.min(im.height, maxH / s);
+      const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(im.width * s)); c.height = Math.max(1, Math.round(sh * s));
+      const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height);
+      x.drawImage(im, 0, 0, im.width, sh, 0, 0, c.width, c.height);
+      res(c.toDataURL("image/jpeg", .62));
+    };
+    im.onerror = rej; im.src = src;
+  });
+}
+let pdfjsP = null;
+function loadPdfjs(){
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (!pdfjsP) pdfjsP = new Promise((res, rej) => {
+    const s = document.createElement("script"); s.src = PDFJS + "pdf.min.js";
+    s.onload = () => { if (!window.pdfjsLib) { pdfjsP = null; return rej(); } window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + "pdf.worker.min.js"; res(window.pdfjsLib); };
+    s.onerror = () => { pdfjsP = null; s.remove(); rej(); };
+    document.head.appendChild(s);
+  });
+  return pdfjsP;
+}
+async function pdfThumb(f){
+  try {
+    const lib = await loadPdfjs();
+    const doc = await lib.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
+    const p = await doc.getPage(1), v1 = p.getViewport({ scale: 1 }), vp = p.getViewport({ scale: 720 / v1.width });
+    const c = document.createElement("canvas"); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+    const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height);
+    await p.render({ canvasContext: x, viewport: vp }).promise; doc.destroy();
+    return await imgToThumb(c.toDataURL("image/png"));
+  } catch(e) { return ""; }
+}
+function fileToThumb(f){
+  if (/^image\//.test(f.type)) { const u = URL.createObjectURL(f); return imgToThumb(u).catch(() => "").finally(() => URL.revokeObjectURL(u)); }
+  if (f.type === "application/pdf" || /\.pdf$/i.test(f.name)) return pdfThumb(f);
+  return Promise.resolve("");
+}
+function cleanName(n){
+  return n.replace(/\.[^.]+$/, "").replace(/[_]+/g, " ").replace(/\s*\(\d+\)$/, "").replace(/\b(final|FINAL|Final)\b/g, "").replace(/\s{2,}/g, " ").replace(/^[\s-]+|[\s-]+$/g, "") || n;
+}
+async function addFiles(files){
+  files = [...files]; if (!files.length) return;
+  toast(`Reading ${files.length} file${files.length>1?"s":""}...`);
+  const made = [];
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i], thumb = await fileToThumb(f);
+    const e = Object.assign(blankEntry(), { id: "a" + Date.now().toString(36) + i, title: cleanName(f.name), type: guessType(f.name, "") || "Other", market: guessMarket(f.name), thumb, notes: "", srcFile: f.name });
+    state.archive.push(e); made.push(e);
+  }
+  persist();
+  if (made.length === 1) openArchive(made[0].id);
+  toast(`Added ${made.length} piece${made.length>1?"s":""}. Add a file link so people can open ${made.length>1?"them":"it"}.`);
+}
+
+// archive editor
+let aEditing = null, aThumb = "";
+function renderPv(){
+  const t = $("#xType").value; $("#xPv").style.setProperty("--tc", A_COLOR[t] || "#7A7C80");
+  $("#xPv").innerHTML = aThumb ? `<img src="${aThumb}" alt="Cover preview">` : phHTML({ type: t }, true);
+  $("#xRm").style.display = aThumb ? "" : "none";
+}
+function openArchive(id, preset){
+  closeDrawer();
+  const a = id ? state.archive.find(x => x.id === id) : Object.assign(blankEntry(), preset || {}, { id: null });
+  if (!a) return;
+  aEditing = a; aThumb = a.thumb || "";
+  $("#aTitle").textContent = id ? "Archive piece" : "Add to archive";
+  $("#xType").innerHTML = A_TYPES.map(t => `<option>${t}</option>`).join("");
+  $("#xMarket").innerHTML = A_MARKETS.concat(A_MARKETS.includes(a.market) || !a.market ? [] : [a.market]).map(t => `<option>${esc(t)}</option>`).join("");
+  $("#xStatus").innerHTML = A_STATUS.map(t => `<option>${t}</option>`).join("");
+  $("#xTitle").value = a.title; $("#xType").value = A_TYPES.includes(a.type) ? a.type : "Other"; $("#xMarket").value = a.market || "Healthcare";
+  $("#xDate").value = a.date || ""; $("#xStatus").value = a.status || "Current";
+  $("#xLink").value = a.link || ""; $("#xEdit").value = a.editLink || "";
+  $("#xOwners").value = (a.owners||[]).join(", "); $("#xTags").value = (a.tags||[]).join(", "); $("#xNotes").value = a.notes || "";
+  const it = a.fromItem && state.items.find(i => i.id === a.fromItem);
+  $("#xSrc").innerHTML = it ? `Added from tracker item: <a data-id="${esc(it.id)}">${esc(it.title)}</a>` : a.srcFile ? `Added from file: ${esc(a.srcFile)}` : "Added by hand";
+  $("#aDel").style.display = id ? "" : "none";
+  renderPv();
+  $("#aDrawer").classList.add("open"); $("#scrim").classList.add("open"); $("#aDrawer").setAttribute("aria-hidden","false");
+  setTimeout(() => $("#xTitle").focus(), 60);
+}
+function closeArchive(){ $("#aDrawer").classList.remove("open"); $("#aDrawer").setAttribute("aria-hidden","true"); if (!$("#drawer").classList.contains("open")) $("#scrim").classList.remove("open"); aEditing = null; }
+function saveArchive(){
+  const title = $("#xTitle").value.trim(); if (!title) { $("#xTitle").focus(); return; }
+  const rawLink = $("#xLink").value.trim(), rawEdit = $("#xEdit").value.trim();
+  if ((rawLink && !safeUrl(rawLink)) || (rawEdit && !safeUrl(rawEdit))) { alert("Links need to be web addresses that start with https://"); return; }
+  const a = aEditing;
+  Object.assign(a, { title, type: $("#xType").value, market: $("#xMarket").value, date: $("#xDate").value || "", status: $("#xStatus").value,
+    link: safeUrl(rawLink), editLink: safeUrl(rawEdit), owners: $("#xOwners").value.split(",").map(s => s.trim()).filter(Boolean),
+    tags: $("#xTags").value.split(",").map(s => s.trim()).filter(Boolean), notes: $("#xNotes").value.trim(), thumb: aThumb });
+  if (!a.id) {
+    a.id = a.fromItem ? "a-" + a.fromItem : "a" + Date.now().toString(36);
+    if (a.fromItem) state.archiveIgnore = state.archiveIgnore.filter(x => x !== a.fromItem);
+    state.archive.push(a);
+  }
+  closeArchive(); persist(); toast("Saved to the collateral archive");
+}
+function setCoverFrom(file){ if (!file) return; toast("Making cover preview..."); fileToThumb(file).then(t => { if (!aEditing) return; if (t) { aThumb = t; renderPv(); toast("Cover updated"); } else toast("Couldn't make a preview from that file. Try an image or screenshot."); }); }
+function exportArchiveCSV(){
+  const cols = ["Title","Type","Market","Date finished","Brand status","File link","Editable source","Owner","Tags","Notes","Tracker item"];
+  const q = v => `"${String(v ?? "").replace(/"/g,'""')}"`;
+  const rows = state.archive.slice().sort((a,b) => (b.date||"").localeCompare(a.date||"")).map(a => {
+    const it = a.fromItem && state.items.find(i => i.id === a.fromItem);
+    return [a.title, a.type, a.market, a.date, a.status, a.link, a.editLink, (a.owners||[]).join("; "), (a.tags||[]).join("; "), a.notes, it ? it.title : ""].map(q).join(",");
+  });
+  download(`Collateral_Archive_${stamp()}.csv`, "﻿" + [cols.map(q).join(",")].concat(rows).join("\r\n"), "text/csv");
+}
+
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 2400); }
+
+// ---------- events ----------
+document.addEventListener("click", e => {
+  if (e.target.closest("a.alink")) return;
+  const ac = e.target.closest("[data-aid]");
+  if (ac) { openArchive(ac.dataset.aid); return; }
+  const ak = e.target.closest("[data-akpi]");
+  if (ak) { const id = ak.dataset.akpi;
+    if (id === "all") { AF.status = ""; AF.nolink = false; }
+    else if (id === "nolink") AF.nolink = !AF.nolink;
+    else { const s = id === "current" ? "Current" : "Needs rebrand update"; AF.status = AF.status === s ? "" : s; }
+    renderArchive(); return; }
+  const tc = e.target.closest("[data-atype]");
+  if (tc) { AF.type = AF.type === tc.dataset.atype ? "" : tc.dataset.atype; renderArchive(); return; }
+  const card = e.target.closest("[data-id]");
+  if (card && !e.target.closest("select")) { if (aEditing) closeArchive(); openDrawer(card.dataset.id); return; }
+  const k = e.target.closest("[data-kpi]");
+  if (k) { F.kpi = F.kpi === k.dataset.kpi ? "" : k.dataset.kpi; if (F.kpi && view === "now") setView("table"); else renderAll(); return; }
+  const th = e.target.closest("th[data-sort]");
+  if (th) { const c = th.dataset.sort; if (sortCol === c) sortDir *= -1; else { sortCol = c; sortDir = 1; } renderTable(); return; }
+  const tab = e.target.closest(".tab");
+  if (tab) { setView(tab.dataset.view); return; }
+  if (!e.target.closest(".menu")) $("#morePop").classList.remove("open");
+});
+document.addEventListener("change", e => {
+  if (e.target.matches("select[data-status]")) { const it = state.items.find(i => i.id === e.target.dataset.status); it.status = e.target.value; const added = persist(); toast(added ? "Status updated and added to the collateral archive" : "Status updated"); }
+  if (e.target.id === "tlEarly") { tlEarly = e.target.checked; renderTimeline(); }
+  if (e.target.matches("[data-sub]")) { const s = draftSubs[+e.target.dataset.sub]; s.done = e.target.checked; renderSubs(); }
+});
+function setView(v){
+  view = v; document.body.dataset.view = v; document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.view === v));
+  document.querySelectorAll(".view").forEach(s => s.classList.toggle("active", s.id === "v-"+v));
+  try { localStorage.setItem(KEY+":view", v); } catch(e) {}
+  renderAll();
+}
+$("#q").addEventListener("input", e => { F.q = e.target.value.trim(); renderAll(); });
+$("#fOwner").addEventListener("change", e => { F.owner = e.target.value; renderAll(); });
+$("#fWs").addEventListener("change", e => { F.ws = e.target.value; renderAll(); });
+$("#fStatus").addEventListener("change", e => { F.status = e.target.value; renderAll(); });
+$("#fDone").addEventListener("change", e => { F.done = e.target.checked; renderAll(); });
+$("#clearF").addEventListener("click", () => { Object.assign(F, { q:"", owner:"", ws:"", status:"", done:false, kpi:"" }); $("#q").value = ""; $("#fDone").checked = false; renderAll(); });
+$("#addBtn").addEventListener("click", () => openDrawer(null));
+$("#saveCopyBtn").addEventListener("click", saveCopy);
+$("#bannerSave").addEventListener("click", saveCopy);
+$("#moreBtn").addEventListener("click", () => $("#morePop").classList.toggle("open"));
+$("#morePop").addEventListener("click", e => {
+  const a = e.target.dataset.act; if (!a) return; $("#morePop").classList.remove("open");
+  if (a === "csv") exportCSV();
+  if (a === "acsv") exportArchiveCSV();
+  if (a === "json") download(`Marketing_Project_Tracker_${stamp()}.json`, JSON.stringify({ savedAt: new Date().toISOString(), source: SEED.source, items: state.items, archive: state.archive, archiveIgnore: state.archiveIgnore }, null, 1), "application/json");
+  if (a === "import") $("#importFile").click();
+  if (a === "print") window.print();
+  if (a === "reset" && confirm("Discard the edits saved in this browser and go back to the data built into this file?")) {
+    try { localStorage.removeItem(KEY); } catch(e) {}
+    const fresh = JSON.parse(document.getElementById("seed").textContent);
+    state = { basedOn: SEED.savedAt, editedAt: null, items: fresh.items, archive: fresh.archive || [], archiveIgnore: fresh.archiveIgnore || [] }; localDirty = false; storageFull = false; syncArchive(); renderAll(); toast("Reset to file data");
+  }
+});
+$("#importFile").addEventListener("change", e => {
+  const f = e.target.files[0]; if (!f) return;
+  f.text().then(t => { const d = JSON.parse(t); if (!Array.isArray(d.items)) throw 0; state.items = d.items; if (Array.isArray(d.archive)) { state.archive = d.archive; state.archiveIgnore = Array.isArray(d.archiveIgnore) ? d.archiveIgnore : []; } persist(); toast(`Imported ${d.items.length} items${Array.isArray(d.archive) ? " and "+d.archive.length+" archive pieces" : ""}`); })
+   .catch(() => alert("That file doesn't look like tracker data.")).finally(() => e.target.value = "");
+});
+$("#dClose").addEventListener("click", closeDrawer); $("#dCancel").addEventListener("click", closeDrawer); $("#scrim").addEventListener("click", () => { closeDrawer(); closeArchive(); });
+$("#dArch").addEventListener("click", () => {
+  const it = editing; if (!it || !it.id) return;
+  const ex = state.archive.find(a => a.fromItem === it.id);
+  closeDrawer(); setView("archive");
+  if (ex) openArchive(ex.id); else openArchive(null, entryFromItem(it));
+});
+// archive controls
+$("#aq").addEventListener("input", e => { AF.q = e.target.value.trim(); renderArchive(); });
+$("#aMarket").addEventListener("change", e => { AF.market = e.target.value; renderArchive(); });
+$("#aStatus").addEventListener("change", e => { AF.status = e.target.value; renderArchive(); });
+$("#aYear").addEventListener("change", e => { AF.year = e.target.value; renderArchive(); });
+$("#aSort").addEventListener("change", e => { AF.sort = e.target.value; renderArchive(); });
+$("#aClear").addEventListener("click", () => { Object.assign(AF, { q:"", type:"", market:"", status:"", year:"", nolink:false }); $("#aq").value = ""; renderArchive(); });
+$("#aNew").addEventListener("click", () => openArchive(null));
+$("#aPick").addEventListener("click", () => $("#aFiles").click());
+$("#aFiles").addEventListener("change", e => { addFiles(e.target.files).finally(() => e.target.value = ""); });
+const dropEl = $("#aDrop");
+["dragenter","dragover"].forEach(t => dropEl.addEventListener(t, e => { e.preventDefault(); dropEl.classList.add("over"); }));
+["dragleave","drop"].forEach(t => dropEl.addEventListener(t, e => { e.preventDefault(); if (t === "drop" || !dropEl.contains(e.relatedTarget)) dropEl.classList.remove("over"); }));
+dropEl.addEventListener("drop", e => { if (e.dataTransfer && e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });
+// stop a stray drop from navigating away from the tracker
+window.addEventListener("dragover", e => { if (e.dataTransfer && [...e.dataTransfer.types].includes("Files")) e.preventDefault(); });
+window.addEventListener("drop", e => { if (e.dataTransfer && e.dataTransfer.files.length) { e.preventDefault(); if (view === "archive" && !aEditing && !e.target.closest("#aDrop")) addFiles(e.dataTransfer.files); } });
+$("#aClose").addEventListener("click", closeArchive); $("#aCancel").addEventListener("click", closeArchive);
+$("#aSave").addEventListener("click", saveArchive);
+$("#aForm").addEventListener("submit", e => { e.preventDefault(); saveArchive(); });
+$("#aDel").addEventListener("click", () => {
+  if (!aEditing || !confirm("Remove this piece from the archive? The file itself is not touched.")) return;
+  const a = aEditing;
+  if (a.fromItem && !state.archiveIgnore.includes(a.fromItem)) state.archiveIgnore.push(a.fromItem);
+  state.archive = state.archive.filter(x => x !== a); closeArchive(); persist(); toast("Removed from archive");
+});
+$("#xType").addEventListener("change", renderPv);
+$("#xUp").addEventListener("click", () => $("#aCover").click());
+$("#xRm").addEventListener("click", () => { aThumb = ""; renderPv(); });
+$("#aCover").addEventListener("change", e => { setCoverFrom(e.target.files[0]); e.target.value = ""; });
+const pv = $("#xPv");
+["dragenter","dragover"].forEach(t => pv.addEventListener(t, e => { e.preventDefault(); e.stopPropagation(); pv.classList.add("over"); }));
+pv.addEventListener("dragleave", () => pv.classList.remove("over"));
+pv.addEventListener("drop", e => { e.preventDefault(); e.stopPropagation(); pv.classList.remove("over"); setCoverFrom(e.dataTransfer.files[0]); });
+document.addEventListener("paste", e => {
+  if (!aEditing || !e.clipboardData) return;
+  const img = [...e.clipboardData.items].find(i => i.kind === "file" && /^image\//.test(i.type));
+  if (img) { e.preventDefault(); setCoverFrom(img.getAsFile()); }
+});
+document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.matches && e.target.matches(".acard")) { e.preventDefault(); openArchive(e.target.dataset.aid); } });
+$("#dSave").addEventListener("click", () => saveDrawer(false));
+$("#dDone").addEventListener("click", () => saveDrawer(true));
+$("#dDel").addEventListener("click", () => { if (confirm("Delete this item?")) { state.items = state.items.filter(i => i !== editing); closeDrawer(); persist(); toast("Deleted"); } });
+$("#dForm").addEventListener("submit", e => { e.preventDefault(); saveDrawer(false); });
+$("#eSubs").addEventListener("click", e => { if (e.target.id === "addSub") { const v = $("#newSub").value.trim(); if (v) { draftSubs.push({ t:v, done:false }); renderSubs(); $("#newSub").focus(); } } });
+$("#eSubs").addEventListener("keydown", e => { if (e.target.id === "newSub" && e.key === "Enter") { e.preventDefault(); $("#addSub").click(); } });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { if (aEditing) closeArchive(); else if (editing) closeDrawer(); } });
+
+syncArchive();
+let startView = "now"; try { startView = localStorage.getItem(KEY+":view") || "now"; } catch(e) {}
+setView(["now","timeline","owners","table","archive"].includes(startView) ? startView : "now");
+boot();
+})();
+</script></body></html>

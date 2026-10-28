@@ -1,0 +1,627 @@
+<meta charset="utf-8">
+<title>Boldt Marketing Dashboard</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap">
+<style>
+/* Layout: navy masthead with filter, page tabs, then summary-first panels on a cool neutral ground. */
+:root{
+  --navy:#033D51; --navy-deep:#022E3D; --yellow:#EBBC4E; --gold:#D19000; --olive:#70924C; --green:#296C51; --slate:#57788F;
+  --bg:#F2F4F5; --surface:#FFFFFF; --ink:#0F1C22; --muted:#5A6870; --line:#DCE1E4; --soft:#E9EDEF;
+  --c-li:#033D51; --c-ga:#D19000; --c-hc:#033D51; --c-sl:#70924C; --c-budget:#9AA6AD;
+  --good:#296C51; --warn:#B87A00; --bad:#B23B2A; --good-bg:#E3F0E9; --warn-bg:#FBF0D6; --bad-bg:#F8E3DF;
+  --mast-ink:#FFFFFF;
+  --f-display:"Archivo","Arial Narrow",Arial,sans-serif; --f-body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A171D; --surface:#102229; --ink:#E7EDF0; --muted:#97A8B0; --line:#22404B; --soft:#16303A;
+  --c-li:#62AFCB; --c-ga:#EBBC4E; --c-hc:#62AFCB; --c-sl:#9BBE72; --c-budget:#5E737D;
+  --good:#6CC096; --warn:#EBBC4E; --bad:#EE8773; --good-bg:#14352A; --warn-bg:#3A2F12; --bad-bg:#3C1E19;
+  --navy:#04394B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A171D; --surface:#102229; --ink:#E7EDF0; --muted:#97A8B0; --line:#22404B; --soft:#16303A;
+  --c-li:#62AFCB; --c-ga:#EBBC4E; --c-hc:#62AFCB; --c-sl:#9BBE72; --c-budget:#5E737D;
+  --good:#6CC096; --warn:#EBBC4E; --bad:#EE8773; --good-bg:#14352A; --warn-bg:#3A2F12; --bad-bg:#3C1E19;
+  --navy:#04394B; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--navy)}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.num{font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
+
+/* masthead */
+.mast{background:var(--navy);color:var(--mast-ink);position:sticky;top:env(safe-area-inset-top,0px);z-index:5;border-bottom:3px solid var(--yellow)}
+.mast .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding-block:14px}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+.brand img{height:22px;width:auto;filter:invert(1)}
+.brand h1{font-size:15px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-stretch:90%;opacity:.92;white-space:nowrap}
+.asof{font-size:12.5px;opacity:.75;margin-left:auto}
+.month-pick{font:inherit;font-size:13px;font-weight:600;padding:5px 8px;border-radius:8px;border:0;background:rgba(255,255,255,.14);color:#fff}.month-pick option{color:#1B1B1B}
+.scope{display:inline-flex;font-size:13px;font-weight:600;padding:6px 14px;border-radius:999px;background:var(--yellow);color:#1B1B1B}
+.tabs{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:calc(env(safe-area-inset-top,0px) + 63px);z-index:4}
+.tabs .wrap{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.tabs a{white-space:nowrap;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;padding:12px 12px 10px;border-bottom:3px solid transparent}
+.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--yellow)}
+.tabs a:focus-visible{outline:2px solid var(--yellow);outline-offset:-2px}
+
+main .wrap{padding-block:24px 56px;display:grid;gap:22px}
+.page-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px}
+.page-head h2{font-size:clamp(26px,3.4vw,36px);font-weight:800;font-stretch:78%;letter-spacing:-.01em}
+.page-head p{margin:0;color:var(--muted);max-width:70ch}
+.eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+.grid{display:grid;gap:16px}
+.g-kpi{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.g-2{grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr))}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 18px 16px;min-width:0}
+.panel h3{font-size:16px;font-weight:700;font-stretch:92%;margin-bottom:2px}
+.panel .sub{color:var(--muted);font-size:13px;margin:0 0 12px}
+.kpi{display:grid;gap:4px;align-content:start}
+.kpi .v{font-family:var(--f-display);font-size:34px;line-height:1.05;font-weight:800;font-stretch:72%;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:13px;color:var(--muted);font-weight:600}
+.kpi .d{font-size:13px;color:var(--muted)}
+.kpi .d b{font-weight:700}
+.up{color:var(--good)} .dn{color:var(--bad)}
+.bar{height:8px;background:var(--soft);border-radius:4px;position:relative;margin-top:6px;overflow:visible}
+.bar>i{position:absolute;inset:0 auto 0 0;border-radius:4px;background:var(--c-hc)}
+.bar>u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--muted);text-decoration:none}
+.bar-labels{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:4px}
+
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap;background:var(--soft);color:var(--ink)}
+.chip.good{background:var(--good-bg);color:var(--good)} .chip.warn{background:var(--warn-bg);color:var(--warn)} .chip.bad{background:var(--bad-bg);color:var(--bad)}
+.chip.hc::before,.chip.sl::before,.chip.sh::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--c-hc)}
+.chip.sl::before{background:var(--c-sl)} .chip.sh::before{background:var(--c-budget)}
+
+.flags{display:grid;gap:0;margin:0;padding:0;list-style:none}
+.flags li{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:12px 0;border-top:1px solid var(--line)}
+.flags li:first-child{border-top:0;padding-top:4px}
+.flags .sev{grid-row:span 2;width:4px;border-radius:2px;background:var(--warn)}
+.flags .sev.bad{background:var(--bad)} .flags .sev.good{background:var(--good)} .flags .sev.info{background:var(--slate)}
+.flags b{font-weight:700}
+.flags span{color:var(--muted);font-size:13.5px}
+
+.tbl-wrap{overflow-x:auto;margin:0 -4px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+th:first-child,td:first-child,td.l,th.l{text-align:left}
+td.wrap-cell{white-space:normal;min-width:220px}
+td.wrap-sm{white-space:normal;min-width:90px}
+tr.total td{font-weight:700;border-bottom:0}
+.util{display:inline-block;width:70px;height:6px;background:var(--soft);border-radius:3px;vertical-align:middle;margin-left:8px;position:relative}
+.util i{position:absolute;inset:0 auto 0 0;border-radius:3px;background:var(--c-hc)}
+.util i.over{background:var(--bad)}
+
+.chart{width:100%;height:auto;display:block;overflow:visible}
+.chart text{fill:var(--muted);font-size:11px;font-family:var(--f-body)}
+.chart .grid line{stroke:var(--line)}
+.chart .axis{stroke:var(--line)}
+.chart .lbl{fill:var(--ink);font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted);margin-bottom:8px}
+.legend i{display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.legend i.box{height:10px;width:10px}
+.legend i.dash{background:transparent!important;border-top:2px dashed var(--muted);height:0}
+
+.alert{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:14px 16px;border-radius:var(--r);background:var(--bad-bg);border:1px solid color-mix(in srgb,var(--bad) 30%,transparent)}
+.alert.warn{background:var(--warn-bg);border-color:color-mix(in srgb,var(--warn) 30%,transparent)}
+.alert.info{background:var(--soft);border-color:var(--line)}
+.alert b{display:block;margin-bottom:2px}
+.alert p{margin:0;font-size:14px}
+.alert .dot{width:10px;height:10px;border-radius:50%;background:var(--bad);margin-top:6px}
+.alert.warn .dot{background:var(--warn)} .alert.info .dot{background:var(--slate)}
+
+.ads{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.ad{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:grid;grid-template-rows:auto 1fr;min-width:0}
+.ad .thumb{aspect-ratio:1/1;max-width:100%;background:var(--soft);display:grid;place-items:center;position:relative;overflow:hidden}
+.ad .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.ad .thumb .ph{font-family:var(--f-display);font-stretch:75%;font-weight:700;color:var(--muted);text-align:center;padding:16px;font-size:15px}
+.ad .rank{position:absolute;top:8px;left:8px;background:var(--navy);color:#fff;font-weight:800;font-size:12px;border-radius:999px;padding:2px 9px}
+.ad .rank.top{background:var(--yellow);color:#1B1B1B}
+.ad .body{padding:12px 14px 14px;display:grid;gap:8px;align-content:start}
+.ad .hl{font-weight:700;font-size:14px;line-height:1.3}
+.ad .chips{display:flex;flex-wrap:wrap;gap:6px}
+.ad dl{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:0}
+.ad dt{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+.ad dd{margin:0;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+.note{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+.insights{margin:0;padding-left:18px;display:grid;gap:8px}
+.insights li::marker{color:var(--gold)}
+.list-2{columns:2 260px;column-gap:24px;margin:0;padding:0;list-style:none}
+.list-2 li{break-inside:avoid;padding:6px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.empty{padding:28px 18px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:var(--r);background:var(--surface)}
+.g-3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:20px}
+.panel-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:8px 16px}
+.sel{font-size:13px;color:var(--muted);font-weight:600;display:inline-flex;align-items:center;gap:8px}
+.sel select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+.ph-cell{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--muted);border:1px dashed var(--line);border-radius:4px;padding:0 6px}
+.placeholder{border-style:dashed}
+tr.future td{color:var(--muted)}
+.hbars{display:grid;gap:7px;margin-top:6px}
+.hb{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(60px,1fr) auto;gap:10px;align-items:center;font-size:13px}
+.hb-l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb-t{height:8px;background:var(--soft);border-radius:4px;position:relative}
+.hb-t i{position:absolute;inset:0 auto 0 0;border-radius:4px}
+.pace{margin:10px 0 14px}
+.pace-h{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;font-weight:600;margin-bottom:4px}
+.pace-h span:first-child{display:inline-flex;gap:8px;align-items:center}
+.bar>i.over{background:var(--bad)}
+.eyebrow{margin-bottom:4px}
+.method summary{list-style:none;cursor:pointer;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.method summary::-webkit-details-marker{display:none}
+.method summary h3::before{content:"+ ";color:var(--gold)}
+.method[open] summary h3::before{content:"– "}
+.steps,.bp,.recs{margin:12px 0 0;padding-left:20px;display:grid;gap:10px}
+.steps li::marker,.bp li::marker{color:var(--gold);font-weight:700}
+.recs{list-style:none;padding:0}
+.ex-head{justify-content:space-between;align-items:flex-end}
+.ex-head .eyebrow{margin-bottom:4px}
+.btn-print{font:inherit;font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.ex-doc{display:grid;gap:22px;padding:28px}
+.ex-doc section{display:grid;gap:8px;max-width:80ch}
+.ex-doc h3{font-size:17px}
+.ex-doc p{margin:0;line-height:1.6}
+.ex-lede{font-size:18px;line-height:1.55;max-width:75ch;font-weight:500}
+.ex-list{margin:0;padding-left:20px;display:grid;gap:6px;line-height:1.55}
+.page-head a{color:inherit;font-weight:600}
+@media print{.mast,.tabs,footer,.btn-print,.narr{display:none!important}body{background:#fff}.panel{break-inside:avoid;border-color:#ccc}main .wrap{padding:0}}
+.recs li{border-top:1px solid var(--line);padding-top:12px}
+.recs li:first-child{border-top:0;padding-top:0}
+.rec-h{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.recs p{margin:4px 0 2px;color:var(--ink);max-width:90ch}
+.nar-good h3{color:var(--good)} .nar-bad h3{color:var(--warn)}
+.spark{display:block}
+table.mom td:first-child{white-space:normal;min-width:180px}
+footer{color:var(--muted);font-size:12.5px;padding-block:0 32px}
+@media (max-width:640px){.asof{margin-left:0;order:3}.scope{order:2;padding:3px 12px}.kpi .v{font-size:30px}.tabs{top:calc(env(safe-area-inset-top,0px) + 91px)}}
+@media (prefers-reduced-motion:no-preference){.panel,.ad{animation:rise .35s ease both}@keyframes rise{from{transform:translateY(4px)}to{transform:none}}}
+</style>
+
+<header class="mast">
+  <div class="wrap">
+    <div class="brand"><img src="boldt-logo.png" alt="Boldt"><h1>Marketing Dashboard</h1></div>
+    <span class="scope">Healthcare</span>
+    <div class="asof" id="asof"></div>
+  </div>
+</header>
+<nav class="tabs" aria-label="Pages"><div class="wrap" id="tabs"></div></nav>
+<main><div class="wrap" id="view"><div class="empty">Loading dashboard data…</div></div></main>
+<footer><div class="wrap" id="foot"></div></footer>
+
+<script>
+(function(){
+const PAGES=[["exec","Executive summary"],["summary","Dashboard"],["trends","Month over month"],["paid","Paid media"],["creative","Ads & creative"],["website","Website"],["leads","Leads"],["accounts","Known accounts & MQLs"],["roi","ROI & variables"],["budget","Budget"],["plan","Plan & next steps"]];
+let D=null; const DIV="HC";   /* healthcare only; senior living removed Oct 28 */
+
+/* ---------- formatting ---------- */
+const $=(n,dp=0)=>"$"+Number(n).toLocaleString("en-US",{minimumFractionDigits:dp,maximumFractionDigits:dp});
+const $k=n=>Math.abs(n)>=10000?"$"+(n/1000).toFixed(n>=100000?0:1)+"K":$(n);
+const N=(n,dp=0)=>Number(n).toLocaleString("en-US",{minimumFractionDigits:dp,maximumFractionDigits:dp});
+const P=(n,dp=1)=>(n*100).toFixed(dp)+"%";
+const sum=a=>a.reduce((s,x)=>s+(x||0),0);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const DIVNAME={HC:"Healthcare"};
+const chipDiv=d=>`<span class="chip ${d==="HC"?"hc":"sh"}">${d==="HC"?"Healthcare":"Shared"}</span>`;
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+/* ---------- data helpers ---------- */
+const M=()=>D.months, CM=()=>D.currentMonth;
+function paidSeries(platform,metric){
+  const p=D.paid[platform], out=new Array(12).fill(0);
+  const add=(arr,w)=>arr.forEach((v,i)=>out[i]+=v*w);
+  add(p.HC[metric],1); if(p.SH) add(p.SH[metric],.5);   /* Brand and National General Google campaigns: half counts to healthcare */
+  return out.slice(0,CM());
+}
+const inDiv=d=>d==="HC"||d==="SH";
+function budgetLines(){return D.budget.lines;}   /* healthcare and shared lines */
+
+/* ---------- charts (hand-drawn SVG) ---------- */
+function niceMax(v){if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v)));const n=v/p;return (n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*p;}
+function chartW(half){const v=document.getElementById('view').clientWidth||900;const full=v-38;return Math.max(300,Math.round(half&&v>=956?(v-16)/2-38:full));}
+function ticks(max){for(const n of [5,4]){const s=max/n,p=Math.pow(10,Math.floor(Math.log10(s))),m=s/p;if([1,2,2.5,5,10].some(x=>Math.abs(m-x)<1e-9))return n;}return 4;}
+function chart({labels,bars=[],lines=[],refs=[],fmt=N,h=230,stacked=false,partialLast=false,half=false}){
+  const W=chartW(half),H=h,L=48,R=14,T=14,B=26,iw=W-L-R,ih=H-T-B,n=labels.length;
+  let vals=[]; if(stacked){labels.forEach((_,i)=>vals.push(sum(bars.map(b=>b.values[i]||0))));} else bars.forEach(b=>vals.push(...b.values.filter(v=>v!=null)));
+  lines.forEach(l=>vals.push(...l.values.filter(v=>v!=null))); refs.forEach(r=>vals.push(r.value));
+  const max=niceMax(Math.max(...vals,0)*1.05), y=v=>T+ih-(v/max)*ih, bw=iw/n;
+  let g=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img">`;
+  g+=`<g class="grid">`; const nt=ticks(max);for(let k=0;k<=nt;k++){const v=max*k/nt;g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${fmt(v)}</text>`;} g+=`</g>`;
+  labels.forEach((lb,i)=>{g+=`<text x="${L+bw*i+bw/2}" y="${H-8}" text-anchor="middle">${lb}</text>`;});
+  if(bars.length){const gw=bw*.68, each=stacked?gw:gw/bars.length;
+    labels.forEach((_,i)=>{let base=0;bars.forEach((b,j)=>{const v=b.values[i];if(v==null)return;const x=L+bw*i+(bw-gw)/2+(stacked?0:j*each);
+      const y0=stacked?y(base+v):y(v), hh=stacked?y(base)-y(base+v):T+ih-y(v); base+=stacked?v:0;
+      const partial=partialLast&&i===CM()-1;
+      g+=`<rect x="${x}" y="${y0}" width="${Math.max(each-2,1)}" height="${Math.max(hh,0)}" rx="2" fill="${b.color}" ${partial?'fill-opacity=".45"':''}><title>${b.name} ${labels[i]}: ${fmt(v)}</title></rect>`;});});}
+  refs.forEach(r=>{g+=`<line x1="${L}" x2="${W-R}" y1="${y(r.value)}" y2="${y(r.value)}" stroke="${r.color}" stroke-dasharray="5 4" stroke-width="1.5"/><text x="${W-R}" y="${y(r.value)-5}" text-anchor="end" class="lbl" style="fill:${r.color}">${r.name}</text>`;});
+  lines.forEach(l=>{const pts=l.values.map((v,i)=>v==null?null:[L+bw*i+bw/2,y(v)]);let d="";pts.forEach((p,i)=>{if(!p)return;d+=(d&&pts[i-1]?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1);});
+    g+=`<path d="${d}" fill="none" stroke="${l.color}" stroke-width="2.5" ${l.dash?'stroke-dasharray="6 4"':''} stroke-linejoin="round"/>`;
+    pts.forEach((p,i)=>{if(p)g+=`<circle cx="${p[0]}" cy="${p[1]}" r="${i===pts.length-1?4:2.5}" fill="${l.color}"><title>${l.name} ${labels[i]}: ${fmt(l.values[i])}</title></circle>`;});
+    const last=pts.map((p,i)=>[p,i]).filter(x=>x[0]).pop(); if(last&&l.endLabel!==false)g+=`<text x="${last[0][0]+7}" y="${last[0][1]+4}" class="lbl" style="fill:${l.color}">${fmt(l.values[last[1]])}</text>`;});
+  return g+`</svg>`;
+}
+const legend=items=>`<div class="legend">${items.map(i=>`<span><i class="${i.box?'box':''} ${i.dash?'dash':''}" style="background:${i.color}"></i>${i.name}</span>`).join("")}</div>`;
+
+/* ---------- report month ---------- */
+const MONTHS_LONG=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const RM=()=>MONTHS_LONG[CM()-1], RMs=()=>M()[CM()-1], PMs=()=>M()[CM()-2]||"", NM=()=>MONTHS_LONG[CM()%12];
+const DONE=()=>!!(D.report&&D.report.complete);
+const SOFAR=()=>DONE()?"":" so far";
+const MTD=()=>DONE()?"":` ${RM()} is month to date.`;
+const FULL=()=>DONE()?CM():CM()-1;                       /* completed months this year */
+const THRU=()=>`Jan to ${M()[FULL()-1]}`;
+const TXT=(k,fb=[])=>(D.text&&D.text[k])||fb;
+
+/* ---------- shared numbers ---------- */
+function mqlStats(){const L=D.leads, cm=CM(), mql=L.mql.slice(0,cm), ytd=sum(mql), f=FULL();
+  return {mql,ytd,oct:mql[cm-1],goalMo:L.goals.conservative,goalsYTD:{c:L.goals.conservative*cm,b:L.goals.base*cm,o:L.goals.optimistic*cm},
+          prev9:sum(L.mql2025.slice(0,f)),cur9:sum(mql.slice(0,f))};}
+const SQLN=()=>D.leads.sql.filter(x=>x!=null).length;
+function costPerMql(){const s=mqlStats();return {all:sum(D.budget.hcSpend)/s.ytd, ad:sum(D.budget.hcAdSpend)/s.ytd, spend:sum(D.budget.hcSpend)};}
+function budgetTotals(lines){const cm=CM();const a=lines.map(l=>sum(l.actual.slice(0,cm))), b=lines.map(l=>sum(l.budget.slice(0,cm)));
+  return {ytdA:sum(a),ytdB:sum(b),annual:sum(lines.map(l=>sum(l.budget))),
+    monthA:M().map((_,i)=>i<cm?sum(lines.map(l=>l.actual[i]||0)):null), monthB:M().map((_,i)=>sum(lines.map(l=>l.budget[i]||0)))};}
+
+/* ---------- pages ---------- */
+const R={};
+let CAMP_M=null;
+function head(title,sub){return `<div class="page-head"><h2>${title}</h2><p>${sub}</p></div>`;}
+function kpi(l,v,d=""){return `<div class="panel kpi"><div class="l">${l}</div><div class="v num">${v}</div>${d?`<div class="d">${d}</div>`:""}</div>`;}
+function phKpi(l,d){return `<div class="panel kpi placeholder"><div class="l">${l}</div><div class="v num">–</div><div class="d">${d}</div></div>`;}
+function flagItem(sev,title,detail){return `<li><i class="sev ${sev}"></i><b>${title}</b><span>${detail}</span></li>`;}
+const PH=`<span class="ph-cell">–</span>`;
+function hbars(items,{fmt=N,color=css("--c-hc"),label="k",value="v",max=null}={}){
+  const mx=max||Math.max(...items.map(i=>i[value]),1);
+  return `<div class="hbars">${items.map(i=>`<div class="hb"><span class="hb-l">${esc(i[label])}</span><span class="hb-t"><i style="width:${i[value]/mx*100}%;background:${i.color||color}"></i></span><b class="num">${fmt(i[value])}</b></div>`).join("")}</div>`;
+}
+function pacing(){
+  const cm=CM(), dim=new Date(2026,cm,0).getDate(), day=DONE()?dim:Math.min(+D.asOf.slice(8,10),dim), pace=day/dim;
+  const map=[["LinkedIn - Healthcare","LinkedIn","HC"],["Google - (50% healthcare)","Google Ads","HC"]];
+  const rows=map.map(([line,pl,dv])=>{const l=D.budget.lines.find(x=>x.line===line);return {pl,dv,a:l.actual[cm-1]||0,b:l.budget[cm-1]||0};});
+  return {pace,day,dim,rows};
+}
+function pacingPanel(){
+  const p=pacing();
+  return `<div class="panel"><h3>${RM()} ad budget ${DONE()?"used":"pacing"}</h3><p class="sub">${DONE()?"Platform spend against the month's budget.":`Day ${p.day} of ${p.dim}: on pace means ${P(p.pace,0)} of the month's budget spent. Marker shows today's pace.`}</p>
+  ${p.rows.map(r=>{const u=r.b?r.a/r.b:0, st=u>1?"bad":u>p.pace*1.15?"warn":u<p.pace*.85?"warn":"good", lbl=u>1?"Over budget":DONE()?(u<.85?"Under budget":"On budget"):u>p.pace*1.15?"Ahead of pace":u<p.pace*.5?"Well under pace":u<p.pace*.85?"Under pace":"On pace";
+    return `<div class="pace"><div class="pace-h"><span>${r.pl} ${chipDiv(r.dv)}</span><span class="chip ${st}">${lbl}</span></div>
+    <div class="bar"><i class="${u>1?'over':''}" style="width:${Math.min(100,u*100)}%"></i><u style="left:${p.pace*100}%"></u></div>
+    <div class="bar-labels"><span>${$(r.a)} spent</span><span>${P(u,0)} of ${$(r.b)}</span></div></div>`;}).join("")}</div>`;
+}
+
+R.summary=()=>{
+  const s=mqlStats(), c=costPerMql(), bl=budgetLines(), bt=budgetTotals(bl), cm=CM();
+  const liO=paidSeries("linkedin","spend")[cm-1], gaO=paidSeries("google","spend")[cm-1];
+  const adBudgetOct=sum(bl.filter(l=>/^(Google|LinkedIn)/.test(l.line)).map(l=>l.budget[cm-1]));
+  const sqlY=sum(D.leads.sql.filter(x=>x!=null)), sql25=sum(D.sql2025.slice(0,SQLN()));
+  let h=head(`${RM()} at a glance`,`Healthcare.${MTD()}`);
+  h+=`<div class="grid g-kpi">`;
+  {
+    const pc=s.ytd/s.goalsYTD.c;
+    h+=`<div class="panel kpi"><div class="l">MQLs year to date</div><div class="v num">${N(s.ytd)}</div>
+      <div class="bar"><i style="width:${Math.min(100,s.ytd/s.goalsYTD.o*100)}%"></i><u style="left:${s.goalsYTD.c/s.goalsYTD.o*100}%"></u><u style="left:${s.goalsYTD.b/s.goalsYTD.o*100}%"></u></div>
+      <div class="bar-labels"><span>${P(pc,0)} of conservative goal (${s.goalsYTD.c})</span><span>${s.goalsYTD.o}</span></div></div>`;
+    h+=kpi(`MQLs in ${RM()}${SOFAR()}`,N(s.oct),`Monthly goal ${s.goalMo} (conservative)`);
+    h+=kpi("Cost per MQL, YTD",$(c.all),`2025: ${$(D.roiAnnual["2025"].cpMql)}. Ad spend per MQL ${$(c.ad)}`);
+    h+=kpi("SQLs year to date",N(sqlY),`${P(sqlY/D.leads.sqlGoal,0)} of the ${D.leads.sqlGoal} goal. Same months 2025: ${sql25}`);
+  }
+  h+=kpi("Marketing spend, YTD",$k(bt.ytdA),`${P(bt.ytdA/bt.ytdB,0)} of ${$k(bt.ytdB)} YTD budget`);
+  h+=kpi(`Ad spend, ${RM()}${SOFAR()}`,$(liO+gaO),`LinkedIn ${$(liO)} · Google ${$(gaO)} · budget ${$(adBudgetOct)}`);
+  h+=`</div>`;
+  const flags=TXT("summaryFlags"), wins=TXT("summaryWins");
+  h+=`<div class="grid g-2"><div class="panel"><h3>Needs attention</h3><p class="sub">Items to act on</p><ul class="flags">${flags.map(f=>flagItem(...f)).join("")}</ul></div>
+    <div class="grid" style="align-content:start"><div class="panel"><h3>What's working</h3><p class="sub">Bright spots this month</p><ul class="flags">${wins.map(w=>flagItem("good",w[0],w[1])).join("")}</ul></div>${pacingPanel()}</div></div>`;
+  {
+    h+=`<div class="grid g-2"><div class="panel"><h3>MQLs by month vs goal</h3><p class="sub">New MQLs entered in HubSpot by month${DONE()?"":`; ${RM()} is month to date`}</p>
+    ${legend([{name:"2026 MQLs",color:css("--c-hc"),box:1},{name:"2025",color:css("--c-budget")},{name:"Conservative goal (37)",color:css("--gold"),dash:1}])}
+    ${chart({labels:M().slice(0,cm),bars:[{name:"MQLs",color:css("--c-hc"),values:s.mql}],lines:[{name:"2025",color:css("--c-budget"),values:D.leads.mql2025.slice(0,cm),endLabel:false}],refs:[{name:"37",value:37,color:css("--gold")}],partialLast:true,half:true})}</div>
+    <div class="panel"><h3>Cost per MQL by month</h3><p class="sub">Healthcare marketing spend ÷ MQLs. 2025 average ${$(D.roiAnnual["2025"].cpMql)}</p>
+    ${legend([{name:"All marketing spend",color:css("--c-hc")},{name:"Ad spend only",color:css("--c-ga")}])}
+    ${chart({labels:M().slice(0,cm),lines:[{name:"All spend",color:css("--c-hc"),values:D.budget.hcSpend.map((v,i)=>v/s.mql[i])},{name:"Ad spend",color:css("--c-ga"),values:D.budget.hcAdSpend.map((v,i)=>v/s.mql[i])}],refs:[{name:"2025",value:D.roiAnnual["2025"].cpMql,color:css("--c-budget")}],fmt:v=>$(v),half:true})}</div></div>`;
+  }
+  h+=`<div class="panel"><h3>Marketing spend vs budget by month</h3><p class="sub">Healthcare and shared lines; senior living lines are left out. Months after ${RM()} show budget only.</p>
+    ${legend([{name:"Actual",color:css("--c-hc"),box:1},{name:"Budget",color:css("--c-budget"),box:1}])}
+    ${chart({labels:M(),bars:[{name:"Actual",color:css("--c-hc"),values:bt.monthA},{name:"Budget",color:css("--c-budget"),values:bt.monthB}],fmt:$k,partialLast:true})}</div>`;
+  return h;
+};
+
+R.paid=()=>{
+  const cm=CM(), li=["impr","clicks","spend"].map(k=>paidSeries("linkedin",k)), ga=["impr","clicks","spend"].map(k=>paidSeries("google",k));
+  const o=i=>({impr:li[0][i]+ga[0][i],clicks:li[1][i]+ga[1][i],spend:li[2][i]+ga[2][i]});
+  const now=o(cm-1), prev=o(cm-2), ytd={spend:sum(li[2])+sum(ga[2]),clicks:sum(li[1])+sum(ga[1]),impr:sum(li[0])+sum(ga[0])};
+  let h=head("Paid media",`LinkedIn and Google Ads, healthcare. Brand and National General Google campaigns are shared, so half their spend counts here. ${MTD()}`);
+  h+=`<div class="grid g-kpi">${kpi(`Spend, ${RM()}${SOFAR()}`,$(now.spend),`${MONTHS_LONG[CM()-2]}: ${$(prev.spend)}`)}${kpi("Spend, year to date",$k(ytd.spend),`LinkedIn ${$k(sum(li[2]))} · Google ${$k(sum(ga[2]))}`)}${kpi(`Clicks, ${RM()}`,N(now.clicks),`${MONTHS_LONG[CM()-2]}: ${N(prev.clicks)}`)}${kpi("Click-through rate",P(now.clicks/now.impr,2),`${MONTHS_LONG[CM()-2]}: ${P(prev.clicks/prev.impr,2)}`)}${kpi("Cost per click",$(now.spend/now.clicks,2),`YTD: ${$(ytd.spend/ytd.clicks,2)}`)}</div>`;
+  const lab=M().slice(0,cm);
+  h+=`<div class="grid g-2">${pacingPanel()}<div class="panel"><h3>Cost per click by month</h3><p class="sub">Spend ÷ clicks</p>${legend([{name:"LinkedIn",color:css("--c-li")},{name:"Google Ads",color:css("--c-ga")}])}
+    ${chart({labels:lab,lines:[{name:"LinkedIn",color:css("--c-li"),values:li[2].map((s,i)=>li[1][i]?s/li[1][i]:null)},{name:"Google Ads",color:css("--c-ga"),values:ga[2].map((s,i)=>ga[1][i]?s/ga[1][i]:null)}],fmt:v=>$(v,2),half:true})}</div></div>`;
+  h+=`<div class="grid g-2"><div class="panel"><h3>Spend by month</h3><p class="sub">Platform spend</p>${legend([{name:"LinkedIn",color:css("--c-li")},{name:"Google Ads",color:css("--c-ga")}])}
+    ${chart({labels:lab,lines:[{name:"LinkedIn",color:css("--c-li"),values:li[2]},{name:"Google Ads",color:css("--c-ga"),values:ga[2]}],fmt:$k,half:true})}</div>
+    <div class="panel"><h3>Click-through rate by month</h3><p class="sub">Clicks ÷ impressions</p>${legend([{name:"LinkedIn",color:css("--c-li")},{name:"Google Ads",color:css("--c-ga")}])}
+    ${chart({labels:lab,lines:[{name:"LinkedIn",color:css("--c-li"),values:li[1].map((c,i)=>li[0][i]?c/li[0][i]:null)},{name:"Google Ads",color:css("--c-ga"),values:ga[1].map((c,i)=>ga[0][i]?c/ga[0][i]:null)}],fmt:v=>P(v,1),half:true})}</div></div>`;
+  const mSel=CAMP_M||cm, rows=D.campaigns.filter(c=>c.month===mSel&&inDiv(c.div)).sort((a,b)=>b.spend-a.spend);
+  const prevM={}; D.campaigns.filter(c=>c.month===mSel-1).forEach(c=>prevM[c.platform+c.name]=c);
+  h+=`<div class="panel"><div class="panel-h"><div><h3>Campaigns</h3><p class="sub">Sorted by spend. Change in click-through rate compares with the month before.</p></div>
+   <label class="sel">Month <select id="camp-month">${M().slice(0,cm).map((m,i)=>`<option value="${i+1}" ${i+1===mSel?"selected":""}>${m}${i+1===cm?" (to date)":""}</option>`).join("")}</select></label></div>
+   <div class="tbl-wrap"><table><thead><tr><th class="l">Campaign</th><th class="l">Platform</th><th class="l">Division</th><th>Spend</th><th>Impr.</th><th>Clicks</th><th>CTR</th><th>vs prior</th><th>CPC</th></tr></thead><tbody>
+   ${rows.map(r=>{const s=prevM[r.platform+r.name], ctr=r.clicks/r.impr, sc=s?s.clicks/s.impr:null, dd=sc!=null?ctr-sc:null;
+     return `<tr><td class="l wrap-cell">${esc(r.name)}</td><td class="l">${r.platform}</td><td class="l">${chipDiv(r.div)}</td><td>${$(r.spend)}</td><td>${N(r.impr)}</td><td>${N(r.clicks)}</td><td>${P(ctr,2)}</td><td class="${dd==null?'':dd>=0?'up':'dn'}">${dd==null?"new":(dd>=0?"+":"")+(dd*100).toFixed(2)+" pts"}</td><td>${r.clicks?$(r.spend/r.clicks,2):"–"}</td></tr>`;}).join("")}
+   <tr class="total"><td class="l">Total</td><td></td><td></td><td>${$(sum(rows.map(r=>r.spend)))}</td><td>${N(sum(rows.map(r=>r.impr)))}</td><td>${N(sum(rows.map(r=>r.clicks)))}</td><td>${P(sum(rows.map(r=>r.clicks))/sum(rows.map(r=>r.impr)),2)}</td><td></td><td>${$(sum(rows.map(r=>r.spend))/sum(rows.map(r=>r.clicks)),2)}</td></tr>
+   </tbody></table></div></div>`;
+  const st=D.searchTerms.filter(t=>inDiv(t.div)).sort((a,b)=>b.clicks-a.clicks);
+  h+=`<div class="panel"><h3>Top Google search terms</h3><p class="sub">What people typed before clicking, ${D.searchTermsWindow||"last two months"}. Terms with at least 3 clicks.</p><div class="tbl-wrap"><table><thead><tr><th class="l">Search term</th><th class="l">Campaign</th><th>Clicks</th><th>Impr.</th><th>Spend</th><th>CPC</th></tr></thead><tbody>
+   ${st.map(t=>`<tr><td class="l">${esc(t.term)}</td><td class="l">${esc(t.campaign)}</td><td>${t.clicks}</td><td>${t.impr}</td><td>${$(t.spend,2)}</td><td>${$(t.spend/t.clicks,2)}</td></tr>`).join("")}</tbody></table></div>
+   ${TXT("searchTermsNote","")?`<p class="note">${TXT("searchTermsNote")}</p>`:""}</div>`;
+  return h;
+};
+
+R.leads=()=>{
+  const s=mqlStats(), cm=CM(), L=D.leads, lab=M().slice(0,cm);
+  const sqlY=sum(L.sql.filter(x=>x!=null)), sql25=sum(D.sql2025.slice(0,SQLN()));
+  let h=head("Leads","Healthcare MQLs and SQLs. MQLs count leads entering New in HubSpot's Lead pipeline.");
+  h+=`<div class="grid g-kpi">${kpi(`MQLs, ${RM()}${SOFAR()}`,N(s.oct),`Goal ${L.goals.conservative} / ${L.goals.base} / ${L.goals.optimistic}`)}
+    ${kpi("MQLs year to date",N(s.ytd),`Goal to date ${s.goalsYTD.c} / ${s.goalsYTD.b} / ${s.goalsYTD.o}`)}
+    ${kpi(`MQLs ${THRU()} vs 2025`,`<span class="${s.cur9>=s.prev9?'up':'dn'}">${s.cur9>=s.prev9?"+":""}${P(s.cur9/s.prev9-1,0)}</span>`,`${s.cur9} in 2026 vs ${s.prev9} in 2025`)}
+    ${kpi("SQLs year to date",N(sqlY),`Goal ${L.sqlGoal}. Same months 2025: ${sql25}`)}
+    ${kpi("MQL to SQL, YTD",P(sqlY/sum(s.mql.slice(0,SQLN())),1),`2025: ${P(D.roiAnnual["2025"].mqlSql,1)}`)}</div>`;
+  h+=`<div class="grid g-2"><div class="panel"><h3>MQLs by month</h3><p class="sub">2026 vs 2025, with the three goal levels</p>
+    ${legend([{name:"2026",color:css("--c-hc"),box:1},{name:"2025",color:css("--c-budget"),box:1},{name:"Goals 37 / 42 / 47",color:css("--gold"),dash:1}])}
+    ${chart({labels:lab,bars:[{name:"2026",color:css("--c-hc"),values:s.mql},{name:"2025",color:css("--c-budget"),values:L.mql2025.slice(0,cm)}],refs:[{name:"37",value:37,color:css("--gold")},{name:"42",value:42,color:css("--gold")},{name:"47",value:47,color:css("--gold")}],partialLast:true,half:true})}</div>
+    <div class="panel"><h3>SQLs by month</h3><p class="sub">2026 vs 2025. Monthly goal 3.</p>
+    ${legend([{name:"2026",color:css("--c-hc"),box:1},{name:"2025",color:css("--c-budget"),box:1},{name:"Goal 3",color:css("--gold"),dash:1}])}
+    ${chart({labels:lab,bars:[{name:"2026",color:css("--c-hc"),values:L.sql.slice(0,cm)},{name:"2025",color:css("--c-budget"),values:D.sql2025.slice(0,cm)}],refs:[{name:"3",value:3,color:css("--gold")}],half:true})}</div></div>`;
+  h+=`<div class="panel"><h3>${RM()} MQL accounts</h3><p class="sub">${D.mqlMonth.length} companies entered as MQLs in HubSpot${DONE()?"":" so far"} this month</p><ul class="list-2">
+    ${D.mqlMonth.map(m=>`<li><span>${esc(m.name)}</span>${m.engaged?'<span class="chip good">Saw LinkedIn ads</span>':`<span class="note" style="margin:0">${m.date}</span>`}</li>`).join("")}</ul>
+    <p class="note">"Saw LinkedIn ads" means Factors matched the company to a LinkedIn impression followed by a site visit.</p></div>
+</div>`;
+  return h;
+};
+
+R.accounts=()=>{
+  const A=D.accounts, halo=A.liHalo.HC, vis=A.liVisitors, O=D.overlap, JT=D.jobTitles.HC;
+  let h=head("Known accounts & MQLs",`Factors.ai, ${A.window}. Focused on companies in HubSpot and MQL accounts; net new accounts, engagement levels and deal influence are left out.`);
+  h+=`<div class="grid g-kpi">${kpi("HubSpot companies on the site",N(A.knownVisitsWeek),`Unique companies with a session, ${A.window}`)}
+    ${kpi("LinkedIn to website",P(halo.visited/halo.reached,1),`${halo.visited} of ${N(halo.reached)} companies that saw ads visited the site`)}
+    ${kpi("LinkedIn to paid search",P(O.liToSearch.next/O.liToSearch.start,1),`${O.liToSearch.next} of ${N(O.liToSearch.start)} companies, about ${Math.round(O.liToSearch.hours/24)} days later on average`)}
+    ${kpi("Paid search to LinkedIn",P(O.searchToLi.next/O.searchToLi.start,1),`${O.searchToLi.next} of ${O.searchToLi.start} companies, about ${Math.round(O.searchToLi.hours)} hours later`)}
+    ${kpi(`${RM()} MQLs that saw ads first`,N(D.mqlMonth.filter(m=>m.engaged).length),`Of ${D.mqlMonth.length} ${RM()} MQL companies`)}</div>`;
+  h+=`<div class="grid g-2"><div class="panel"><h3>HubSpot companies visiting by day</h3><p class="sub">Companies in HubSpot with at least one session</p>${chart({labels:A.knownVisitsDaily.map(d=>d.day.replace("Oct ","Oct ")),bars:[{name:"Companies",color:css("--c-hc"),values:A.knownVisitsDaily.map(d=>d.count)}],h:220,half:true})}</div>
+    <div class="panel"><h3>Companies that visited after seeing LinkedIn ads</h3><p class="sub">Healthcare LinkedIn ads, ${A.window}</p><ul class="list-2">${vis.map(v=>`<li><span>${esc(v.name)}</span>${v.hubspotLead?'<span class="chip good">HubSpot lead</span>':`<span class="note" style="margin:0">${esc(v.domain)}</span>`}</li>`).join("")}</ul></div></div>`;
+  if(JT){
+    const L=JT.levels.map(x=>({k:x.k,v:x.impr})), F=JT.functions.map(x=>({k:x.k,v:x.impr}));
+    h+=`<div class="panel"><h3>Who LinkedIn ads reached</h3><p class="sub">${N(JT.impr)} ${DIVNAME[DIV].toLowerCase()} impressions with a reported job title, ${JT.clicks} clicks. Grouped by title keywords.</p>
+     <div class="grid g-3"><div><div class="eyebrow">Seniority</div>${hbars(L,{max:JT.impr})}</div><div><div class="eyebrow">Function</div>${hbars(F,{max:JT.impr})}</div>
+     <div><div class="eyebrow">Top titles</div>${hbars(JT.top.slice(0,8).map(x=>({k:x.k,v:x.impr})))}</div></div>
+     ${`<p class="note">Clinical titles took ${P(JT.functions.find(f=>f.k==="Clinical").impr/JT.impr,0)} of healthcare impressions; real estate, facilities and development roles took ${P(JT.functions.find(f=>f.k.startsWith("Real estate")).impr/JT.impr,0)}. Tightening job function targeting toward real estate, finance and strategy would put more spend in front of decision makers.</p>`}</div>`;
+  }
+  return h;
+};
+
+R.roi=()=>{
+  const cm=CM(), L=D.leads, s=mqlStats(), sp=D.budget.hcSpend, ad=D.budget.hcAdSpend, mq=s.mql, sq=L.sql.slice(0,cm), A=D.roiAnnual;
+  const r=(a,b,f=$)=>b?f(a/b):"–";
+  const ytdSql=sum(sq.filter(x=>x!=null)), ytdSp=sum(sp), ytdAd=sum(ad);
+  let h=head("ROI & healthcare variables","Healthcare ROI and healthcare variables, from the budget workbook.");
+  h+=`<div class="grid g-kpi">${kpi("Healthcare marketing spend, YTD",$k(ytdSp),`2025 full year: ${$k(A["2025"].spend)}`)}${kpi("Cost per MQL, YTD",$(ytdSp/s.ytd),`2025: ${$(A["2025"].cpMql)}`)}${kpi("Cost per SQL, YTD",$(ytdSp/ytdSql),`2025: ${$(A["2025"].cpSql)}`)}
+    ${phKpi("Awarded projects, YTD","Count, value and estimated return")}${phKpi("Awarded ROI","Estimated return ÷ marketing spend")}</div>`;
+  h+=`<div class="panel"><h3>Healthcare ROI by month</h3><p class="sub">Marketing spend = Healthcare Budget tab total. Ad spend = Google and LinkedIn healthcare lines.${MTD()}</p><div class="tbl-wrap"><table>
+    <thead><tr><th class="l">Month</th><th>Marketing spend</th><th>Ad spend</th><th>MQLs</th><th>Cost / MQL</th><th>Ad spend / MQL</th><th>SQLs</th><th>Cost / SQL</th><th>Ad spend / SQL</th><th>MQL to SQL</th><th>Subscriber to MQL</th></tr></thead><tbody>
+    ${M().slice(0,cm).map((m,i)=>`<tr><td class="l">${m}</td><td>${$(sp[i])}</td><td>${$(ad[i])}</td><td>${mq[i]}</td><td>${r(sp[i],mq[i])}</td><td>${r(ad[i],mq[i])}</td><td>${sq[i]==null?PH:sq[i]}</td><td>${sq[i]?r(sp[i],sq[i]):sq[i]==null?PH:"–"}</td><td>${sq[i]?r(ad[i],sq[i]):sq[i]==null?PH:"–"}</td><td>${sq[i]==null?PH:P(sq[i]/mq[i],1)}</td><td>${PH}</td></tr>`).join("")}
+    <tr class="total"><td class="l">2026 YTD</td><td>${$(ytdSp)}</td><td>${$(ytdAd)}</td><td>${s.ytd}</td><td>${$(ytdSp/s.ytd)}</td><td>${$(ytdAd/s.ytd)}</td><td>${ytdSql}</td><td>${$(ytdSp/ytdSql)}</td><td>${$(ytdAd/ytdSql)}</td><td>${P(ytdSql/sum(mq.slice(0,SQLN())),1)}</td><td>${PH}</td></tr></tbody></table></div>
+    </div>`;
+  const yr=(k,f)=>["2024","2025"].map(y=>A[y][k]==null?"–":f(A[y][k]));
+  const rows=[["Marketing spend","spend",v=>$(v),$(ytdSp)],["Advertising spend","ad",v=>$(v),$(ytdAd)],["Cost per MQL","cpMql",v=>$(v,2),$(ytdSp/s.ytd,2)],["Ad spend per MQL","adMql",v=>$(v,2),$(ytdAd/s.ytd,2)],
+    ["Cost per SQL","cpSql",v=>$(v,2),$(ytdSp/ytdSql,2)],["Ad spend per SQL","adSql",v=>$(v,2),$(ytdAd/ytdSql,2)],["Subscriber to MQL","subMql",v=>P(v,2),PH],["MQL to SQL","mqlSql",v=>P(v,2),P(ytdSql/sum(mq.slice(0,SQLN())),2)],
+    ["MQL to awarded","mqlAw",v=>P(v,2),PH],["SQL to awarded","sqlAw",v=>P(v,2),PH],["Cost per awarded project","cpAw",v=>$(v,2),PH],["Ad spend per awarded project","adAw",v=>$(v,2),PH],["Awarded ROI","awRoi",v=>N(v,1)+"x",PH],["Awarded ROAS","awRoas",v=>N(v,1)+"x",PH]];
+  h+=`<div class="grid g-2"><div class="panel"><h3>Year over year</h3><p class="sub">2024 and 2025 from the Healthcare ROI tab; 2026 is year to date</p><div class="tbl-wrap"><table><thead><tr><th class="l">Measure</th><th>2024</th><th>2025</th><th>2026 YTD</th></tr></thead><tbody>
+    ${rows.map(([n,k,f,v26])=>{const [a,b]=yr(k,f);return `<tr><td class="l">${n}</td><td>${a}</td><td>${b}</td><td>${v26}</td></tr>`;}).join("")}</tbody></table></div>
+    </div>
+    <div class="panel"><h3>Awarded and actual projects</h3><p class="sub">Year to date</p><div class="tbl-wrap"><table><thead><tr><th class="l">Measure</th><th>YTD</th><th>Source</th></tr></thead><tbody>
+    ${["Awarded projects (count)","Awarded project value","Estimated return","Actual projects (count)","Cost per awarded project","Ad spend per awarded project","Awarded ROI","Awarded ROAS"].map(n=>`<tr><td class="l">${n}</td><td>${PH}</td><td class="l">Project records</td></tr>`).join("")}</tbody></table></div>
+    </div></div>`;
+  const g=L.goals, sq25=D.sql2025, mq25=L.mql2025;
+  h+=`<div class="panel"><h3>Healthcare variables by month</h3><p class="sub">MQL and SQL goals, % to goal and year-over-year change. Variance shows true change vs 2025 (2026 ÷ 2025 − 1).</p><div class="tbl-wrap"><table>
+    <thead><tr><th class="l">Month</th><th>MQLs</th><th>% to 37</th><th>% to 42</th><th>% to 47</th><th>2025 MQLs</th><th>YoY</th><th>SQLs</th><th>% to 3</th><th>2025 SQLs</th><th>YoY</th><th>Actual projects</th><th>Awarded projects</th><th>Subscribers</th></tr></thead><tbody>
+    ${M().map((m,i)=>{const v=i<cm?mq[i]:null, q=i<cm?sq[i]:null, fut=i>=cm;
+      const yo=(a,b)=>a==null||!b?"–":`<span class="${a>=b?'up':'dn'}">${a>=b?"+":""}${P(a/b-1,0)}</span>`;
+      return `<tr class="${fut?'future':''}"><td class="l">${m}</td><td>${v??"–"}</td><td>${v==null?"–":P(v/g.conservative,0)}</td><td>${v==null?"–":P(v/g.base,0)}</td><td>${v==null?"–":P(v/g.optimistic,0)}</td><td>${mq25[i]}</td><td>${yo(v,mq25[i])}</td>
+      <td>${fut?"–":q==null?PH:q}</td><td>${fut?"–":q==null?PH:P(q/3,0)}</td><td>${sq25[i]}</td><td>${fut?"–":q==null?PH:yo(q,sq25[i])}</td><td>${fut?"–":PH}</td><td>${fut?"–":PH}</td><td>${fut?"–":PH}</td></tr>`;}).join("")}
+    <tr class="total"><td class="l">Total</td><td>${s.ytd}</td><td>${P(s.ytd/444,0)}</td><td>${P(s.ytd/504,0)}</td><td>${P(s.ytd/564,0)}</td><td>${sum(mq25)}</td><td></td><td>${ytdSql}</td><td>${P(ytdSql/36,0)}</td><td>${sum(sq25)}</td><td></td><td>${PH}</td><td>${PH}</td><td>${PH}</td></tr></tbody></table></div>
+    <p class="note">Annual goals: MQLs 444 / 504 / 564, SQLs 36. The YTD % columns compare with the full-year goal, as in the workbook.</p></div>`;
+  const MS=D.mqlSource, ms=Object.keys(MS.months), allM=M().slice(0,cm);
+  h+=`<div class="panel"><h3>New MQLs by original source</h3><p class="sub">From the Healthcare Variables tab</p><div class="tbl-wrap"><table>
+    <thead><tr><th class="l">Source</th>${allM.map(m=>`<th>${m}</th>`).join("")}<th>Total</th></tr></thead><tbody>
+    ${MS.sources.map((src,j)=>`<tr><td class="l">${src}</td>${allM.map(m=>MS.months[m]?`<td>${MS.months[m][j]}</td>`:`<td>${PH}</td>`).join("")}<td>${sum(ms.map(m=>MS.months[m][j]))}</td></tr>`).join("")}
+    <tr class="total"><td class="l">Total</td>${allM.map(m=>MS.months[m]?`<td>${sum(MS.months[m])}</td>`:`<td></td>`).join("")}<td>${sum(ms.map(m=>sum(MS.months[m])))}</td></tr></tbody></table></div></div>`;
+  return h;
+};
+
+R.budget=()=>{
+  const bl=budgetLines(), bt=budgetTotals(bl), cm=CM();
+  const cats={}; bl.forEach(l=>{const c=cats[l.cat]||(cats[l.cat]={a:0,b:0,ann:0});c.a+=sum(l.actual.slice(0,cm));c.b+=sum(l.budget.slice(0,cm));c.ann+=sum(l.budget);});
+  let h=head("Budget",`Healthcare and shared lines (virtual assistant, photography, events, memberships, sponsorships). Senior living lines are left out. Google and LinkedIn actuals are platform spend by campaign.`);
+  h+=`<div class="grid g-kpi">${kpi("Spent year to date",$k(bt.ytdA),`${P(bt.ytdA/bt.ytdB,0)} of ${$k(bt.ytdB)} budgeted through ${RM()}`)}
+    ${kpi("Left in the annual budget",$k(bt.annual-bt.ytdA),`Of ${$k(bt.annual)}. Rest of year budget: ${$k(sum(bt.monthB.slice(CM())))}`)}
+    ${kpi(`${RM()}${SOFAR()}`,$k(bt.monthA[cm-1]),`Budget ${$k(bt.monthB[cm-1])}`)}</div>`;
+  h+=`<div class="grid g-2"><div class="panel"><h3>Actual vs budget by month</h3><p class="sub">${DONE()?"Months after "+RM()+" show budget only":RM()+" is month to date"}</p>${legend([{name:"Actual",color:css("--c-hc"),box:1},{name:"Budget",color:css("--c-budget"),box:1}])}
+    ${chart({labels:M(),bars:[{name:"Actual",color:css("--c-hc"),values:bt.monthA},{name:"Budget",color:css("--c-budget"),values:bt.monthB}],fmt:$k,partialLast:true,half:true})}</div>${pacingPanel()}</div>`;
+  const ce=Object.entries(cats).sort((a,b)=>b[1].ann-a[1].ann);
+  h+=`<div class="panel"><h3>By category, year to date</h3><div class="tbl-wrap"><table><thead><tr><th class="l">Category</th><th>Actual</th><th>Budget to date</th><th>Used</th><th>Annual budget</th><th>Left for rest of year</th></tr></thead><tbody>
+    ${ce.map(([k,c])=>{const u=c.b?c.a/c.b:null;return `<tr><td class="l">${k}</td><td>${$(c.a)}</td><td>${$(c.b)}</td><td>${u==null?(c.a?'<span class="chip bad">No budget</span>':"–"):P(u,0)}${u!=null?`<span class="util"><i class="${u>1?'over':''}" style="width:${Math.min(100,u*100)}%"></i></span>`:""}</td><td>${$(c.ann)}</td><td>${$(c.ann-c.b)}</td></tr>`;}).join("")}
+    <tr class="total"><td class="l">Total</td><td>${$(bt.ytdA)}</td><td>${$(bt.ytdB)}</td><td>${P(bt.ytdA/bt.ytdB,0)}</td><td>${$(bt.annual)}</td><td>${$(bt.annual-bt.ytdB)}</td></tr></tbody></table></div>
+    ${TXT("budgetNote","")?`<p class="note">${TXT("budgetNote")}</p>`:""}</div>`;
+  const lines=bl.map(l=>({...l,ya:sum(l.actual.slice(0,cm)),yb:sum(l.budget.slice(0,cm)),oa:l.actual[cm-1]||0,ob:l.budget[cm-1]||0})).filter(l=>l.ya||l.yb).sort((a,b)=>b.ya-a.ya);
+  h+=`<div class="panel"><h3>Line items</h3><p class="sub">Sorted by spend to date. Lines over budget to date are marked.</p><div class="tbl-wrap"><table><thead><tr><th class="l">Line</th><th class="l">Division</th><th>${RM()}</th><th>${RMs()} budget</th><th>YTD</th><th>YTD budget</th><th>Used</th></tr></thead><tbody>
+    ${lines.map(l=>{const u=l.yb?l.ya/l.yb:null;return `<tr><td class="l">${esc(l.line)}</td><td class="l">${chipDiv(l.div)}</td><td>${$(l.oa)}</td><td>${$(l.ob)}</td><td>${$(l.ya)}</td><td>${$(l.yb)}</td><td>${u==null?'<span class="chip bad">No budget</span>':u>1.1?`<span class="chip bad">${P(u,0)}</span>`:P(u,0)}</td></tr>`;}).join("")}</tbody></table></div></div>`;
+  return h;
+};
+
+/* ---------- round 3: narrative, trends, plan, Factors website, creative method ---------- */
+function narrative(well,improve){
+  if(!well.length&&!improve.length) return "";
+  return `<div class="grid g-2 narr"><div class="panel nar-good"><h3>What went well</h3><ul class="flags">${well.map(w=>flagItem("good",w[0],w[1])).join("")}</ul></div>
+  <div class="panel nar-bad"><h3>Needs improvement</h3><ul class="flags">${improve.map(w=>flagItem(w[2]||"warn",w[0],w[1])).join("")}</ul></div></div>`;
+}
+const NARR=new Proxy({},{get:(_,pg)=>{const n=D&&D.text&&D.text.narrative&&D.text.narrative[pg];return n?()=>[n.well||[],n.improve||[]]:undefined;}});
+
+R.website=()=>{
+  const F=D.factorsWeb, srcs=Object.keys(F.sources), lab=F.months, n=lab.length;
+  const tot=lab.map((_,i)=>sum(srcs.map(s=>F.sources[s][i])));
+  const colors={"Google Ads":css("--c-ga"),"LinkedIn":css("--c-li"),"Bing":css("--c-sl"),"Direct and other":css("--c-budget")};
+  let h=head("Website",`Healthcare website sessions from Factors.ai, March onward.${MTD()}`);
+  h+=`<div class="grid g-kpi">${kpi(`Healthcare sessions, ${RM()}`,N(tot[n-1]),`${lab[n-2]}: ${N(tot[n-2])} · ${lab[n-3]}: ${N(tot[n-3])}`)}
+    ${kpi(`HubSpot companies visiting, ${RM()}`,N(F.knownCompanies[RMs()]||0),`${MONTHS_LONG[CM()-2]}: ${F.knownCompanies[PMs()]??"–"}`)}
+    ${kpi("From Google Ads",N(F.sources["Google Ads"][n-1]),`${P(F.sources["Google Ads"][n-1]/tot[n-1],0)} of sessions`)}
+    ${kpi("From LinkedIn",N(F.sources["LinkedIn"][n-1]),`${lab[n-2]}: ${F.sources["LinkedIn"][n-2]}`)}
+    ${kpi("From Bing",N(F.sources["Bing"][n-1]),`${lab[n-2]}: ${F.sources["Bing"][n-2]}`)}</div>`;
+  h+=`<div class="panel"><h3>Healthcare sessions by source</h3><p class="sub">Factors, monthly</p>${legend(srcs.map(s=>({name:s,color:colors[s],box:1})))}
+    ${chart({labels:lab,stacked:true,bars:srcs.map(s=>({name:s,color:colors[s],values:F.sources[s]})),h:250})}</div>
+</div>`;
+  const lp=D.landingYtd.slice().sort((a,b)=>b.sessions-a.sessions);
+  h+=`<div class="panel"><h3>Landing pages, year to date</h3><p class="sub">Where sessions start. Key event rate = key events ÷ sessions.</p><div class="tbl-wrap"><table><thead><tr><th class="l">Landing page</th><th>Sessions</th><th>Engaged</th><th>Key events</th><th>Key event rate</th></tr></thead><tbody>
+    ${lp.map(p=>{const r=p.keyEvents/p.sessions;return `<tr><td class="l">${esc(p.page)}</td><td>${N(p.sessions)}</td><td>${P(p.engaged/p.sessions,0)}</td><td>${N(p.keyEvents)}</td><td>${r<0.005&&p.sessions>1000?`<span class="chip bad">${P(r,1)}</span>`:P(r,1)}</td></tr>`;}).join("")}</tbody></table></div></div>`;
+  h+=`<div class="panel"><h3>Top blog posts, year to date</h3><p class="sub">Page views</p>${hbars(D.blogYtd.filter(b=>b.title!=="Blog home").map(b=>({k:b.title,v:b.views})))}</div>`;
+  return h;
+};
+
+R.creative=()=>{
+  const CA=D.creativeAnalysis, div="HC", T=CA.HC_image, all=CA.HC;
+  const ads=D.creatives.filter(a=>inDiv(a.div)&&a.impr>=1000).map(a=>({...a,ctr:a.clicks/a.impr,cpc:a.clicks?a.spend/a.clicks:null})).sort((a,b)=>b.ctr-a.ctr);
+  let h=head("Ads & creative",`How copy and creative choices perform on LinkedIn, healthcare. Every healthcare ad from January through ${CA.through||RM()}.`);
+  h+=`<details class="panel method"><summary><h3>How this analysis works</h3><span class="sub">Method, data and limits</span></summary><ol class="steps">
+    <li><b>Data.</b> Monthly impressions, clicks, spend and conversions for every healthcare LinkedIn ad from January 1 through ${CA.through||RM()} (${CA.ads||56} ads, ${CA.adMonths||182} ad-months), pulled from LinkedIn through Windsor.ai.</li>
+    <li><b>Tagging.</b> Each headline is tagged by theme, headline form (point-of-view statement, command such as "View" or "Discover", or question), whether it names Boldt, length (6 words or fewer vs 7 or more), whether it says "you" or "your", and whether it includes a number. Format (single image, document or lead gen, video) comes from the campaign.</li>
+    <li><b>Scoring.</b> For each tag: click-through rate = all clicks ÷ all impressions for ads with that tag, so bigger ads count more. Also cost per click and cost per conversion.</li>
+    <li><b>Fair comparisons.</b> Document and lead gen ads behave differently (low click-through, form fills), so healthcare copy tags are compared within single-image ads only.</li>
+    <li><b>Confidence.</b> A finding needs at least 10,000 impressions and 2 or more ads behind it. Anything smaller is marked directional.</li>
+    <li><b>Trends.</b> Click-through rate in each ad's first two months vs its last two, and January to June vs July onward.</li>
+    <li><b>Limits.</b> LinkedIn returns headlines but almost no intro text, so intro copy isn't scored yet. Visual elements (imagery, text on image, color) are reviewed by eye in the weekly creative review.</li></ol></details>`;
+  const tbl=(k,title)=>{const v=T[k]; if(!v)return ""; return `<div class="panel"><h3>${title}</h3><div class="tbl-wrap"><table><thead><tr><th class="l">${k}</th><th>Ads</th><th>Impr.</th><th>CTR</th><th>CPC</th><th>Conv.</th></tr></thead><tbody>
+    ${v.map(z=>`<tr><td class="l">${esc(z.k)}${z.impr<10000||z.ads<2?' <span class="chip">Directional</span>':''}</td><td>${z.ads}</td><td>${N(z.impr)}</td><td><b>${P(z.ctr,2)}</b></td><td>${z.cpc?$(z.cpc,2):"–"}</td><td>${z.conv}</td></tr>`).join("")}</tbody></table></div></div>`;};
+  h+=tbl("Theme","Message theme");
+  h+=`<div class="grid g-2">${tbl("Headline form","Headline form")}${tbl("Length","Headline length")}${tbl("Names Boldt","Brand name in the headline")}${tbl('Speaks to "you"','Speaking to "you"')}${div==="HC"?`<div class="panel"><h3>Format</h3><div class="tbl-wrap"><table><thead><tr><th class="l">Format</th><th>Ads</th><th>CTR</th><th>CPC</th><th>Conv.</th><th>Cost / conv.</th></tr></thead><tbody>${all.Format.map(z=>`<tr><td class="l">${z.k}</td><td>${z.ads}</td><td>${P(z.ctr,2)}</td><td>${$(z.cpc,2)}</td><td>${z.conv}</td><td>${z.cpconv?$(z.cpconv):"–"}</td></tr>`).join("")}</tbody></table></div></div>`:tbl("Format","Format")}</div>`;
+  const fat=CA.fatigue.filter(f=>f.div===div);
+  if(fat.length) h+=`<div class="panel"><h3>Long-running ads over time</h3><p class="sub">Click-through rate by month for ads that ran 5 months or more. A falling line would mean creative fatigue.</p>
+    ${legend(fat.map((f,i)=>({name:f.title.slice(0,42),color:[css("--c-hc"),css("--c-ga"),css("--c-sl")][i%3]})))}
+    ${chart({labels:D.months.slice(0,10),lines:fat.map((f,i)=>({name:f.title,color:[css("--c-hc"),css("--c-ga"),css("--c-sl")][i%3],values:D.months.slice(0,10).map((_,m)=>{const s=f.series.find(x=>x.m===m+1);return s&&s.impr>=1500?s.ctr:null;}),endLabel:false})),fmt:v=>P(v,1),h:220})}
+    ${TXT("fatigueNote","")?`<p class="note">${TXT("fatigueNote")}</p>`:""}</div>`;
+  const BP=TXT("bestPractices");
+  h+=`<div class="panel"><h3>Best practices to apply</h3><p class="sub">Drawn from this year's results. Saved as standing guidance for new ads.</p><ol class="bp">${BP.map(b=>`<li><b>${b[0]}.</b> ${b[1]}</li>`).join("")}</ol></div>`;
+  h+=`<div class="panel"><h3>Ads running now</h3><p class="sub">August 1 to today, at least 1,000 impressions, ranked by click-through rate</p></div>`;
+  h+=`<div class="ads">${ads.map((a,i)=>`<article class="ad"><div class="thumb">${a.thumb?`<img src="${a.thumb}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'${a.format} ad'}))">`:`<div class="ph">${a.format} ad</div>`}<span class="rank ${i<3?'top':''}">#${i+1}</span></div>
+    <div class="body"><div class="hl">${esc(a.headline)}</div><div class="chips">${chipDiv(a.div)}<span class="chip">${a.format}</span>${a.status==="PAUSED"?'<span class="chip warn">Paused</span>':''}${a.impr<10000?'<span class="chip">Directional</span>':''}</div>
+    <dl><div><dt>CTR</dt><dd>${P(a.ctr,2)}</dd></div><div><dt>CPC</dt><dd>${a.cpc?$(a.cpc,2):"–"}</dd></div><div><dt>Spend</dt><dd>${$k(a.spend)}</dd></div><div><dt>Conv.</dt><dd>${a.conv}</dd></div></dl>
+    <div class="note" style="margin:0">${N(a.impr)} impressions · ${N(a.clicks)} clicks</div></div></article>`).join("")}</div>`;
+  return h;
+};
+
+R.trends=()=>{
+  const cm=CM(), mon=M().slice(0,cm), L=D.leads, s=mqlStats(), F=D.factorsWeb;
+  const liS=paidSeries("linkedin","spend"), liC=paidSeries("linkedin","clicks"), liI=paidSeries("linkedin","impr");
+  const gaS=paidSeries("google","spend"), gaC=paidSeries("google","clicks"), gaI=paidSeries("google","impr");
+  const bl=budgetLines(), bt=budgetTotals(bl);
+  const fweb=mon.map(m=>{const i=F.months.indexOf(m);return i<0?null:sum(Object.values(F.sources).map(a=>a[i]));});
+  const rows=[];
+  {rows.push(["MQLs",s.mql,N,true],["SQLs",L.sql.slice(0,cm),N,true],["Cost per MQL",D.budget.hcSpend.map((v,i)=>v/s.mql[i]),v=>$(v),false],["Healthcare marketing spend",D.budget.hcSpend,v=>$(v),null]);}
+  rows.push(["Marketing spend vs budget",bt.monthA.slice(0,cm).map((a,i)=>a/bt.monthB[i]),v=>P(v,0),null]);
+  rows.push(["LinkedIn spend",liS,v=>$(v),null],["LinkedIn click-through rate",liC.map((c,i)=>c/liI[i]),v=>P(v,2),true],["LinkedIn cost per click",liS.map((x,i)=>x/liC[i]),v=>$(v,2),false]);
+  rows.push(["Google Ads spend",gaS,v=>$(v),null],["Google Ads click-through rate",gaC.map((c,i)=>gaI[i]?c/gaI[i]:null),v=>P(v,2),true],["Google Ads cost per click",gaS.map((x,i)=>gaC[i]?x/gaC[i]:null),v=>$(v,2),false]);
+  rows.push(["Healthcare website sessions (Factors)",fweb,N,true]);
+  const spark=(vals)=>{const v=vals.map(x=>x==null||!isFinite(x)?null:x), nn=v.filter(x=>x!=null);if(nn.length<2)return"";const mx=Math.max(...nn),mn=Math.min(...nn),W=110,H=26;
+    const pts=v.map((x,i)=>x==null?null:[i*(W/(v.length-1)),H-2-(mx===mn?0.5:(x-mn)/(mx-mn))*(H-4)]);let d="";pts.forEach((p,i)=>{if(p)d+=(d&&pts[i-1]?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1);});
+    const last=pts.filter(Boolean).pop();return `<svg class="spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><path d="${d}" fill="none" stroke="${css("--c-hc")}" stroke-width="1.6"/><circle cx="${last[0]}" cy="${last[1]}" r="2.5" fill="${css("--gold")}"/></svg>`;};
+  let h=head("Month over month",`Healthcare. Each metric by month with the change from the month before.${DONE()?"":` ${RM()} is month to date, so totals (spend, MQLs, sessions) will rise by month-end; rates are comparable now.`}`);
+  h+=`<div class="panel"><div class="tbl-wrap"><table class="mom"><thead><tr><th class="l">Metric</th>${mon.map(m=>`<th>${m}</th>`).join("")}<th>Trend</th><th>${PMs()} to ${RMs()}</th></tr></thead><tbody>
+    ${rows.map(([n,vals,f,upGood])=>{const a=vals[cm-2],b=vals[cm-1];const ch=a&&b!=null&&isFinite(a)&&isFinite(b)?b/a-1:null;const cls=ch==null||upGood==null?"":(ch>=0)===upGood?"up":"dn";
+      return `<tr><td class="l">${n}</td>${vals.map(v=>`<td>${v==null||!isFinite(v)?"–":f(v)}</td>`).join("")}<td>${spark(vals)}</td><td class="${cls}">${ch==null?"–":(ch>=0?"+":"")+P(ch,0)}</td></tr>`;}).join("")}
+    </tbody></table></div><p class="note">Green and red mark whether the change is good or bad for that metric; spend changes are left neutral.</p></div>`;
+  return h;
+};
+
+/* ---------- project calendar (live tracker on the published site) ---------- */
+let TRK=null, LATEST=true;
+const ymOf=s=>String(s||"").slice(0,7);
+function reportYM(){return `2026-${String(CM()).padStart(2,"0")}`;}
+function nextYM(){const m=CM()%12+1, y=CM()===12?2027:2026;return `${y}-${String(m).padStart(2,"0")}`;}
+function trackerLists(){
+  const ym=reportYM(), nx=nextYM();
+  if(TRK&&LATEST){
+    const done=TRK.filter(i=>i.status==="Complete"&&(ymOf(i.completedAt)===ym||(!i.completedAt&&ymOf(i.due)===ym)))
+      .map(i=>({project:i.title,cat:i.ws,owner:(i.owners||[]).join(", "),status:"Complete"}));
+    const active=TRK.filter(i=>["In progress","In review"].includes(i.status)&&ymOf(i.due)<=ym)
+      .map(i=>({project:i.title,cat:i.ws,owner:(i.owners||[]).join(", "),status:i.status}));
+    const next=TRK.filter(i=>i.status!=="Complete"&&!i.recurring&&ymOf(i.due)===nx)
+      .map(i=>({project:i.title,cat:i.ws,owner:(i.owners||[]).join(", "),status:i.status,due:i.due,prec:i.prec}));
+    return {done,active,next,live:true};
+  }
+  const P_=D.projects||[];
+  return {done:P_.filter(p=>p.status==="Complete"),active:P_.filter(p=>p.status!=="Complete"),next:D.upcoming||[],live:false};
+}
+const projRows=(list,showDue)=>list.length?list.map(p=>`<tr><td class="l wrap-cell">${esc(p.project)}</td><td class="l wrap-sm">${esc(p.cat||"")}</td><td class="l wrap-sm">${esc(p.owner||"")}</td>${showDue?`<td class="l">${p.due?(p.prec==="month"?M()[+p.due.slice(5,7)-1]:M()[+p.due.slice(5,7)-1]+" "+(+p.due.slice(8,10))):"–"}</td>`:`<td class="l"><span class="chip ${p.status==="Complete"?"good":"warn"}">${esc(p.status)}</span></td>`}</tr>`).join(""):`<tr><td class="l" colspan="4">Nothing listed.</td></tr>`;
+
+R.plan=()=>{
+  const T=trackerLists(), RC=D.recs||[];
+  let h=head("Plan & next steps",`Projects from the marketing project calendar and recommendations for ${NM()}.${T.live?` <a href="/tracker.html">Open the project calendar</a>`:""}`);
+  h+=`<div class="grid g-2"><div class="panel"><h3>Completed in ${RM()}</h3><p class="sub">${T.done.length} project${T.done.length===1?"":"s"}</p><div class="tbl-wrap"><table><thead><tr><th class="l">Project</th><th class="l">Workstream</th><th class="l">Owner</th><th class="l">Status</th></tr></thead><tbody>${projRows(T.done)}</tbody></table></div></div>
+    <div class="panel"><h3>Coming up in ${NM()}</h3><p class="sub">${T.next.length} project${T.next.length===1?"":"s"} due</p><div class="tbl-wrap"><table><thead><tr><th class="l">Project</th><th class="l">Workstream</th><th class="l">Owner</th><th class="l">Due</th></tr></thead><tbody>${projRows(T.next,true)}</tbody></table></div></div></div>`;
+  if(T.active.length) h+=`<div class="panel"><h3>In progress</h3><div class="tbl-wrap"><table><thead><tr><th class="l">Project</th><th class="l">Workstream</th><th class="l">Owner</th><th class="l">Status</th></tr></thead><tbody>${projRows(T.active)}</tbody></table></div></div>`;
+  h+=`<div class="panel"><h3>Recommendations for ${NM()}</h3><p class="sub">From ${RM()}'s results, with priority and owner</p><ol class="recs">
+    ${RC.map(r=>`<li><div class="rec-h"><span class="chip ${r.pri==="High"?"bad":r.pri==="Medium"?"warn":""}">${r.pri}</span><b>${esc(r.title)}</b></div><p>${esc(r.detail)}</p><span class="note">Owner: ${esc(r.owner)}</span></li>`).join("")}</ol></div>`;
+  return h;
+};
+
+/* ---------- executive summary ---------- */
+R.exec=()=>{
+  const E=D.exec||{}, s=mqlStats(), c=costPerMql(), bt=budgetTotals(budgetLines()), sqlY=sum(D.leads.sql.filter(x=>x!=null)), T=trackerLists();
+  const list=(arr)=>`<ul class="ex-list">${(arr||[]).map(x=>`<li>${x}</li>`).join("")}</ul>`;
+  let h=`<div class="page-head ex-head"><div><div class="eyebrow">Executive summary</div><h2>${RM()} 2026 marketing report</h2><p>Healthcare. ${E.prepared||""}</p></div><button type="button" class="btn-print" onclick="window.print()">Print or save as PDF</button></div>`;
+  h+=`<div class="grid g-kpi">${kpi(`MQLs, ${RM()}`,N(s.oct),`Monthly goal ${s.goalMo}`)}${kpi("MQLs year to date",N(s.ytd),`${P(s.ytd/s.goalsYTD.c,0)} of goal to date`)}
+    ${kpi("SQLs year to date",N(sqlY),`${P(sqlY/D.leads.sqlGoal,0)} of the ${D.leads.sqlGoal} annual goal`)}${kpi("Cost per MQL, YTD",$(c.all),`2025: ${$(D.roiAnnual["2025"].cpMql)}`)}
+    ${kpi("Marketing spend, YTD",$k(bt.ytdA),`${P(bt.ytdA/bt.ytdB,0)} of budget to date`)}</div>`;
+  h+=`<article class="panel ex-doc">`;
+  if(E.headline) h+=`<p class="ex-lede">${E.headline}</p>`;
+  (E.sections||[]).forEach(sec=>{h+=`<section><h3>${sec.title}</h3>${sec.body?`<p>${sec.body}</p>`:""}${sec.bullets?list(sec.bullets):""}</section>`;});
+  if(T.done.length) h+=`<section><h3>Delivered in ${RM()}</h3>${list(T.done.slice(0,12).map(p=>esc(p.project)))}${T.done.length>12?`<p class="note">Plus ${T.done.length-12} more on the Plan page.</p>`:""}</section>`;
+  if(E.nextMonth) h+=`<section><h3>Focus for ${NM()}</h3>${list(E.nextMonth)}</section>`;
+  h+=`</article>`;
+  return h;
+};
+
+/* ---------- shell ---------- */
+function current(){const h=(location.hash||"").slice(1);return PAGES.some(p=>p[0]===h)?h:"exec";}
+function render(){
+  if(!D)return;
+  const pg=current();
+  document.getElementById("tabs").innerHTML=PAGES.map(([id,n])=>`<a href="#${id}" ${id===pg?'aria-current="page"':''}>${n}</a>`).join("");
+  let html=R[pg]();
+  if(NARR[pg]){const [w,i]=NARR[pg]();const k=html.indexOf("</div>",html.indexOf("page-head"))+6;html=html.slice(0,k)+narrative(w,i)+html.slice(k);}
+  document.getElementById("view").innerHTML=html;
+  const cs=document.getElementById("camp-month"); if(cs) cs.addEventListener("change",()=>{CAMP_M=+cs.value;render();});
+  const t=document.querySelector('.tabs a[aria-current="page"]'); if(t&&t.scrollIntoView) t.scrollIntoView({block:"nearest",inline:"nearest"});
+}
+addEventListener("hashchange",()=>{render();scrollTo(0,0);});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
+new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+function boot(data){D=data;
+  document.getElementById("asof").textContent=(DONE()?`${RM()} 2026 · final`:`Updated ${D.asOfLabel}`);
+  document.getElementById("foot").textContent="Sources: LinkedIn Ads and Google Ads through Windsor.ai; HubSpot; Factors.ai; 2026 Marketing Budget Google Sheet; marketing project calendar.";render();}
+const getJSON=u=>fetch(u,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json();}).then(j=>{if(j&&j.ok===false)throw 0;return j;});
+/* Monthly snapshots live at /data/YYYY-MM.json with a list in /data/index.json; data.json is the fallback. */
+async function loadMonth(m){try{boot(await getJSON(`data/${m}.json`));return true;}catch(e){return false;}}
+(async()=>{
+  let months=[];
+  try{months=(await getJSON("data/index.json")).months||[];}catch(e){}
+  if(!(months.length&&await loadMonth(months[0]))){
+    try{boot(await getJSON("data.json"));}
+    catch(e){const el=document.getElementById("dash-data"); if(el) boot(JSON.parse(el.textContent));
+      else {document.getElementById("view").innerHTML='<div class="empty">The report data did not load. Refresh the page to try again.</div>';return;}}
+  }
+  if(months.length>1){const sel=document.createElement("select");sel.className="month-pick";sel.setAttribute("aria-label","Report month");
+    sel.innerHTML=months.map(m=>`<option value="${m}">${MONTHS_LONG[+m.slice(5,7)-1]} ${m.slice(0,4)}</option>`).join("");
+    sel.addEventListener("change",async()=>{LATEST=sel.value===months[0];await loadMonth(sel.value);});
+    document.getElementById("asof").after(sel);}
+  try{const j=await getJSON("/api/tracker"); TRK=j.items||null; render();}catch(e){}
+})();
+})();
+</script>
