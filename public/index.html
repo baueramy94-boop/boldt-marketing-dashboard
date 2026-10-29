@@ -429,15 +429,11 @@ R.accounts=()=>{
   h+=`<div class="grid g-2"><div class="panel"><h3>HubSpot companies visiting by day</h3><p class="sub">Companies in HubSpot with at least one session</p>${chart({labels:A.knownVisitsDaily.map(d=>d.day.replace("Oct ","Oct ")),bars:[{name:"Companies",color:css("--c-hc"),values:A.knownVisitsDaily.map(d=>d.count)}],h:220,half:true})}</div>
     <div class="panel"><h3>Companies that visited after seeing LinkedIn ads</h3><p class="sub">Healthcare LinkedIn ads, ${A.window}</p><ul class="list-2">${vis.map(v=>`<li><span>${esc(v.name)}</span>${v.hubspotLead?'<span class="chip good">HubSpot lead</span>':`<span class="note" style="margin:0">${esc(v.domain)}</span>`}</li>`).join("")}</ul></div></div>`;
   if(JT){
-    const L=JT.levels.map(x=>({k:x.k,v:x.impr})), F=JT.functions.map(x=>({k:x.k,v:x.impr})), TR=D.jobTitleTrend;
+    const TR=D.jobTitleTrend;
     if(TR) h+=`<div class="panel"><h3>Decision makers engaging with LinkedIn ads</h3><p class="sub">Clicks on healthcare LinkedIn ads by the viewer's job title, ${TR.months[0]} to ${TR.months[TR.months.length-1]}</p>
       ${legend([{name:"VP and C-suite",color:css("--c-hc"),box:1},{name:"Real estate, finance & strategy roles",color:css("--c-ga"),box:1}])}
       ${chart({labels:TR.months,bars:[{name:"VP and C-suite",color:css("--c-hc"),values:TR.cvpClicks},{name:"Real estate, finance & strategy",color:css("--c-ga"),values:TR.dmClicks}],h:220})}
       ${TXT("audienceNote","")?`<p class="note">${TXT("audienceNote")}</p>`:""}</div>`;
-    h+=`<div class="panel"><h3>Who LinkedIn ads reached${JT.window?`, ${JT.window}`:""}</h3><p class="sub">${N(JT.impr)} healthcare impressions with a reported job title, ${JT.clicks} clicks. Grouped by title keywords.</p>
-     <div class="grid g-3"><div><div class="eyebrow">Seniority</div>${hbars(L,{max:JT.impr})}</div><div><div class="eyebrow">Function</div>${hbars(F,{max:JT.impr})}</div>
-     <div><div class="eyebrow">Top titles</div>${hbars(JT.top.slice(0,8).map(x=>({k:x.k,v:x.impr})))}</div></div>
-     <p class="note">${P(JT.levels.filter(l=>/C-suite|Vice|Director/.test(l.k)).reduce((s,l)=>s+l.impr,0)/JT.impr,0)} of these impressions reached directors and above.</p></div>`;
   }
   return h;
 };
