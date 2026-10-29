@@ -651,7 +651,9 @@ async function askSend(q){q=q.trim();if(!q||ASK.busy)return;ASK.busy=true;docume
   catch(e){w.className="msg a";w.textContent=(e&&e.message&&e.message!=="error")?e.message:"Something went wrong. Please try again.";}
   ASK.busy=false;document.getElementById("askSend").disabled=false;}
 function askOpen(o){const p=document.getElementById("askPanel");p.classList.toggle("open",o);p.setAttribute("aria-hidden",o?"false":"true");if(o)setTimeout(()=>document.getElementById("askInput").focus(),200);}
-function askInit(){const b=document.getElementById("askBtn");b.hidden=false;b.addEventListener("click",()=>askOpen(true));
+function askInit(ready){const b=document.getElementById("askBtn");b.hidden=false;b.addEventListener("click",()=>askOpen(true));
+  if(!ready){document.getElementById("askChips").hidden=true;document.getElementById("askSend").disabled=true;document.getElementById("askInput").disabled=true;
+    askAdd("a","The assistant isn't available right now. Please check back later.");document.getElementById("askClose").addEventListener("click",()=>askOpen(false));return;}
   document.getElementById("askClose").addEventListener("click",()=>askOpen(false));
   document.addEventListener("keydown",e=>{if(e.key==="Escape")askOpen(false);});
   const chips=[`How did LinkedIn perform in ${D?RM():"the latest month"}?`,"Are we on budget for the year?","How are Google Ads doing this month so far?","What did marketing deliver last month?","How do MQLs compare with last year?"];
@@ -695,7 +697,7 @@ async function loadMonth(m){try{boot(await getJSON(`data/${m}.json`));return tru
     sel.innerHTML=months.map(m=>`<option value="${m}">${MONTHS_LONG[+m.slice(5,7)-1]} ${m.slice(0,4)}</option>`).join("");
     sel.addEventListener("change",async()=>{LATEST=sel.value===months[0];await loadMonth(sel.value);});
     document.getElementById("asof").after(sel);}
-  try{const a=await getJSON("/api/ask"); if(a.ready) askInit();}catch(e){}
+  try{const a=await getJSON("/api/ask"); askInit(!!a.ready);}catch(e){}
   try{const r=await fetch("tracker.html",{method:"HEAD"}); if(r.ok&&/html/.test(r.headers.get("content-type")||"")){CAL=true; render();}}catch(e){}
   try{const j=await getJSON("/api/tracker"); TRK=(j.items&&j.items.length)?j.items:null; render();}catch(e){}
 })();

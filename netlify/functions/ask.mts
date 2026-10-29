@@ -142,6 +142,17 @@ const TOOLS: Anthropic.Tool[] = [
       required: ["platform", "date_from", "date_to", "breakdown"] } },
 ];
 
+/* Claude connection: Netlify AI Gateway's Anthropic variables, a key Amy set herself, or the gateway's generic variables as a backup. */
+function claudeConfig(): { client: Anthropic; via: string } | null {
+  const e = process.env;
+  if (e.ANTHROPIC_API_KEY || e.ANTHROPIC_BASE_URL) return { client: new Anthropic(), via: e.ANTHROPIC_BASE_URL ? "gateway" : "own key" };
+  const own = Netlify.env.get("ANTHROPIC_API_KEY");
+  if (own) return { client: new Anthropic({ apiKey: own }), via: "own key" };
+  if (e.NETLIFY_AI_GATEWAY_BASE_URL && e.NETLIFY_AI_GATEWAY_KEY)
+    return { client: new Anthropic({ apiKey: null, authToken: e.NETLIFY_AI_GATEWAY_KEY, baseURL: e.NETLIFY_AI_GATEWAY_BASE_URL.replace(/\/$/, "") + "/anthropic" }), via: "gateway backup" };
+  return null;
+}
+
 function strip(d: any) {
   const c = structuredClone(d);
   (c.creatives || []).forEach((a: any) => delete a.thumb);
@@ -166,7 +177,11 @@ export default async (req: Request, context: Context) => {
     const r = await fetch(u, { redirect: "follow" }); return r.json();
   };
 
-  if (req.method === "GET") return json({ ok: true, ready: !!process.env.ANTHROPIC_BASE_URL || !!Netlify.env.get("ANTHROPIC_API_KEY"), live: !!Netlify.env.get("WINDSOR_API_KEY") });
+  if (req.method === "GET") {
+    const c = claudeConfig();
+    console.log(`ask status: ready=${!!c} via=${c ? c.via : "none"} ANTHROPIC_BASE_URL=${!!process.env.ANTHROPIC_BASE_URL} ANTHROPIC_API_KEY=${!!process.env.ANTHROPIC_API_KEY} NETLIFY_AI_GATEWAY_BASE_URL=${!!process.env.NETLIFY_AI_GATEWAY_BASE_URL} NETLIFY_AI_GATEWAY_KEY=${!!process.env.NETLIFY_AI_GATEWAY_KEY} WINDSOR=${!!Netlify.env.get("WINDSOR_API_KEY")}`);
+    return json({ ok: true, ready: !!c, live: !!Netlify.env.get("WINDSOR_API_KEY") });
+  }
   if (req.method !== "POST") return json({ ok: false, error: "method not allowed" }, 405);
 
   let body: any;
@@ -269,7 +284,9 @@ export default async (req: Request, context: Context) => {
   }
 
   /* ---------- Claude ---------- */
-  const anthropic = new Anthropic();
+  const cfg = claudeConfig();
+  if (!cfg) { console.log("ask: no Claude connection available"); return json({ ok: false, error: "The assistant isn't available right now. Please try again later." }, 503); }
+  const anthropic = cfg.client;
   const today = new Date().toLocaleDateString("en-US", { timeZone: "America/Chicago", year: "numeric", month: "long", day: "numeric" });
   const system: Anthropic.TextBlockParam[] = [
     { type: "text", text: SYSTEM(latest, months, today, keyFigures(latestData)) },
@@ -309,7 +326,8 @@ export default async (req: Request, context: Context) => {
       answer = textOf(await call(true));
     }
   } catch (e: any) {
-    return json({ ok: false, error: "The assistant is not available right now. Please try again in a minute." }, 502);
+    console.log(`ask error: status=${e?.status} ${String(e?.message || e).slice(0, 300)}`);
+    return json({ ok: false, error: e?.status === 429 ? "The assistant is busy. Please try again in a minute." : "The assistant is not available right now. Please try again in a minute." }, 502);
   }
   if (!answer) answer = FALLBACK;
   answer = answer.replace(/\s?—\s?/g, ", ");                                              // house style: no em dashes
