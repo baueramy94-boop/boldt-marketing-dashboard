@@ -28,7 +28,7 @@
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--navy)}
-.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1680px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .num{font-variant-numeric:tabular-nums}
 h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
 
@@ -51,7 +51,7 @@ h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
 main .wrap{padding-block:24px 56px;display:grid;gap:22px}
 .page-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px}
 .page-head h2{font-size:clamp(26px,3.4vw,36px);font-weight:800;font-stretch:78%;letter-spacing:-.01em}
-.page-head p{margin:0;color:var(--muted);max-width:70ch}
+.page-head p{margin:0;color:var(--muted)}
 .eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 
 .grid{display:grid;gap:16px}
@@ -161,17 +161,17 @@ tr.future td{color:var(--muted)}
 .ex-head .eyebrow{margin-bottom:4px}
 .btn-print{font:inherit;font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
 .ex-doc{display:grid;gap:22px;padding:28px}
-.ex-doc section{display:grid;gap:8px;max-width:80ch}
+.ex-doc section{display:grid;gap:8px}
 .ex-doc h3{font-size:17px}
 .ex-doc p{margin:0;line-height:1.6}
-.ex-lede{font-size:18px;line-height:1.55;max-width:75ch;font-weight:500}
+.ex-lede{font-size:18px;line-height:1.55;font-weight:500}
 .ex-list{margin:0;padding-left:20px;display:grid;gap:6px;line-height:1.55}
 .page-head a{color:inherit;font-weight:600}
 @media print{.mast,.tabs,footer,.btn-print,.narr{display:none!important}body{background:#fff}.panel{break-inside:avoid;border-color:#ccc}main .wrap{padding:0}}
 .recs li{border-top:1px solid var(--line);padding-top:12px}
 .recs li:first-child{border-top:0;padding-top:0}
 .rec-h{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.recs p{margin:4px 0 2px;color:var(--ink);max-width:90ch}
+.recs p{margin:4px 0 2px;color:var(--ink)}
 .nar-good h3{color:var(--good)} .nar-bad h3{color:var(--warn)}
 .spark{display:block}
 table.mom td:first-child{white-space:normal;min-width:180px}
