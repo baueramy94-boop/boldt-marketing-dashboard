@@ -148,8 +148,9 @@ function claudeConfig(): { client: Anthropic; via: string } | null {
   if (e.ANTHROPIC_API_KEY || e.ANTHROPIC_BASE_URL) return { client: new Anthropic(), via: e.ANTHROPIC_BASE_URL ? "gateway" : "own key" };
   const own = Netlify.env.get("ANTHROPIC_API_KEY");
   if (own) return { client: new Anthropic({ apiKey: own }), via: "own key" };
-  if (e.NETLIFY_AI_GATEWAY_BASE_URL && e.NETLIFY_AI_GATEWAY_KEY)
-    return { client: new Anthropic({ apiKey: null, authToken: e.NETLIFY_AI_GATEWAY_KEY, baseURL: e.NETLIFY_AI_GATEWAY_BASE_URL.replace(/\/$/, "") + "/anthropic" }), via: "gateway backup" };
+  const gw = e.NETLIFY_AI_GATEWAY_BASE_URL || e.NETLIFY_AI_GATEWAY_URL;
+  if (gw && e.NETLIFY_AI_GATEWAY_KEY)
+    return { client: new Anthropic({ apiKey: null, authToken: e.NETLIFY_AI_GATEWAY_KEY, baseURL: gw.replace(/\/$/, "") + "/anthropic" }), via: "gateway backup" };
   return null;
 }
 
@@ -179,7 +180,7 @@ export default async (req: Request, context: Context) => {
 
   if (req.method === "GET") {
     const c = claudeConfig();
-    console.log(`ask status: ready=${!!c} via=${c ? c.via : "none"} ANTHROPIC_BASE_URL=${!!process.env.ANTHROPIC_BASE_URL} ANTHROPIC_API_KEY=${!!process.env.ANTHROPIC_API_KEY} NETLIFY_AI_GATEWAY_BASE_URL=${!!process.env.NETLIFY_AI_GATEWAY_BASE_URL} NETLIFY_AI_GATEWAY_KEY=${!!process.env.NETLIFY_AI_GATEWAY_KEY} WINDSOR=${!!Netlify.env.get("WINDSOR_API_KEY")}`);
+    console.log(`ask status: ready=${!!c} via=${c ? c.via : "none"} ANTHROPIC_BASE_URL=${!!process.env.ANTHROPIC_BASE_URL} ANTHROPIC_API_KEY=${!!process.env.ANTHROPIC_API_KEY} NETLIFY_AI_GATEWAY_BASE_URL=${!!process.env.NETLIFY_AI_GATEWAY_BASE_URL} NETLIFY_AI_GATEWAY_URL=${!!process.env.NETLIFY_AI_GATEWAY_URL} gatewayVars=${Object.keys(process.env).filter(k => /AI_GATEWAY|ANTHROPIC/.test(k)).join("|")} NETLIFY_AI_GATEWAY_KEY=${!!process.env.NETLIFY_AI_GATEWAY_KEY} WINDSOR=${!!Netlify.env.get("WINDSOR_API_KEY")}`);
     return json({ ok: true, ready: !!c, live: !!Netlify.env.get("WINDSOR_API_KEY") });
   }
   if (req.method !== "POST") return json({ ok: false, error: "method not allowed" }, 405);
