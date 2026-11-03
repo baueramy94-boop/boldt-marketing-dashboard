@@ -128,7 +128,7 @@ Definitions: MQL = HubSpot lead entering New in the Lead pipeline, by month ente
 const TOOLS: Anthropic.Tool[] = [
   { name: "get_month_report", description: "Full data from one monthly report snapshot (paid media by month and campaign, ads and creative analysis, website, leads and MQL companies, accounts, budget lines, executive summary text, projects). Use for months other than the latest, which is already in the prompt.",
     input_schema: { type: "object", properties: { month: { type: "string", description: "YYYY-MM" } }, required: ["month"] } },
-  { name: "get_project_calendar", description: "Live marketing project calendar (projects, workstreams, owners, due dates, status, completion dates). Filter to keep results small.",
+  { name: "get_project_calendar", description: "Live marketing project calendar (projects, workstreams, owners, due dates, status, priority, completion dates), plus the four most recent team meetings with agenda, minutes and action items. Filter to keep results small.",
     input_schema: { type: "object", properties: {
       status: { type: "string", description: "Optional exact status, e.g. Complete, In progress, Not started" },
       workstream: { type: "string", description: "Optional workstream contains, e.g. Advertising, Proposals" },
@@ -265,7 +265,10 @@ export default async (req: Request, context: Context) => {
       if (name === "get_project_calendar") {
         const t: any = await script({ action: "tracker" });
         if (!t.ok) return { ok: false, error: "The project calendar is not available right now." };
-        let items: any[] = t.items || [];
+        const all: any[] = t.items || [];
+        let items: any[] = all.filter(i => i.kind !== "meeting");
+        const meetings = all.filter(i => i.kind === "meeting").sort((a, b) => String(b.due).localeCompare(String(a.due))).slice(0, 4)
+          .map(m => ({ meeting: m.title, date: m.due, agenda: (m.agenda || []).map((a: any) => a.t + (a.done ? " (covered)" : "")), minutes: String(m.minutes || "").slice(0, 1500), actions: (m.actions || []).map((a: any) => `${a.t}${a.owner ? " (" + a.owner + ")" : ""}${a.due ? " by " + a.due : ""}`) }));
         const f = input || {};
         if (f.status) items = items.filter(i => String(i.status).toLowerCase() === String(f.status).toLowerCase());
         if (f.workstream) items = items.filter(i => String(i.ws).toLowerCase().includes(String(f.workstream).toLowerCase()));
@@ -273,8 +276,8 @@ export default async (req: Request, context: Context) => {
         if (f.due_to) items = items.filter(i => i.due && i.due <= f.due_to);
         if (f.completed_from) items = items.filter(i => i.completedAt && i.completedAt >= f.completed_from);
         if (f.search) { const q = String(f.search).toLowerCase(); items = items.filter(i => (i.title + " " + (i.notes || "")).toLowerCase().includes(q)); }
-        const rows = items.slice(0, 80).map(i => ({ title: i.title, workstream: i.ws, owners: (i.owners || []).join(", "), due: i.due, status: i.status, completed: i.completedAt || undefined, waitingOn: i.waiting || undefined }));
-        return { ok: true, count: items.length, items: rows };
+        const rows = items.slice(0, 80).map(i => ({ title: i.title, workstream: i.ws, owners: (i.owners || []).join(", "), due: i.due, status: i.status, priority: i.priority || undefined, eventDate: i.eventDate || undefined, tracker: i.board || (i.ws === "Rebrand" ? "rebrand" : "marketing"), completed: i.completedAt || undefined, waitingOn: i.waiting || undefined }));
+        return { ok: true, count: items.length, items: rows, recentMeetings: meetings };
       }
       if (name === "get_budget") {
         const view = String(input.view || "lines"), b = await script({ action: "budget", view });

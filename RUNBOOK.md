@@ -60,6 +60,14 @@ Use the connectors listed here. If a source fails, keep last month's values for 
 - `jobTitles.HC`: LinkedIn impressions by job title for healthcare campaigns, grouped into seniority levels, functions and top titles.
 - `landingYtd` and `blogYtd`: GA4 (Windsor `googleanalytics4`) year to date. Drop any senior living pages or posts.
 
+### MQL company journeys (Factors agent + HubSpot), shown on the Leads & accounts page
+- For each company behind this month's MQLs (HubSpot Lead records entering New in month `m`; use `hs_primary_company_id` and the company `domain`, without `www.`), run the Factors agent `mql_journey_agent_(dashboard)_lQKvZ` with `run_agent_async`, then poll `get_agent_run`. Results expire after 10 minutes, so start no more than 9 at a time and collect them before starting more. Save each JSON result to a file.
+- From HubSpot, get each company's contacts (job title, `hs_email_last_open_date`, `hs_email_last_click_date`, `hs_sales_email_last_clicked`) and the lead's label (Hot or Warm).
+- Build `mqlJourneys` = `{month, summary, companies}` with `scripts/build_mql_journeys.py` (edit its inputs). Rules: ad and website touches cover the 6 months before each MQL date (Factors' limit); email covers 12 months. "Actively engaged" = clicked an ad, visited from an ad or clicked an email. Show LinkedIn ad views only as "saw LinkedIn ads" because Factors counts them inconsistently. Drop any senior living touch, page or campaign. Never include people's names or email addresses.
+
+### Ads archive (tracker's Ads archive tab)
+- Rebuild `public/data/ads-archive.json` with `scripts/build_ads_archive.py` from two Windsor pulls for January 1 through today: `linkedin` (campaign_group_name, campaign, creative_id, share_title, creative_status, landing_page, creative_thumbnail, impressions, clicks) and `google_ads` (campaign, ad_group_name, ad_id, ad_group_ad_status, campaign_status, ad_strength, ad_responsive_search_ad_headlines, ad_responsive_search_ad_descriptions, ad_final_urls, impressions, clicks). Leave out senior living, DemandGen and YouTube. Set `updated` to today. LinkedIn thumbnail links expire about a week after the pull; that's expected.
+
 ### Budget (Google Sheet `19SXdl16vuH4QP9wFv7X8kaXk1MfuV9VW67YUEqZOHD0`)
 - Tab `2026 Actual Marketing Budget`: line names in column A. Month `m` Actual is column B + 4×(m−1), Budget is the next column (October = AL/AM, November = AP/AQ, December = AT/AU).
 - For every object in `budget.lines`, match on `line` and set `actual[i]` (and refresh `budget` if it changed). Don't add senior living lines.

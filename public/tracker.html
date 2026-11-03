@@ -23,7 +23,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 header.top{background:var(--navy);color:#fff;padding:18px 24px 0}
 .top-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between}
 .title{margin:0;font-size:30px;line-height:1;font-stretch:70%;font-weight:900;letter-spacing:.005em}
-.title .hl{text-decoration:underline;text-decoration-color:var(--yellow);text-decoration-thickness:5px;text-underline-offset:7px}
+.title .hl{text-decoration:none}
 .sub{color:#BFD0D8;font-size:13px;margin-top:6px}
 .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .btn{border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:600;white-space:nowrap}
@@ -97,7 +97,80 @@ main{padding:18px 24px 48px;max-width:1600px;margin:0 auto}
 .s-ongoing{background:#DCEBE3;color:var(--green)}
 .s-complete{background:#E7EEDD;color:#4c6a2c}
 .s-confirm-status{background:var(--yellow);color:#3d2c00}
-.subprog{font-size:12px;color:var(--muted)}
+.subprog{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.subprog i{display:inline-block;width:54px;height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+.subprog i b{display:block;height:100%;background:var(--olive)}
+.nextstep{font-size:12px;color:var(--gray);margin-top:6px}
+.nextstep b{font-weight:700;color:var(--ink)}
+.prio{font-size:11px;font-weight:800;border-radius:20px;padding:1px 8px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.prio.high{background:#F6E1DC;color:var(--brick)} .prio.medium{background:#FBF0D6;color:#7a5400} .prio.low{background:#EEF2F4;color:var(--slate)}
+.card.ms{background:var(--navy);border-color:var(--navy);border-left-color:var(--yellow);color:#fff}
+.card.ms .t{color:#fff}
+.card.ms .msd{margin-top:6px;font-size:12.5px;color:#F4D27A;font-weight:700}
+.lanes.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.lanes.one{grid-template-columns:1fr}
+.lanes.one .lane{max-height:none}
+.cardgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0 10px}
+.boards{display:inline-flex;gap:2px;background:rgba(255,255,255,.12);border-radius:10px;padding:3px;margin-top:10px}
+.boards button{border:0;background:none;color:#BFD0D8;padding:6px 14px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px}
+.boards button[aria-pressed="true"]{background:#fff;color:var(--navy)}
+/* meetings */
+body[data-view="meetings"] #kpis, body[data-view="meetings"] section.filters, body[data-view="meetings"] #footnote,
+body[data-view="ads"] #kpis, body[data-view="ads"] section.filters, body[data-view="ads"] #footnote{display:none}
+.mt{display:grid;grid-template-columns:280px minmax(0,1fr);gap:16px;align-items:start}
+.mt-list{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;display:grid;gap:6px}
+.mt-list .mi{border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer;background:#fff;text-align:left;width:100%}
+.mt-list .mi[aria-current="true"]{border-color:var(--navy);box-shadow:inset 3px 0 0 var(--yellow)}
+.mt-list .mi b{display:block;font-size:13.5px}
+.mt-list .mi span{font-size:12px;color:var(--muted)}
+.mt-ed{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:grid;gap:14px}
+.mt-ed h3{margin:0;font-size:15px;font-stretch:80%;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:.03em;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mt-row{display:grid;grid-template-columns:2fr 1fr;gap:10px}
+.mt-ed input,.mt-ed textarea,.mt-ed select{width:100%;border:1px solid #CDD0D4;border-radius:8px;padding:8px 10px;background:#fff}
+.mt-ed textarea{min-height:140px;resize:vertical}
+.mt-ed label.l{display:block;font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.ag{display:grid;gap:6px}
+.ag-r{display:grid;grid-template-columns:18px minmax(0,1fr) 140px 26px;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.ag-r.done .ag-t{text-decoration:line-through;color:var(--muted)}
+.ag-r input[type=checkbox]{width:16px;height:16px;padding:0;accent-color:var(--navy)}
+.ag-r .ag-t{border:0;padding:4px 2px}
+.ag-r .ag-o{padding:5px 8px;font-size:12.5px}
+.ag-r .lnk{grid-column:2/4;font-size:12px;color:var(--slate)}
+.ag-r .lnk a{color:var(--navy);font-weight:600;cursor:pointer}
+.ac-r{display:grid;grid-template-columns:minmax(0,1fr) 120px 140px auto 26px;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.mt-btns{display:flex;gap:8px;flex-wrap:wrap}
+.mt-hint{font-size:12px;color:var(--muted);margin:0}
+/* ads archive */
+.adbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.adbar input[type=search]{flex:1 1 220px;min-width:180px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 10px}
+.adbar select{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 10px}
+.adgrp{background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:12px}
+.adgrp>summary{list-style:none;cursor:pointer;padding:12px 14px;display:flex;justify-content:space-between;gap:10px;align-items:center;font-weight:800;color:var(--navy);font-stretch:85%;font-size:16px}
+.adgrp>summary::-webkit-details-marker{display:none}
+.adgrp>summary .sm{font-weight:500;color:var(--muted);font-size:12.5px;font-stretch:100%}
+.adgrp .camp{padding:0 14px 14px}
+.adgrp .camp h4{margin:10px 0 8px;font-size:13px;color:var(--gray);text-transform:uppercase;letter-spacing:.04em}
+.adcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.adc{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+.adc .im{aspect-ratio:1/1;background:var(--navy);position:relative;overflow:hidden}
+.adc .im img{width:100%;height:100%;object-fit:cover;display:block}
+.adc .im .ph{position:absolute;inset:0;display:flex;align-items:flex-end;padding:14px;color:#fff;font-weight:800;font-stretch:75%;font-size:20px;line-height:1.1;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 2px,transparent 2px 14px)}
+.adc .bd{padding:10px 12px;display:grid;gap:5px;font-size:12.5px}
+.adc .bd .h{font-weight:700;font-size:13.5px;line-height:1.3;color:var(--ink)}
+.adc .bd .m{color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px}
+.adc .bd a{color:var(--navy);font-weight:600;text-decoration:none;overflow-wrap:anywhere}
+.st{font-size:11px;font-weight:800;border-radius:20px;padding:1px 8px;text-transform:uppercase;letter-spacing:.04em}
+.st.on{background:#DCEBE3;color:var(--green)} .st.off{background:#E9EAEC;color:var(--gray)}
+.gad{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#fff;display:grid;gap:4px}
+.gad .sp{font-size:12px;color:var(--ink)}
+.gad .sp b{font-weight:700}
+.gad .gh{color:#1a0dab;font-size:16px;line-height:1.3}
+.gad .gd{font-size:13px;color:#4d5156;line-height:1.4}
+.gad details{font-size:12.5px;color:var(--gray)}
+.gad details summary{cursor:pointer;color:var(--slate);font-weight:600}
+.gad ul{margin:6px 0 0;padding-left:16px;display:grid;gap:2px}
+@media (max-width:1100px){.lanes.four{grid-template-columns:1fr 1fr}.mt{grid-template-columns:1fr}}
+@media (max-width:700px){.lanes.four{grid-template-columns:1fr}.mt-row{grid-template-columns:1fr}.ag-r{grid-template-columns:18px minmax(0,1fr) 26px}.ag-r .ag-o{grid-column:2/3}.ac-r{grid-template-columns:1fr 1fr}}
 details.grp{background:#fff;border:1px dashed #BFC3C8;border-radius:8px;margin-bottom:8px}
 details.grp summary{cursor:pointer;padding:9px 10px;font-weight:700;list-style:none;display:flex;gap:6px;align-items:center}
 details.grp summary .sm{margin-left:auto;text-align:right}
@@ -170,7 +243,11 @@ table.list{width:100%;border-collapse:collapse;min-width:900px}
 .fld .help{font-size:12px;color:var(--muted);margin-top:4px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .subs{display:grid;gap:4px}
-.subs label{display:flex;gap:8px;align-items:flex-start;font-size:13px;text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink);margin:0}
+.subs label{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink);margin:0;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;line-height:1.35}
+.subs label input[type=checkbox]{width:16px;height:16px;flex:none;margin:1px 0 0;padding:0;accent-color:var(--navy)}
+.subs label span{flex:1;min-width:0}
+.subs .rm{border:0;background:none;color:var(--muted);cursor:pointer;font-size:17px;line-height:1;padding:0 2px}
+.subs .rm:hover{color:var(--brick)}
 .subs label.done span{text-decoration:line-through;color:var(--muted)}
 .subs .addsub{display:flex;gap:6px;margin-top:4px}
 .subs .addsub input{flex:1}
@@ -259,8 +336,9 @@ body[data-view="archive"] #kpis, body[data-view="archive"] section.filters, body
 <header class="top">
   <div class="top-row">
     <div>
-      <h1 class="title"><span class="hl">Marketing</span> Project Tracker</h1>
+      <h1 class="title"><span class="hl" id="boardName">Marketing</span> Project Tracker</h1>
       <div class="sub" id="subline">Boldt Real Estate · shared calendar, changes save for everyone</div>
+      <div class="boards" role="group" aria-label="Tracker"><button type="button" data-board="marketing" aria-pressed="true">Marketing</button><button type="button" data-board="rebrand" aria-pressed="false">Rebrand</button></div>
     </div>
     <div class="actions">
       <button class="btn primary" id="addBtn" type="button">+ Add item</button>
@@ -284,7 +362,9 @@ body[data-view="archive"] #kpis, body[data-view="archive"] section.filters, body
     <button class="tab" role="tab" data-view="timeline" aria-selected="false">Timeline</button>
     <button class="tab" role="tab" data-view="owners" aria-selected="false">By owner</button>
     <button class="tab" role="tab" data-view="table" aria-selected="false">All items</button>
+    <button class="tab" role="tab" data-view="meetings" aria-selected="false">Meetings</button>
     <button class="tab" role="tab" data-view="archive" aria-selected="false">Collateral archive</button>
+    <button class="tab" role="tab" data-view="ads" aria-selected="false">Ads archive</button>
   </nav>
 </header>
 
@@ -298,6 +378,7 @@ body[data-view="archive"] #kpis, body[data-view="archive"] section.filters, body
     <select id="fOwner"><option value="">All owners</option></select>
     <select id="fWs"><option value="">All workstreams</option></select>
     <select id="fStatus"><option value="">All statuses</option></select>
+    <select id="fPri"><option value="">All priorities</option><option>High</option><option>Medium</option><option>Low</option></select>
     <label class="toggle"><input type="checkbox" id="fDone"> Show completed</label>
     <button class="clear" id="clearF" type="button">Clear filters</button>
     <span class="count" id="count"></span>
@@ -307,6 +388,8 @@ body[data-view="archive"] #kpis, body[data-view="archive"] section.filters, body
   <section class="view" id="v-timeline"></section>
   <section class="view" id="v-owners"></section>
   <section class="view" id="v-table"></section>
+  <section class="view" id="v-meetings"></section>
+  <section class="view" id="v-ads"></section>
   <section class="view" id="v-archive">
     <section class="kpis akpis" id="akpis"></section>
     <div class="drop" id="aDrop">
@@ -339,6 +422,11 @@ body[data-view="archive"] #kpis, body[data-view="archive"] section.filters, body
       <div class="fld"><label for="eStatus">Status</label><select id="eStatus"></select></div>
       <div class="fld"><label for="eWs">Workstream</label><input id="eWs" list="wsList"></div>
     </div>
+    <div class="row2">
+      <div class="fld"><label for="ePri">Priority</label><select id="ePri"><option value="">None</option><option>High</option><option>Medium</option><option>Low</option></select></div>
+      <div class="fld"><label for="eEvent">Event or milestone date</label><input id="eEvent" type="date"><div class="help">For events and project milestones. Shows on the card.</div></div>
+    </div>
+    <div class="fld"><label for="eBoard">Tracker</label><select id="eBoard"><option value="marketing">Marketing</option><option value="rebrand">Rebrand</option></select></div>
     <div class="fld"><label for="eOwners">Responsible</label><input id="eOwners" list="ownerList"><div class="help">Separate multiple owners with commas.</div></div>
     <div class="row2">
       <div class="fld"><label for="eDue">Due date</label><input id="eDue" type="date"></div>
@@ -414,6 +502,14 @@ function parseD(s){ if(!s) return null; const [y,m,d] = s.split("-").map(Number)
 function fmtISO(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function monthEnd(y,m){ return new Date(y, m+1, 0); }
 const DAY = 864e5;
+const WEEK_END = (() => { const d = new Date(TODAY); d.setDate(d.getDate() + (7 - d.getDay()) % 7); return d; })();   // through Sunday
+const DAYS_LEFT_IN_WEEK = Math.round((WEEK_END - TODAY) / DAY);
+const BOARDS = { marketing: "Marketing", rebrand: "Rebrand" };
+let BOARD = "marketing"; try { BOARD = localStorage.getItem("boldt-tracker-board") || "marketing"; } catch(e) {}
+if (!BOARDS[BOARD]) BOARD = "marketing";
+const boardOf = it => it.board || (it.ws === "Rebrand" ? "rebrand" : "marketing");
+const isMeeting = it => it.kind === "meeting";
+const PRI_ORDER = { High:0, Medium:1, Low:2 };
 
 // ---------- state ----------
 let state = { basedOn: SEED.savedAt, editedAt: null, items: SEED.items, archive: SEED.archive || [], archiveIgnore: SEED.archiveIgnore || [] };
@@ -486,7 +582,7 @@ async function boot(){
   try { await pull(true); }
   catch(e) { online = false; setSync("err", "Showing the built-in copy. Sign in again or check the connection."); }
   setInterval(() => {
-    const busy = saving || document.querySelector("#drawer.open, #aDrawer.open");
+    const busy = saving || mSaveT && view === "meetings" || document.querySelector("#drawer.open, #aDrawer.open") || (view === "meetings" && document.activeElement && document.activeElement.closest && document.activeElement.closest("#v-meetings"));
     if (online && !busy) pull(false).catch(() => {});
   }, 60000);
 }
@@ -495,7 +591,7 @@ async function boot(){
 function effDue(it){
   if (it.recurring === "monthly" && it.status !== "Complete") return monthEnd(TODAY.getFullYear(), TODAY.getMonth());
   if (it.recurring === "quarterly" && it.status !== "Complete") { const q = Math.floor(TODAY.getMonth()/3); return monthEnd(TODAY.getFullYear(), q*3+2); }
-  if (!it.due) return null;
+  if (!it.due) return it.eventDate ? parseD(it.eventDate) : null;
   const d = parseD(it.due);
   return it.prec === "month" ? monthEnd(d.getFullYear(), d.getMonth()) : d;
 }
@@ -503,7 +599,7 @@ function dueLabel(it){
   const d = effDue(it); if (!d) return "No date";
   if (it.recurring === "monthly") return "Every month";
   if (it.recurring === "quarterly") return "Quarterly, next by "+MONTHS[d.getMonth()]+" "+d.getFullYear();
-  if (it.prec === "month") return MONTHS[d.getMonth()]+" "+d.getFullYear();
+  if (it.prec === "month" && it.due) return MONTHS[d.getMonth()]+" "+d.getFullYear()+" (any day)";
   return MONTHS[d.getMonth()]+" "+d.getDate()+", "+d.getFullYear();
 }
 function daysOut(it){ const d = effDue(it); return d ? Math.round((d - TODAY)/DAY) : null; }
@@ -517,12 +613,14 @@ function dueClass(it){
 }
 
 // ---------- filters ----------
-const F = { q:"", owner:"", ws:"", status:"", done:false, kpi:"" };
+const F = { q:"", owner:"", ws:"", status:"", pri:"", done:false, kpi:"" };
 function passes(it, ignoreDone){
+  if (isMeeting(it) || boardOf(it) !== BOARD) return false;
   if (!F.done && !ignoreDone && it.status === "Complete") return false;
   if (F.owner && !it.owners.includes(F.owner)) return false;
   if (F.ws && it.ws !== F.ws) return false;
   if (F.status && it.status !== F.status) return false;
+  if (F.pri && (it.priority || "") !== F.pri) return false;
   if (F.q) {
     const hay = (it.title+" "+it.notes+" "+it.waiting+" "+it.owners.join(" ")+" "+it.ws+" "+it.src).toLowerCase();
     if (!F.q.toLowerCase().split(/\s+/).every(w => hay.includes(w))) return false;
@@ -535,7 +633,7 @@ const KPI_DEF = [
   { id:"d14", label:"Due in 14 days", cls:"gold", test: it => { const n = daysOut(it); return n !== null && n >= 0 && n <= 14 && it.status !== "Complete" && !it.recurring; } },
   { id:"active", label:"In progress / review", cls:"", test: it => it.status === "In progress" || it.status === "In review" },
   { id:"wait", label:"Waiting / on hold", cls:"", test: it => it.status === "Waiting on others" || it.status === "On hold" },
-  { id:"confirm", label:"Status to confirm", cls:"gold", test: it => it.status === "Confirm status" },
+  { id:"week", label:"Due this week", cls:"gold", test: it => { const n = daysOut(it); return n !== null && n >= 0 && n <= DAYS_LEFT_IN_WEEK && it.status !== "Complete" && !it.recurring; } },
   { id:"d90", label:"Due next 90 days", cls:"", test: it => { const n = daysOut(it); return n !== null && n >= 0 && n <= 90 && it.status !== "Complete" && !it.recurring; } },
 ];
 
@@ -548,13 +646,23 @@ function dueHTML(it){
 function subProg(it){
   if (!it.subtasks || !it.subtasks.length) return "";
   const d = it.subtasks.filter(s => s.done).length;
-  return `<span class="subprog">${d}/${it.subtasks.length} steps</span>`;
+  return `<span class="subprog"><i><b style="width:${Math.round(d/it.subtasks.length*100)}%"></b></i>${d} of ${it.subtasks.length} steps</span>`;
 }
+function priPill(it){ return it.priority ? `<span class="prio ${it.priority.toLowerCase()}">${esc(it.priority)}</span>` : ""; }
+function fmtLong(iso){ const d = parseD(iso); return d ? MONTHS[d.getMonth()]+" "+d.getDate()+", "+d.getFullYear() : ""; }
+const isMilestone = it => it.ws === "Project Milestones";
 function cardHTML(it){
   const c = WS_COLOR[it.ws] || "#57788F";
+  if (isMilestone(it)) {
+    const md = it.eventDate || (it.due && it.prec !== "month" ? it.due : "");
+    return `<div class="card ms" data-id="${it.id}"><div class="t">${esc(it.title)}</div>${md ? `<div class="msd">${fmtLong(md)}</div>` : it.due ? `<div class="msd">${esc(dueLabel(it))}</div>` : ""}</div>`;
+  }
+  const next = (it.subtasks || []).find(x => !x.done);
   return `<div class="card" data-id="${it.id}" style="--c:${c}">
     <div class="t">${esc(it.title)}</div>
-    <div class="meta">${dueHTML(it)} ${statusPill(it.status)} ${subProg(it)}</div>
+    <div class="meta">${priPill(it)} ${dueHTML(it)} ${statusPill(it.status)} ${subProg(it)}</div>
+    ${it.eventDate ? `<div class="meta"><span class="due">Event: ${fmtLong(it.eventDate)}</span></div>` : ""}
+    ${next ? `<div class="nextstep">Next step: <b>${esc(next.t)}</b></div>` : ""}
     <div class="meta"><span class="ws" style="--c:${c}"><i></i>${esc(it.ws)}</span> ${ownersHTML(it)}</div>
     ${it.waiting ? `<div class="wait">Waiting on: ${esc(it.waiting)}</div>` : ""}
   </div>`;
@@ -591,18 +699,20 @@ function passesNoKpi(it){ const k = F.kpi; F.kpi = ""; const r = passes(it, true
 function renderNow(){
   const vis = state.items.filter(it => passes(it));
   const over = vis.filter(isOverdue).sort(sortByDue);
-  const inN = (a,b) => it => { const n = daysOut(it); return n !== null && n >= a && n <= b && it.status !== "Complete" && it.status !== "Confirm status" && it.status !== "On hold"; };
-  const next30 = vis.filter(inN(0,30)).sort(sortByDue);
-  const later = vis.filter(inN(31,90)).sort(sortByDue);
-  const nodate = vis.filter(it => !effDue(it) && ["In progress","In review","Ongoing","Not started"].includes(it.status)).sort((a,b)=>a.title.localeCompare(b.title));
-  const waiting = vis.filter(it => it.status === "Waiting on others" || it.status === "On hold").sort(sortByDue);
-  const confirm = vis.filter(it => it.status === "Confirm status").sort(sortByDue);
-  const lane = (title, list, cls, hint) => `<div class="lane ${cls||""}"><h3>${title}<span class="badge">${list.length}</span></h3>${hint?`<div class="hint">${hint}</div>`:""}${list.length ? withGroups(list, cardHTML, (arr, o) => o.slice(0,3).join(", ")+(o.length>3?" +"+(o.length-3):"")) : '<div class="empty">Nothing here.</div>'}</div>`;
+  const inN = (a,b) => it => { const n = daysOut(it); return n !== null && n >= a && n <= b && it.status !== "Complete" && it.status !== "On hold"; };
+  const byPri = (a,b) => sortByDue(a,b) || (PRI_ORDER[a.priority] ?? 3) - (PRI_ORDER[b.priority] ?? 3);
+  const week = vis.filter(inN(0, DAYS_LEFT_IN_WEEK)).sort(byPri);
+  const next30 = vis.filter(inN(DAYS_LEFT_IN_WEEK + 1, 30)).sort(byPri);
+  const later = vis.filter(inN(31,90)).sort(byPri);
+  const waiting = vis.filter(it => it.status === "Waiting on others" || it.status === "On hold").sort(byPri);
+  const grp = list => withGroups(list, cardHTML, (arr, o) => o.slice(0,3).join(", ")+(o.length>3?" +"+(o.length-3):""));
+  const lane = (title, list, cls, hint, wide) => `<div class="lane ${cls||""}"><h3>${title}<span class="badge">${list.length}</span></h3>${hint?`<div class="hint">${hint}</div>`:""}${list.length ? (wide ? `<div class="cardgrid">${grp(list)}</div>` : grp(list)) : '<div class="empty">Nothing here.</div>'}</div>`;
   const done = F.done ? vis.filter(it => it.status === "Complete").sort((a,b)=>sortByDue(b,a)) : [];
+  const wk = `${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()} to ${MONTHS[WEEK_END.getMonth()]} ${WEEK_END.getDate()}`;
   $("#v-now").innerHTML =
-    `<div class="lanes">${lane("Overdue", over, "overdue", "Past due and not marked complete.")}${lane("Due in the next 30 days", next30, "", "Includes this month's recurring work.")}${lane("Coming up: 31 to 90 days", later, "")}</div>
-     <div class="lanes second">${lane("In flight, no date set", nodate, "", "Add a due date so these surface on the timeline.")}${lane("Waiting on others / on hold", waiting, "")}${lane("Status to confirm", confirm, "", "Planned in the calendar, but the file doesn't say where they stand.")}</div>
-     ${F.done ? `<div class="lanes second" style="grid-template-columns:1fr">${lane("Completed", done, "")}</div>` : ""}`;
+    `<div class="lanes four">${lane("Overdue", over, "overdue", "Past due and not marked complete.")}${lane("Due this week", week, "", wk)}${lane("Next 30 days", next30, "", "Includes this month's recurring work.")}${lane("Coming up: 31 to 90 days", later, "")}</div>
+     <div class="lanes second one">${lane("Waiting on others / on hold", waiting, "", "", true)}</div>
+     ${F.done ? `<div class="lanes second one">${lane("Completed", done, "", "", true)}</div>` : ""}`;
 }
 
 // ---------- Timeline ----------
@@ -658,19 +768,20 @@ function renderOwners(){
 let sortCol = "due", sortDir = 1;
 function renderTable(){
   const vis = state.items.filter(it => passes(it));
-  const cols = [["title","Item"],["ws","Workstream"],["owners","Responsible"],["due","Due"],["status","Status"],["waiting","Waiting on"],["notes","Notes"]];
-  const val = (it,c) => c==="owners" ? it.owners.join(", ") : c==="due" ? (effDue(it)?.getTime() ?? 9e15) : c==="status" ? STATUSES.indexOf(it.status) : (it[c]||"").toLowerCase();
+  const cols = [["title","Item"],["priority","Priority"],["ws","Workstream"],["owners","Responsible"],["due","Due"],["status","Status"],["waiting","Waiting on"],["notes","Notes"]];
+  const val = (it,c) => c==="owners" ? it.owners.join(", ") : c==="due" ? (effDue(it)?.getTime() ?? 9e15) : c==="status" ? STATUSES.indexOf(it.status) : c==="priority" ? (PRI_ORDER[it.priority] ?? 3) : (it[c]||"").toLowerCase();
   vis.sort((a,b) => { const x = val(a,sortCol), y = val(b,sortCol); return (x<y?-1:x>y?1:0)*sortDir || sortByDue(a,b); });
   $("#v-table").innerHTML = `<div class="tbl-wrap"><table class="list"><thead><tr>${cols.map(([k,l]) => `<th data-sort="${k}" class="${sortCol===k?"sorted":""}">${l} <span class="ar">${sortCol===k?(sortDir>0?"▲":"▼"):"↕"}</span></th>`).join("")}</tr></thead><tbody>
-    ${vis.map(it => `<tr><td class="tt" data-id="${it.id}">${esc(it.title)} ${subProg(it)}</td><td><span class="ws" style="--c:${WS_COLOR[it.ws]||"#999"}"><i></i>${esc(it.ws)}</span></td><td>${ownersHTML(it)}</td><td>${dueHTML(it)}</td>
+    ${vis.map(it => `<tr><td class="tt" data-id="${it.id}">${esc(it.title)} ${subProg(it)}</td><td>${priPill(it)}</td><td><span class="ws" style="--c:${WS_COLOR[it.ws]||"#999"}"><i></i>${esc(it.ws)}</span></td><td>${ownersHTML(it)}</td><td>${dueHTML(it)}</td>
       <td><select data-status="${it.id}">${STATUSES.map(s => `<option ${s===it.status?"selected":""}>${s}</option>`).join("")}</select></td><td class="nt">${esc(it.waiting)}</td><td class="nt">${esc(it.notes)}</td></tr>`).join("")}
   </tbody></table></div>`;
 }
 
 // ---------- Filter controls ----------
 function fillSelects(){
-  const owners = [...new Set(state.items.flatMap(i => i.owners))].sort((a,b) => (a==="Unassigned")-(b==="Unassigned") || a.localeCompare(b));
-  const wss = [...new Set(state.items.map(i => i.ws))].sort();
+  const pool = state.items.filter(i => !isMeeting(i) && boardOf(i) === BOARD);
+  const owners = [...new Set(pool.flatMap(i => i.owners))].sort((a,b) => (a==="Unassigned")-(b==="Unassigned") || a.localeCompare(b));
+  const wss = [...new Set(pool.map(i => i.ws))].sort();
   const fill = (sel, arr, cur, first) => { $(sel).innerHTML = `<option value="">${first}</option>` + arr.map(v => `<option ${v===cur?"selected":""}>${esc(v)}</option>`).join(""); };
   fill("#fOwner", owners, F.owner, "All owners");
   fill("#fWs", wss, F.ws, "All workstreams");
@@ -683,9 +794,11 @@ function fillSelects(){
 let view = "now";
 function renderAll(){
   fillSelects(); renderKPIs();
+  $("#boardName").textContent = BOARDS[BOARD]; document.title = BOARDS[BOARD] + " Project Tracker";
+  document.querySelectorAll("[data-board]").forEach(b => b.setAttribute("aria-pressed", b.dataset.board === BOARD));
   const n = state.items.filter(it => passes(it)).length;
-  $("#count").textContent = `${n} of ${state.items.length} items`;
-  if (view === "now") renderNow(); else if (view === "timeline") renderTimeline(); else if (view === "owners") renderOwners(); else if (view === "archive") renderArchive(); else renderTable();
+  $("#count").textContent = `${n} of ${state.items.filter(i => !isMeeting(i) && boardOf(i) === BOARD).length} items`;
+  if (view === "now") renderNow(); else if (view === "timeline") renderTimeline(); else if (view === "owners") renderOwners(); else if (view === "archive") renderArchive(); else if (view === "meetings") renderMeetings(); else if (view === "ads") renderAds(); else renderTable();
   const ed = state.editedAt ? new Date(state.editedAt) : null;
   $("#banner").classList.toggle("show", localDirty);
   if (storageFull) $("#bannerText").textContent = "This browser ran out of room to hold your latest edits (cover images take space). Save a shareable copy now so nothing is lost.";
@@ -697,12 +810,13 @@ function renderAll(){
 // ---------- Drawer ----------
 let editing = null, draftSubs = [];
 function openDrawer(id){
-  const it = id ? state.items.find(i => i.id === id) : { id:null, title:"", ws: F.ws || "Operations", owners:["Amy"], due:null, prec:"day", status:"Not started", notes:"", waiting:"", src:"Added in tracker", subtasks:[] };
+  const it = id ? state.items.find(i => i.id === id) : { id:null, title:"", ws: F.ws || (BOARD === "rebrand" ? "Rebrand" : "Operations"), owners:["Amy"], due:null, prec:"day", status:"Not started", notes:"", waiting:"", src:"Added in tracker", subtasks:[], board: BOARD };
   editing = it; draftSubs = (it.subtasks||[]).map(s => ({...s}));
   $("#dTitle").textContent = id ? "Edit item" : "New item";
   $("#eTitle").value = it.title; $("#eStatus").value = it.status; $("#eWs").value = it.ws;
   $("#eOwners").value = it.owners.join(", "); $("#eDue").value = it.due || ""; $("#ePrec").value = it.prec || "day";
   $("#eWait").value = it.waiting || ""; $("#eNotes").value = it.notes || "";
+  $("#ePri").value = it.priority || ""; $("#eEvent").value = it.eventDate || ""; $("#eBoard").value = boardOf(it);
   $("#eSrc").textContent = it.src ? "Source: " + it.src + (it.recurring ? " · Repeats " + it.recurring : "") : "";
   $("#dDel").style.display = id ? "" : "none"; $("#dDone").style.display = id && it.status !== "Complete" ? "" : "none";
   $("#dArch").style.display = id ? "" : "none";
@@ -712,7 +826,7 @@ function openDrawer(id){
   setTimeout(() => $("#eTitle").focus(), 60);
 }
 function renderSubs(){
-  $("#eSubs").innerHTML = draftSubs.map((s,i) => `<label class="${s.done?"done":""}"><input type="checkbox" data-sub="${i}" ${s.done?"checked":""}><span>${esc(s.t)}</span></label>`).join("") +
+  $("#eSubs").innerHTML = draftSubs.map((s,i) => `<label class="${s.done?"done":""}"><input type="checkbox" data-sub="${i}" ${s.done?"checked":""}><span>${esc(s.t)}</span><button type="button" class="rm" data-rmsub="${i}" aria-label="Remove step">×</button></label>`).join("") +
     `<div class="addsub"><input id="newSub" placeholder="Add a step"><button class="b2" type="button" id="addSub">Add</button></div>`;
 }
 function closeDrawer(){ $("#drawer").classList.remove("open"); $("#scrim").classList.remove("open"); $("#drawer").setAttribute("aria-hidden","true"); editing = null; }
@@ -725,6 +839,9 @@ function saveDrawer(markDone){
   if (newDue !== it.due) it.target = false;
   it.due = newDue; it.prec = newDue ? $("#ePrec").value : null; it.waiting = $("#eWait").value.trim(); it.notes = $("#eNotes").value.trim();
   it.subtasks = draftSubs;
+  it.priority = $("#ePri").value || ""; if (!it.priority) delete it.priority;
+  it.eventDate = $("#eEvent").value || ""; if (!it.eventDate) delete it.eventDate;
+  it.board = $("#eBoard").value || BOARD;
   if (!it.id) { it.id = "u" + Date.now().toString(36); state.items.push(it); }
   closeDrawer(); const added = persist();
   toast(added ? (markDone ? "Marked complete and added to the collateral archive" : "Saved and added to the collateral archive") : (markDone ? "Marked complete" : "Saved"));
@@ -1025,8 +1142,9 @@ $("#q").addEventListener("input", e => { F.q = e.target.value.trim(); renderAll(
 $("#fOwner").addEventListener("change", e => { F.owner = e.target.value; renderAll(); });
 $("#fWs").addEventListener("change", e => { F.ws = e.target.value; renderAll(); });
 $("#fStatus").addEventListener("change", e => { F.status = e.target.value; renderAll(); });
+$("#fPri").addEventListener("change", e => { F.pri = e.target.value; renderAll(); });
 $("#fDone").addEventListener("change", e => { F.done = e.target.checked; renderAll(); });
-$("#clearF").addEventListener("click", () => { Object.assign(F, { q:"", owner:"", ws:"", status:"", done:false, kpi:"" }); $("#q").value = ""; $("#fDone").checked = false; renderAll(); });
+$("#clearF").addEventListener("click", () => { Object.assign(F, { q:"", owner:"", ws:"", status:"", pri:"", done:false, kpi:"" }); $("#q").value = ""; $("#fPri").value = ""; $("#fDone").checked = false; renderAll(); });
 $("#addBtn").addEventListener("click", () => openDrawer(null));
 $("#saveCopyBtn").addEventListener("click", saveCopy);
 $("#bannerSave").addEventListener("click", saveCopy);
@@ -1100,13 +1218,128 @@ $("#dSave").addEventListener("click", () => saveDrawer(false));
 $("#dDone").addEventListener("click", () => saveDrawer(true));
 $("#dDel").addEventListener("click", () => { if (confirm("Delete this item?")) { state.items = state.items.filter(i => i !== editing); closeDrawer(); persist(); toast("Deleted"); } });
 $("#dForm").addEventListener("submit", e => { e.preventDefault(); saveDrawer(false); });
-$("#eSubs").addEventListener("click", e => { if (e.target.id === "addSub") { const v = $("#newSub").value.trim(); if (v) { draftSubs.push({ t:v, done:false }); renderSubs(); $("#newSub").focus(); } } });
+$("#eSubs").addEventListener("click", e => { if (e.target.dataset && e.target.dataset.rmsub !== undefined) { e.preventDefault(); draftSubs.splice(+e.target.dataset.rmsub, 1); renderSubs(); return; } if (e.target.id === "addSub") { const v = $("#newSub").value.trim(); if (v) { draftSubs.push({ t:v, done:false }); renderSubs(); $("#newSub").focus(); } } });
 $("#eSubs").addEventListener("keydown", e => { if (e.target.id === "newSub" && e.key === "Enter") { e.preventDefault(); $("#addSub").click(); } });
 document.addEventListener("keydown", e => { if (e.key === "Escape") { if (aEditing) closeArchive(); else if (editing) closeDrawer(); } });
 
+
+// ---------- meetings (stored as items with kind "meeting", so they save to the same Sheet) ----------
+let MSEL = null, mSaveT = null;
+const meetings = () => state.items.filter(isMeeting).sort((a,b) => (b.due||"").localeCompare(a.due||""));
+function newMeeting(){
+  const prev = meetings()[0];
+  const carry = prev ? (prev.agenda||[]).filter(a => !a.done).map(a => ({ ...a, id: "g"+Math.random().toString(36).slice(2,8), carried: true })) : [];
+  const m = { id: "m"+Date.now().toString(36), kind:"meeting", title: prev ? prev.title : "Weekly marketing meeting", due: fmtISO(TODAY), prec:"day",
+    owners: prev ? prev.owners.slice() : ["Amy"], status:"Meeting", ws:"Meetings", notes:"", waiting:"", src:"Meetings", subtasks:[],
+    agenda: carry, minutes:"", actions:[], recording:"" };
+  state.items.push(m); MSEL = m.id; persist();
+  toast(carry.length ? `New meeting. ${carry.length} open topic${carry.length>1?"s":""} carried over from ${fmtLong(prev.due)}.` : "New meeting added");
+}
+function meetingSave(){ clearTimeout(mSaveT); mSaveT = setTimeout(() => { stampCompleted(); state.editedAt = new Date().toISOString(); pushChanges(); }, 700); }
+function renderMeetings(){
+  const list = meetings();
+  if (!MSEL || !list.some(m => m.id === MSEL)) MSEL = list[0] ? list[0].id : null;
+  const m = list.find(x => x.id === MSEL);
+  const items = state.items.filter(i => !isMeeting(i) && i.status !== "Complete");
+  const itemOpts = items.map(i => `<option value="${esc(i.title)}">`).join("");
+  const left = `<div class="mt-list"><button type="button" class="b2 pri" id="mNew">+ New meeting</button>
+    ${list.length ? list.map(x => `<button type="button" class="mi" data-mid="${x.id}" aria-current="${x.id===MSEL}"><b>${esc(x.title)}</b><span>${fmtLong(x.due)} · ${(x.agenda||[]).length} topic${(x.agenda||[]).length===1?"":"s"}${(x.actions||[]).length?` · ${(x.actions||[]).length} action${(x.actions||[]).length===1?"":"s"}`:""}</span></button>`).join("") : '<p class="mt-hint">No meetings yet.</p>'}
+    <p class="mt-hint">A new meeting carries over any agenda topics that weren't checked off last time.</p></div>`;
+  if (!m) { $("#v-meetings").innerHTML = `<div class="mt">${left}<div class="mt-ed"><h3>Meeting agenda</h3><p class="mt-hint">Start a meeting to build its agenda, take minutes and turn action items into tracker items.</p></div></div>`; return; }
+  const linkFor = t => { const it = t.itemId && state.items.find(i => i.id === t.itemId); return it ? `<div class="lnk">Tracker item: <a data-open="${it.id}">${esc(it.title)}</a> · ${esc(it.status)} · ${esc(dueLabel(it))}</div>` : ""; };
+  const ag = (m.agenda||[]).map((a,i) => `<div class="ag-r ${a.done?"done":""}"><input type="checkbox" data-agdone="${i}" ${a.done?"checked":""} aria-label="Covered"><input class="ag-t" data-agt="${i}" value="${esc(a.t)}" list="mItems" placeholder="Topic"><input class="ag-o" data-ago="${i}" value="${esc(a.owner||"")}" list="ownerList" placeholder="Owner"><button type="button" class="rm b2" data-agrm="${i}" aria-label="Remove topic" style="padding:2px 6px">×</button>${linkFor(a)}</div>`).join("");
+  const ac = (m.actions||[]).map((a,i) => `<div class="ac-r"><input data-act="${i}" value="${esc(a.t)}" placeholder="Action item"><input data-aco="${i}" value="${esc(a.owner||"")}" list="ownerList" placeholder="Owner"><input type="date" data-acd="${i}" value="${esc(a.due||"")}">${a.itemId ? `<a class="b2" data-open="${a.itemId}" style="text-decoration:none;font-size:12px">Open in tracker</a>` : `<button type="button" class="b2" data-acadd="${i}" style="font-size:12px">Add to tracker</button>`}<button type="button" class="b2" data-acrm="${i}" aria-label="Remove action" style="padding:2px 6px">×</button></div>`).join("");
+  $("#v-meetings").innerHTML = `<div class="mt">${left}<div class="mt-ed">
+    <div class="mt-row"><div><label class="l" for="mTitle">Meeting</label><input id="mTitle" value="${esc(m.title)}"></div><div><label class="l" for="mDate">Date</label><input id="mDate" type="date" value="${esc(m.due||"")}"></div></div>
+    <div class="mt-row"><div><label class="l" for="mWho">Attendees</label><input id="mWho" value="${esc(m.owners.join(", "))}"></div><div><label class="l" for="mRec">Recording or transcript link</label><input id="mRec" type="url" value="${esc(m.recording||"")}" placeholder="https://"></div></div>
+    <div><h3>Agenda <span class="mt-btns"><button type="button" class="b2" id="mPull" style="font-size:12px">Add due and overdue items</button><button type="button" class="b2" id="mAddAg" style="font-size:12px">+ Topic</button></span></h3>
+      <div class="ag">${ag || '<p class="mt-hint">No topics yet. Add one, or pull in this tracker&#39;s items that are due this week or overdue.</p>'}</div></div>
+    <div><h3>Minutes</h3><textarea id="mMin" placeholder="Decisions, discussion and notes">${esc(m.minutes||"")}</textarea>
+      <p class="mt-hint">To turn a recording into minutes, download the meeting transcript and paste it into Claude. Claude writes the minutes and action items here.</p></div>
+    <div><h3>Action items <span class="mt-btns"><button type="button" class="b2" id="mAddAc" style="font-size:12px">+ Action item</button></span></h3><div class="ag">${ac || '<p class="mt-hint">Action items you add here can become tracker items with one click.</p>'}</div></div>
+    <div class="mt-btns" style="justify-content:space-between"><button type="button" class="b2 del" id="mDel">Delete meeting</button>${m.recording && safeUrl(m.recording) ? `<a class="b2" href="${esc(safeUrl(m.recording))}" target="_blank" rel="noopener" style="text-decoration:none">Open recording</a>` : ""}</div>
+    <datalist id="mItems">${itemOpts}</datalist></div></div>`;
+}
+function curMeeting(){ return state.items.find(i => i.id === MSEL); }
+document.addEventListener("input", e => {
+  if (view !== "meetings") return; const m = curMeeting(); if (!m) return; const t = e.target, d = t.dataset;
+  if (t.id === "mTitle") m.title = t.value; else if (t.id === "mWho") m.owners = t.value.split(",").map(x => x.trim()).filter(Boolean);
+  else if (t.id === "mRec") m.recording = t.value.trim(); else if (t.id === "mMin") m.minutes = t.value;
+  else if (d.agt !== undefined) { const a = m.agenda[+d.agt]; a.t = t.value; const it = state.items.find(i => !isMeeting(i) && i.title === t.value); a.itemId = it ? it.id : (a.itemId && state.items.find(i=>i.id===a.itemId)?.title === t.value ? a.itemId : undefined); }
+  else if (d.ago !== undefined) m.agenda[+d.ago].owner = t.value;
+  else if (d.act !== undefined) m.actions[+d.act].t = t.value; else if (d.aco !== undefined) m.actions[+d.aco].owner = t.value;
+  else return;
+  meetingSave();
+});
+document.addEventListener("change", e => {
+  if (view !== "meetings") return; const m = curMeeting(); if (!m) return; const t = e.target, d = t.dataset;
+  if (t.id === "mDate") { m.due = t.value; meetingSave(); renderMeetings(); }
+  else if (d.agdone !== undefined) { m.agenda[+d.agdone].done = t.checked; meetingSave(); renderMeetings(); }
+  else if (d.acd !== undefined) { m.actions[+d.acd].due = t.value; meetingSave(); }
+});
+document.addEventListener("click", e => {
+  if (view !== "meetings") return; const t = e.target.closest("button,a"); if (!t) return; const d = t.dataset; const m = curMeeting();
+  if (t.id === "mNew") { newMeeting(); return; }
+  if (d.mid) { MSEL = d.mid; renderMeetings(); return; }
+  if (d.open) { const id = d.open; setView("now"); openDrawer(id); return; }
+  if (!m) return;
+  if (t.id === "mAddAg") { (m.agenda = m.agenda || []).push({ id:"g"+Date.now().toString(36), t:"", owner:"", done:false }); renderMeetings(); const r = document.querySelectorAll("[data-agt]"); r[r.length-1] && r[r.length-1].focus(); meetingSave(); }
+  else if (t.id === "mAddAc") { (m.actions = m.actions || []).push({ t:"", owner:"", due:"" }); renderMeetings(); const r = document.querySelectorAll("[data-act]"); r[r.length-1] && r[r.length-1].focus(); meetingSave(); }
+  else if (t.id === "mPull") {
+    const have = new Set((m.agenda||[]).map(a => a.itemId).filter(Boolean));
+    const due = state.items.filter(i => !isMeeting(i) && boardOf(i) === BOARD && i.status !== "Complete" && !i.recurring && (() => { const n = daysOut(i); return n !== null && n <= DAYS_LEFT_IN_WEEK && (n >= 0 || isOverdue(i)); })() && !have.has(i.id)).sort(sortByDue);
+    m.agenda = (m.agenda||[]).concat(due.map(i => ({ id:"g"+Math.random().toString(36).slice(2,8), t:i.title, owner:i.owners.join(", "), done:false, itemId:i.id })));
+    meetingSave(); renderMeetings(); toast(due.length ? `Added ${due.length} item${due.length>1?"s":""} due this week or overdue` : "Nothing new is due this week or overdue");
+  }
+  else if (d.agrm !== undefined) { m.agenda.splice(+d.agrm, 1); meetingSave(); renderMeetings(); }
+  else if (d.acrm !== undefined) { m.actions.splice(+d.acrm, 1); meetingSave(); renderMeetings(); }
+  else if (d.acadd !== undefined) {
+    const a = m.actions[+d.acadd]; if (!a.t.trim()) { toast("Write the action item first"); return; }
+    const it = { id:"u"+Date.now().toString(36), title:a.t.trim(), ws: BOARD === "rebrand" ? "Rebrand" : "Operations", owners: a.owner ? a.owner.split(",").map(x=>x.trim()).filter(Boolean) : ["Amy"], due: a.due || null, prec: a.due ? "day" : null, status:"Not started", notes:`From ${m.title}, ${fmtLong(m.due)}`, waiting:"", src:"Meeting action item", subtasks:[], board: BOARD };
+    state.items.push(it); a.itemId = it.id; persist(); toast("Added to the tracker");
+  }
+  else if (t.id === "mDel") { if (!confirm("Delete this meeting, its agenda and minutes?")) return; state.items = state.items.filter(i => i !== m); MSEL = null; persist(); toast("Meeting deleted"); }
+});
+
+// ---------- ads archive (read-only; refreshed by the monthly report run) ----------
+let ADS = null, ADS_ERR = false, ADF = { plat:"linkedin", q:"", status:"active" };
+function loadAds(){ if (ADS || ADS_ERR) return; fetch("data/ads-archive.json", { cache:"no-store" }).then(r => { if (!r.ok) throw 0; return r.json(); }).then(j => { ADS = j; if (view === "ads") renderAds(); }).catch(() => { ADS_ERR = true; if (view === "ads") renderAds(); }); }
+const fmtN = n => Number(n||0).toLocaleString("en-US");
+function renderAds(){
+  if (!ADS) { loadAds(); $("#v-ads").innerHTML = `<div class="empty">${ADS_ERR ? "The ads archive isn't available right now." : "Loading ads..."}</div>`; return; }
+  const q = ADF.q.toLowerCase(), on = s => /active|enabled/i.test(s||"");
+  const keep = (txt, st) => (!q || txt.toLowerCase().includes(q)) && (ADF.status === "all" || on(st));
+  let body = "", nAds = 0;
+  if (ADF.plat === "linkedin") {
+    (ADS.linkedin || []).forEach(g => {
+      const camps = g.campaigns.map(c => ({ ...c, ads: c.ads.filter(a => keep([g.group, c.campaign, a.title, a.landing].join(" "), a.status)) })).filter(c => c.ads.length);
+      if (!camps.length) return; const n = camps.reduce((s,c) => s + c.ads.length, 0); nAds += n;
+      body += `<details class="adgrp" open><summary><span>${esc(g.group)}</span><span class="sm">${n} ad${n>1?"s":""}</span></summary>${camps.map(c => `<div class="camp"><h4>${esc(c.campaign)}</h4><div class="adcards">${c.ads.map(a => `<div class="adc"><div class="im">${a.thumb ? `<img src="${esc(a.thumb)}" alt="" loading="lazy" onerror="this.remove()">` : ""}<div class="ph">${esc(a.title || "Document ad")}</div></div>
+        <div class="bd"><div class="h">${esc(a.title || "(no headline)")}</div><div class="m"><span class="st ${on(a.status)?"on":"off"}">${on(a.status)?"Active":"Paused"}</span><span>${fmtN(a.impr)} impr.</span><span>${fmtN(a.clicks)} clicks</span><span>${a.impr ? (a.clicks/a.impr*100).toFixed(2)+"% CTR" : ""}</span></div>
+        ${a.landing ? `<a href="${esc(a.landing)}" target="_blank" rel="noopener">${esc(a.landing.replace(/^https?:\/\/(www\.)?/,""))}</a>` : `<span class="m">Lead gen form or document ad</span>`}</div></div>`).join("")}</div></div>`).join("")}</details>`;
+    });
+  } else {
+    (ADS.google || []).forEach(c => {
+      const groups = c.adGroups.map(g => ({ ...g, ads: g.ads.filter(a => keep([c.campaign, g.adGroup, (a.headlines||[]).join(" "), (a.descriptions||[]).join(" ")].join(" "), a.status)) })).filter(g => g.ads.length);
+      if (!groups.length) return; const n = groups.reduce((s,g) => s + g.ads.length, 0); nAds += n;
+      body += `<details class="adgrp" open><summary><span>${esc(c.campaign)}${c.shared ? ' <span class="sm">Shared campaign</span>' : ""}</span><span class="sm">${n} ad${n>1?"s":""}</span></summary><div class="camp"><div class="adcards">${groups.map(g => g.ads.map(a => `<div class="gad"><div class="sp" style="color:var(--gray);text-transform:uppercase;letter-spacing:.04em;font-size:11px;font-weight:700">${esc(g.adGroup)}</div><div class="sp"><b>Sponsored</b> · ${esc((a.url||"").replace(/^https?:\/\/(www\.)?/,"").replace(/\/$/,""))}</div>
+        <div class="gh">${esc((a.headlines||[]).slice(0,3).join(" | "))}</div><div class="gd">${esc((a.descriptions||[])[0] || "")}</div>
+        <div class="m" style="font-size:12px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap"><span class="st ${on(a.status)?"on":"off"}">${on(a.status)?"Active":"Paused"}</span><span>${fmtN(a.impr)} impr.</span><span>${fmtN(a.clicks)} clicks</span>${a.strength ? `<span>Ad strength: ${esc(a.strength.toLowerCase())}</span>` : ""}</div>
+        <details><summary>All ${(a.headlines||[]).length} headlines and ${(a.descriptions||[]).length} descriptions</summary><ul>${(a.headlines||[]).map(h => `<li>${esc(h)}</li>`).join("")}</ul><ul>${(a.descriptions||[]).map(h => `<li>${esc(h)}</li>`).join("")}</ul></details></div>`).join("")).join("")}</div></div></details>`;
+    });
+  }
+  $("#v-ads").innerHTML = `<div class="adbar"><div class="boards" style="margin:0;background:#E3E6E9"><button type="button" data-aplat="linkedin" aria-pressed="${ADF.plat==="linkedin"}" style="color:var(--navy)">LinkedIn</button><button type="button" data-aplat="google" aria-pressed="${ADF.plat==="google"}" style="color:var(--navy)">Google Ads</button></div>
+    <input type="search" id="adq" placeholder="Search headlines, campaigns, pages" value="${esc(ADF.q)}"><select id="adst"><option value="active" ${ADF.status==="active"?"selected":""}>Active ads</option><option value="all" ${ADF.status==="all"?"selected":""}>Active and paused</option></select><span class="count">${nAds} ad${nAds===1?"":"s"}</span></div>
+    ${body || '<div class="empty">No ads match.</div>'}
+    <footer class="note">Healthcare and shared campaigns, ${esc(ADS.window || "2026")}. Updated ${esc(ADS.updated || "")} with each monthly report. LinkedIn images expire about a week after each update, so older cards show the headline instead.</footer>`;
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-aplat]"); if (b) { ADF.plat = b.dataset.aplat; renderAds(); } const bd = e.target.closest("[data-board]"); if (bd) { BOARD = bd.dataset.board; try { localStorage.setItem("boldt-tracker-board", BOARD); } catch(x) {} Object.assign(F, { owner:"", ws:"" }); renderAll(); } });
+document.addEventListener("input", e => { if (e.target.id === "adq") { ADF.q = e.target.value; const pos = e.target.selectionStart; renderAds(); const el = $("#adq"); el.focus(); try { el.setSelectionRange(pos,pos); } catch(x) {} } });
+document.addEventListener("change", e => { if (e.target.id === "adst") { ADF.status = e.target.value; renderAds(); } });
+
 syncArchive();
 let startView = "now"; try { startView = localStorage.getItem(KEY+":view") || "now"; } catch(e) {}
-setView(["now","timeline","owners","table","archive"].includes(startView) ? startView : "now");
+setView(["now","timeline","owners","table","archive","meetings","ads"].includes(startView) ? startView : "now");
 boot();
 })();
 </script></body></html>

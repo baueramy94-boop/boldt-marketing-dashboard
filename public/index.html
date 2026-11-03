@@ -183,6 +183,21 @@ tr.future td{color:var(--muted)}
 .rec-act{color:var(--ink)}
 .rec-act b{color:var(--good)}
 .sec-note{font-size:13px;color:var(--muted);margin:8px 0 0}
+.sec-h{font-size:18px;margin:26px 0 2px}
+.sec-sub{color:var(--muted);margin:0 0 12px;font-size:13.5px}
+.jr-list{display:grid;gap:8px}
+.jr{border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.jr summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(200px,1.2fr) 2fr minmax(180px,1fr);gap:10px 14px;align-items:center;padding:10px 12px}
+.jr summary::-webkit-details-marker{display:none}
+.jr summary:hover{background:var(--soft)}
+.jr[open] summary{border-bottom:1px solid var(--line)}
+.jr-n{display:flex;flex-direction:column;gap:2px}
+.jr-c{display:flex;flex-wrap:wrap;gap:5px}
+.jr-t{font-size:12.5px;color:var(--muted);line-height:1.45}
+.jr-b{display:grid;grid-template-columns:3fr 2fr;gap:16px;padding:12px}
+.jr-tl{margin:6px 0 0;padding-left:16px;display:grid;gap:4px;font-size:13px}
+.jr-p{margin:6px 0 10px;font-size:13px}
+@media (max-width:760px){.jr summary{grid-template-columns:1fr}.jr-b{grid-template-columns:1fr}}
 .nar-good h3{color:var(--good)} .nar-bad h3{color:var(--warn)}
 .spark{display:block}
 table.mom td:first-child{white-space:normal;min-width:180px}
@@ -243,7 +258,7 @@ footer{color:var(--muted);font-size:12.5px;padding-block:0 32px}
 
 <script>
 (function(){
-const PAGES=[["exec","Executive summary"],["summary","Dashboard"],["trends","Month over month"],["quarter","Quarterly review"],["paid","Paid media"],["creative","Ads & creative"],["website","Website"],["leads","Leads"],["accounts","Known accounts & MQLs"],["roi","ROI & variables"],["budget","Budget"],["recs","Recommendations"]];
+const PAGES=[["exec","Executive summary"],["summary","Dashboard"],["trends","Month over month"],["quarter","Quarterly review"],["paid","Paid media"],["creative","Ads & creative"],["website","Website"],["leads","Leads & accounts"],["roi","ROI & variables"],["budget","Budget"],["recs","Recommendations"]];
 let D=null; const DIV="HC";   /* healthcare only; senior living removed Oct 28 */
 
 /* ---------- formatting ---------- */
@@ -407,10 +422,38 @@ R.paid=()=>{
   return h;
 };
 
+/* ---------- MQL company journeys (Factors account journeys + HubSpot email) ---------- */
+const fdShort=iso=>{const d=String(iso||"").split("-");return d.length===3?`${M()[+d[1]-1]} ${+d[2]}`:"";};
+function journeySection(){
+  const J=D.mqlJourneys, S=J.summary, n=S.n, of=v=>`${v} of ${n}`;
+  let h=`<h3 class="sec-h">How ${RM()} MQLs engaged before they qualified</h3><p class="sec-sub">${n} MQL companies. Ad and website touches come from Factors for the 6 months before each MQL date; email comes from HubSpot for the 12 months before.</p>`;
+  h+=`<div class="grid g-kpi">${kpi("Reached by healthcare ads first",P(S.anyAd/n,0),`${of(S.anyAd)} MQL companies saw LinkedIn or Google ads before qualifying`)}
+    ${kpi("Clicked a LinkedIn ad",N(S.liClicked),`${P(S.liClicked/n,0)} of ${RM()} MQLs`)}
+    ${kpi("Came through Google Ads",N(S.google),`${P(S.google/n,0)} of ${RM()} MQLs`)}
+    ${kpi("Actively engaged",N(S.active),`Clicked an ad, visited from an ad or clicked an email. ${S.adsOnly} more saw ads only.`)}</div>`;
+  const tch=[["Saw LinkedIn ads",S.liReached],["Clicked a LinkedIn ad",S.liClicked],["Visited from Google Ads",S.google],["Viewed pages on the site",S.site],["Got a sales email from Boldt",S.salesSent],["Clicked a sales email",S.salesClick],["Opened a marketing email",S.email],["Clicked a marketing email",S.emailClick]].map(([k,v])=>({k,v}));
+  const ord=o=>Object.entries(o||{}).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({k,v}));
+  h+=`<div class="grid g-2"><div class="panel"><h3>Touches before the MQL date</h3><p class="sub">Number of ${RM()} MQL companies with each touch</p>${hbars(tch,{max:n,fmt:v=>of(v)})}</div>
+    <div class="panel"><h3>First touch and last touch</h3><p class="sub">The channel that started each journey, and the last one before the company became an MQL</p>
+      <div class="grid g-2" style="gap:14px"><div><div class="eyebrow">First touch</div>${hbars(ord(S.firstTouch),{max:n})}</div><div><div class="eyebrow">Last touch before MQL</div>${hbars(ord(S.lastTouch),{max:n})}</div></div></div></div>`;
+  const chips=c=>{const t=c.touches,o=[];
+    if(t.liClick) o.push(`<span class="chip good">LinkedIn: ${t.liClick} click${t.liClick>1?"s":""}</span>`); else if(t.liView) o.push(`<span class="chip">Saw LinkedIn ads</span>`);
+    if(t.google) o.push(`<span class="chip good">Google Ads: ${t.google} visit${t.google>1?"s":""}</span>`);
+    if(t.pages) o.push(`<span class="chip">${t.pages} page view${t.pages>1?"s":""}</span>`);
+    if(t.salesClick) o.push(`<span class="chip good">Clicked a sales email</span>`); else if(t.salesSent) o.push(`<span class="chip">${t.salesSent>1?t.salesSent+" sales emails":"Sales email"} sent</span>`);
+    if(t.emailClick) o.push(`<span class="chip good">Clicked a marketing email</span>`); else if(t.emailOpen) o.push(`<span class="chip">Opened a marketing email</span>`);
+    return o.join("");};
+  h+=`<div class="panel"><h3>${RM()} MQL company journeys</h3><p class="sub">Newest MQLs first. Open a company to see its recent touches, the campaigns it saw and the contacts in HubSpot.</p><div class="jr-list">
+    ${J.companies.map(c=>`<details class="jr"><summary><span class="jr-n"><b>${esc(c.company)}</b><span class="note" style="margin:0">MQL ${fdShort(c.mql)}${c.label?` · ${esc(c.label)}`:""}</span></span><span class="jr-c">${chips(c)}</span>
+      <span class="jr-t">${c.first?`First: ${esc(c.first.channel)}, ${fdShort(c.first.date)}`:""}${c.lastBefore?`<br>Last before MQL: ${esc(c.lastBefore.channel)}, ${fdShort(c.lastBefore.date)}`:""}</span></summary>
+      <div class="jr-b"><div><div class="eyebrow">Recent touches before the MQL date</div><ul class="jr-tl">${(c.timeline||[]).map(t=>`<li><span class="note" style="margin:0">${fdShort(t.date)}</span> <b>${esc(t.channel)}</b> ${esc(t.what)}</li>`).join("")||'<li class="note">No tracked touches</li>'}</ul></div>
+        <div>${c.campaigns&&c.campaigns.length?`<div class="eyebrow">Campaigns seen</div><p class="jr-p">${c.campaigns.map(esc).join(" · ")}</p>`:""}${c.titles&&c.titles.length?`<div class="eyebrow">Contacts in HubSpot (${c.contacts})</div><p class="jr-p">${c.titles.map(esc).join(" · ")}${c.contacts>c.titles.length?" and more":""}</p>`:""}</div></div></details>`).join("")}</div></div>`;
+  return h;
+}
 R.leads=()=>{
   const s=mqlStats(), cm=CM(), L=D.leads, lab=M().slice(0,cm);
   const sqlY=sum(L.sql.filter(x=>x!=null)), sql25=sum(D.sql2025.slice(0,SQLN()));
-  let h=head("Leads","Healthcare MQLs and SQLs. MQLs count leads entering New in HubSpot's Lead pipeline.");
+  let h=head("Leads & accounts","Healthcare MQLs and SQLs, how MQL companies engaged before they qualified, and HubSpot companies on the site. MQLs count leads entering New in HubSpot's Lead pipeline.");
   h+=`<div class="grid g-kpi">${kpi(`MQLs, ${RM()}${SOFAR()}`,N(s.oct),`Goal ${L.goals.conservative} / ${L.goals.base} / ${L.goals.optimistic}`)}
     ${kpi("MQLs year to date",N(s.ytd),`Goal to date ${s.goalsYTD.c} / ${s.goalsYTD.b} / ${s.goalsYTD.o}`)}
     ${kpi(`MQLs ${THRU()} vs 2025`,`<span class="${s.cur9>=s.prev9?'up':'dn'}">${s.cur9>=s.prev9?"+":""}${P(s.cur9/s.prev9-1,0)}</span>`,`${s.cur9} in 2026 vs ${s.prev9} in 2025`)}
@@ -422,21 +465,19 @@ R.leads=()=>{
     <div class="panel"><h3>SQLs by month</h3><p class="sub">2026 vs 2025. Monthly goal 3.</p>
     ${legend([{name:"2026",color:css("--c-hc"),box:1},{name:"2025",color:css("--c-budget"),box:1},{name:"Goal 3",color:css("--gold"),dash:1}])}
     ${chart({labels:lab,bars:[{name:"2026",color:css("--c-hc"),values:L.sql.slice(0,cm)},{name:"2025",color:css("--c-budget"),values:D.sql2025.slice(0,cm)}],refs:[{name:"3",value:3,color:css("--gold")}],half:true})}</div></div>`;
-  h+=`<div class="panel"><h3>${RM()} MQL accounts</h3><p class="sub">${D.mqlMonth.length} companies entered as MQLs in HubSpot${DONE()?"":" so far"} this month</p><ul class="list-2">
-    ${D.mqlMonth.map(m=>`<li><span>${esc(m.name)}</span>${m.engaged?'<span class="chip good">Saw LinkedIn ads</span>':`<span class="note" style="margin:0">${m.date}</span>`}</li>`).join("")}</ul>
-    <p class="note">"Saw LinkedIn ads" means Factors matched the company to a LinkedIn impression followed by a site visit.</p></div>
-</div>`;
+  h+=D.mqlJourneys?journeySection():`<div class="panel"><h3>${RM()} MQL accounts</h3><p class="sub">${D.mqlMonth.length} companies entered as MQLs in HubSpot${DONE()?"":" so far"} this month</p><ul class="list-2">
+    ${D.mqlMonth.map(m=>`<li><span>${esc(m.name)}</span>${m.engaged?'<span class="chip good">Saw LinkedIn ads</span>':`<span class="note" style="margin:0">${m.date}</span>`}</li>`).join("")}</ul></div>`;
+  h+=accountsSection();
   return h;
 };
 
-R.accounts=()=>{
+function accountsSection(){
   const A=D.accounts, halo=A.liHalo.HC, vis=A.liVisitors, O=D.overlap, JT=D.jobTitles.HC;
-  let h=head("Known accounts & MQLs",`Factors.ai, ${A.window}. Focused on companies in HubSpot and MQL accounts; net new accounts, engagement levels and deal influence are left out.`);
+  let h=`<h3 class="sec-h">Known accounts on the site</h3><p class="sec-sub">Factors.ai, ${A.window}. Companies in HubSpot and MQL accounts.</p>`;
   h+=`<div class="grid g-kpi">${kpi("HubSpot companies on the site",N(A.knownVisitsWeek),`Unique companies with a session, ${A.window}`)}
     ${kpi("LinkedIn to website",P(halo.visited/halo.reached,1),`${halo.visited} of ${N(halo.reached)} companies that saw ads visited the site`)}
     ${kpi("LinkedIn to paid search",P(O.liToSearch.next/O.liToSearch.start,1),`${O.liToSearch.next} of ${N(O.liToSearch.start)} companies, about ${Math.round(O.liToSearch.hours/24)} days later on average`)}
-    ${kpi("Paid search to LinkedIn",P(O.searchToLi.next/O.searchToLi.start,1),`${O.searchToLi.next} of ${O.searchToLi.start} companies, about ${Math.round(O.searchToLi.hours)} hours later`)}
-    ${kpi(`${RM()} MQLs that saw ads first`,N(D.mqlMonth.filter(m=>m.engaged).length),`Of ${D.mqlMonth.length} ${RM()} MQL companies`)}</div>`;
+    ${kpi("Paid search to LinkedIn",P(O.searchToLi.next/O.searchToLi.start,1),`${O.searchToLi.next} of ${O.searchToLi.start} companies, about ${Math.round(O.searchToLi.hours)} hours later`)}</div>`;
   h+=`<div class="grid g-2"><div class="panel"><h3>HubSpot companies visiting by day</h3><p class="sub">Companies in HubSpot with at least one session</p>${chart({labels:A.knownVisitsDaily.map(d=>d.day.replace("Oct ","Oct ")),bars:[{name:"Companies",color:css("--c-hc"),values:A.knownVisitsDaily.map(d=>d.count)}],h:220,half:true})}</div>
     <div class="panel"><h3>Companies that visited after seeing LinkedIn ads</h3><p class="sub">Healthcare LinkedIn ads, ${A.window}</p><ul class="list-2">${vis.map(v=>`<li><span>${esc(v.name)}</span>${v.hubspotLead?'<span class="chip good">HubSpot lead</span>':`<span class="note" style="margin:0">${esc(v.domain)}</span>`}</li>`).join("")}</ul></div></div>`;
   if(JT){
@@ -447,7 +488,7 @@ R.accounts=()=>{
       ${TXT("audienceNote","")?`<p class="note">${TXT("audienceNote")}</p>`:""}</div>`;
   }
   return h;
-};
+}
 
 R.roi=()=>{
   const cm=CM(), L=D.leads, s=mqlStats(), sp=D.budget.hcSpend, ad=D.budget.hcAdSpend, mq=s.mql, sq=L.sql.slice(0,cm), A=D.roiAnnual;
@@ -598,6 +639,7 @@ function nextYM(){const m=CM()%12+1, y=CM()===12?2027:2026;return `${y}-${String
 function trackerLists(){
   const ym=reportYM(), nx=nextYM();
   if(TRK&&LATEST){
+    TRK=TRK.filter(i=>i.kind!=="meeting");
     const done=TRK.filter(i=>i.status==="Complete"&&(ymOf(i.completedAt)===ym||(!i.completedAt&&ymOf(i.due)===ym)))
       .map(i=>({project:i.title,cat:i.ws,owner:(i.owners||[]).join(", "),status:"Complete"}));
     const active=TRK.filter(i=>["In progress","In review"].includes(i.status)&&ymOf(i.due)<=ym)
@@ -749,13 +791,13 @@ function askInit(ready){const b=document.getElementById("askBtn");b.hidden=false
   inp.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();document.getElementById("askForm").requestSubmit();}});}
 
 /* ---------- shell ---------- */
-function current(){const h=(location.hash||"").slice(1);return PAGES.some(p=>p[0]===h)?h:"exec";}
+function current(){let h=(location.hash||"").slice(1);if(h==="accounts")h="leads";return PAGES.some(p=>p[0]===h)?h:"exec";}
 function render(){
   if(!D)return;
   const pg=current();
   document.getElementById("tabs").innerHTML=PAGES.map(([id,n])=>`<a href="#${id}" ${id===pg?'aria-current="page"':''}>${n}</a>`).join("")+(CAL?`<a href="tracker.html" class="cal-link" title="Open the project calendar">Calendar ↗</a>`:"");
   let html=R[pg]();
-  if(NARR[pg]){const [w,i]=NARR[pg]();const k=html.indexOf("</div>",html.indexOf("page-head"))+6;html=html.slice(0,k)+narrative(w,i)+html.slice(k);}
+  if(NARR[pg]&&pg!=="leads"){const [w,i]=NARR[pg]();const k=html.indexOf("</div>",html.indexOf("page-head"))+6;html=html.slice(0,k)+narrative(w,i)+html.slice(k);}
   document.getElementById("view").innerHTML=html;
   const cs=document.getElementById("camp-month"); if(cs) cs.addEventListener("change",()=>{CAMP_M=+cs.value;render();});
   const qp=document.getElementById("q-pick"); if(qp) qp.addEventListener("change",()=>{QSEL=+qp.value;render();});
