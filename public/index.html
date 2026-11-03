@@ -42,9 +42,9 @@ h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
 .month-pick{font:inherit;font-size:13px;font-weight:600;padding:5px 8px;border-radius:8px;border:0;background:rgba(255,255,255,.14);color:#fff}.month-pick option{color:#1B1B1B}
 .scope{display:inline-flex;font-size:13px;font-weight:600;padding:6px 14px;border-radius:999px;background:var(--yellow);color:#1B1B1B}
 .tabs{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:calc(env(safe-area-inset-top,0px) + 63px);z-index:4}
-.tabs .wrap{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.tabs .wrap{display:flex;gap:1px;overflow-x:auto;scrollbar-width:none}
 .tabs a.cal-link{margin-left:auto;color:var(--ink)}
-.tabs a{white-space:nowrap;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;padding:12px 12px 10px;border-bottom:3px solid transparent}
+.tabs a{white-space:nowrap;text-decoration:none;color:var(--muted);font-weight:600;font-size:13.5px;padding:12px 7px 10px;border-bottom:3px solid transparent}
 .tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--yellow)}
 .tabs a:focus-visible{outline:2px solid var(--yellow);outline-offset:-2px}
 
@@ -172,6 +172,17 @@ tr.future td{color:var(--muted)}
 .recs li:first-child{border-top:0;padding-top:0}
 .rec-h{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .recs p{margin:4px 0 2px;color:var(--ink)}
+.q-pick{font:inherit;font-size:13px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.q-lede{font-size:17px;line-height:1.55;font-weight:500;margin:0}
+.q-take{border-left:4px solid var(--gold);background:var(--warn-bg)}
+.q-take h3{color:var(--ink)}
+.mix{display:flex;height:30px;border-radius:8px;overflow:hidden;margin:6px 0 4px;border:1px solid var(--line)}
+.mix span{display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden}
+.mix-row{display:grid;grid-template-columns:70px 1fr;gap:10px;align-items:center}
+.mix-row b{font-size:13px}
+.rec-act{color:var(--ink)}
+.rec-act b{color:var(--good)}
+.sec-note{font-size:13px;color:var(--muted);margin:8px 0 0}
 .nar-good h3{color:var(--good)} .nar-bad h3{color:var(--warn)}
 .spark{display:block}
 table.mom td:first-child{white-space:normal;min-width:180px}
@@ -232,7 +243,7 @@ footer{color:var(--muted);font-size:12.5px;padding-block:0 32px}
 
 <script>
 (function(){
-const PAGES=[["exec","Executive summary"],["summary","Dashboard"],["trends","Month over month"],["paid","Paid media"],["creative","Ads & creative"],["website","Website"],["leads","Leads"],["accounts","Known accounts & MQLs"],["roi","ROI & variables"],["budget","Budget"]];
+const PAGES=[["exec","Executive summary"],["summary","Dashboard"],["trends","Month over month"],["quarter","Quarterly review"],["paid","Paid media"],["creative","Ads & creative"],["website","Website"],["leads","Leads"],["accounts","Known accounts & MQLs"],["roi","ROI & variables"],["budget","Budget"],["recs","Recommendations"]];
 let D=null; const DIV="HC";   /* healthcare only; senior living removed Oct 28 */
 
 /* ---------- formatting ---------- */
@@ -600,6 +611,84 @@ function trackerLists(){
 }
 const projRows=(list,showDue)=>list.length?list.map(p=>`<tr><td class="l wrap-cell">${esc(p.project)}</td><td class="l wrap-sm">${esc(p.cat||"")}</td><td class="l wrap-sm">${esc(p.owner||"")}</td>${showDue?`<td class="l">${p.due?(p.prec==="month"?M()[+p.due.slice(5,7)-1]:M()[+p.due.slice(5,7)-1]+" "+(+p.due.slice(8,10))):"–"}</td>`:`<td class="l"><span class="chip ${p.status==="Complete"?"good":"warn"}">${esc(p.status)}</span></td>`}</tr>`).join(""):`<tr><td class="l" colspan="4">Nothing listed.</td></tr>`;
 
+/* ---------- quarterly review (healthcare; built from the monthly arrays so it updates itself each quarter) ---------- */
+let QSEL=null;
+const QM=q=>[0,1,2].map(k=>(q-1)*3+k);
+function quartersDone(){const out=[];for(let q=2;q<=4;q++) if(q*3<=FULL()) out.push(q);return out;}
+function qTot(arr,q){const ix=QM(q);if(ix.some(i=>arr[i]==null||!isFinite(arr[i])))return null;return sum(ix.map(i=>arr[i]));}
+function qMetrics(q){
+  const F=D.factorsWeb, src=Object.keys(F.sources), mon=M();
+  const sBy=k=>mon.map(m=>{const i=F.months.indexOf(m);return i<0?null:F.sources[k][i];});
+  const sess=mon.map(m=>{const i=F.months.indexOf(m);return i<0?null:sum(src.map(k=>F.sources[k][i]));});
+  const g=k=>qTot(paidSeries("google",k),q), l=k=>qTot(paidSeries("linkedin",k),q);
+  const o={sess:qTot(sess,q),src:Object.fromEntries(src.map(k=>[k,qTot(sBy(k),q)])),
+    mql:qTot(D.leads.mql,q),sql:qTot(D.leads.sql,q),mkt:qTot(D.budget.hcSpend,q),
+    gs:g("spend"),gi:g("impr"),gc:g("clicks"),ls:l("spend"),li:l("impr"),lc:l("clicks"),lv:l("conv")};
+  o.ad=o.gs+o.ls; o.gctr=o.gi?o.gc/o.gi:null; o.gcpc=o.gc?o.gs/o.gc:null; o.lctr=o.li?o.lc/o.li:null; o.lcpc=o.lc?o.ls/o.lc:null;
+  o.cpm=o.mkt!=null&&o.mql?o.mkt/o.mql:null; o.apm=o.mql?o.ad/o.mql:null; o.aps=o.sess?o.ad/o.sess:null;
+  const T=D.jobTitleTrend; if(T){const ix=QM(q).map(i=>T.months.indexOf(mon[i]));if(ix.every(i=>i>=0)){o.cvp=sum(ix.map(i=>T.cvpClicks[i]));o.dm=sum(ix.map(i=>T.dmClicks[i]));}}
+  return o;
+}
+function qAdGroups(q){
+  const out={}; (D.paid.googleAdGroups||[]).forEach(r=>{if(!QM(q).includes(r.month-1))return;const w=r.shared?.5:1;
+    const a=out[r.adGroup]||(out[r.adGroup]={k:r.adGroup,shared:r.shared,c:0,i:0,s:0});a.c+=r.clicks*w;a.i+=r.impr*w;a.s+=r.spend*w;});
+  return out;
+}
+const chg=(a,b)=>a&&b!=null&&a!==0?b/a-1:null;
+function chgCell(a,b,upGood){const c=chg(a,b);if(c==null)return `<td>–</td>`;const cls=upGood==null||Math.abs(c)<.005?"":(c>=0)===upGood?"up":"dn";return `<td class="${cls}">${c>=0?"+":""}${P(c,0)}</td>`;}
+R.quarter=()=>{
+  const qs=quartersDone();
+  if(!qs.length) return head("Quarterly review","The quarter comparison appears once two full quarters are complete.");
+  const q=qs.includes(QSEL)?QSEL:qs[qs.length-1], p=q-1, Qn=`Q${q}`, Pn=`Q${p}`, mon=M();
+  const rng=x=>`${mon[(x-1)*3]} to ${mon[(x-1)*3+2]}`;
+  const A=qMetrics(p), B=qMetrics(q), Z=D.qbr&&D.qbr.quarter===`2026-Q${q}`?D.qbr:null;
+  const pick=qs.length>1?` <select id="q-pick" class="q-pick" aria-label="Quarter">${qs.map(x=>`<option value="${x}" ${x===q?"selected":""}>Q${x} vs Q${x-1}</option>`).join("")}</select>`:"";
+  const vs=(a,b,f,upGood)=>{const c=chg(a,b);return `${Pn}: ${a==null?"–":f(a)}${c==null?"":` · <span class="${upGood==null||Math.abs(c)<.005?"":(c>=0)===upGood?"up":"dn"}">${c>=0?"+":""}${P(c,0)}</span>`}`;};
+  let h=head("Quarterly review",`Healthcare. ${Qn} 2026 (${rng(q)}) compared with ${Pn} (${rng(p)}). Google includes half of the shared Brand and National General campaigns.${pick}`);
+  if(Z) h+=`<div class="panel"><p class="q-lede">${esc(Z.headline)}</p></div>`;
+  h+=`<div class="grid g-kpi">${kpi(`Website sessions, ${Qn}`,N(B.sess),vs(A.sess,B.sess,N,true))}${kpi(`Paid ad spend, ${Qn}`,$k(B.ad),vs(A.ad,B.ad,$k,null))}
+    ${kpi("Ad spend per session",$(B.aps,2),vs(A.aps,B.aps,v=>$(v,2),false))}${kpi(`MQLs, ${Qn}`,N(B.mql),vs(A.mql,B.mql,N,true))}
+    ${B.sql!=null?kpi(`SQLs, ${Qn}`,N(B.sql),vs(A.sql,B.sql,N,true)):""}${kpi("Cost per MQL",$(B.cpm),vs(A.cpm,B.cpm,v=>$(v),false))}</div>`;
+  const srcs=Object.keys(B.src), colors={"Google Ads":css("--c-ga"),"LinkedIn":css("--c-li"),"Bing":css("--c-sl"),"Direct and other":css("--c-budget")};
+  const mixRow=(lab,o)=>{const g=o.gs/o.ad,l=o.ls/o.ad;return `<div class="mix-row"><b>${lab}</b><div class="mix"><span style="width:${g*100}%;background:${css("--c-ga")}">${g>=.12?"Google "+P(g,0):""}</span><span style="width:${l*100}%;background:${css("--c-li")}">${l>=.12?"LinkedIn "+P(l,0):""}</span></div></div>`;};
+  h+=`<div class="grid g-2"><div class="panel"><h3>Website sessions by source</h3><p class="sub">Healthcare sessions from Factors, by quarter</p>${legend(srcs.map(k=>({name:k,color:colors[k]||css("--c-budget"),box:1})))}
+      ${chart({labels:[Pn,Qn],stacked:true,bars:srcs.map(k=>({name:k,color:colors[k]||css("--c-budget"),values:[A.src[k],B.src[k]]})),h:220,half:true})}</div>
+    <div class="panel"><h3>Paid spend mix</h3><p class="sub">Share of healthcare ad spend by platform</p>${mixRow(Pn,A)}${mixRow(Qn,B)}
+      <p class="note">${Pn}: Google ${$k(A.gs)}, LinkedIn ${$k(A.ls)}. ${Qn}: Google ${$k(B.gs)}, LinkedIn ${$k(B.ls)}.</p></div></div>`;
+  const rows=[["Healthcare website sessions",A.sess,B.sess,N,true]];
+  srcs.forEach(k=>rows.push([`&nbsp;&nbsp;from ${k}`,A.src[k],B.src[k],N,true]));
+  rows.push(["MQLs",A.mql,B.mql,N,true]); if(A.sql!=null&&B.sql!=null) rows.push(["SQLs",A.sql,B.sql,N,true]);
+  rows.push(["Healthcare marketing spend",A.mkt,B.mkt,v=>$(v),null],["Paid ad spend",A.ad,B.ad,v=>$(v),null],["Cost per MQL",A.cpm,B.cpm,v=>$(v),false],["Ad spend per MQL",A.apm,B.apm,v=>$(v),false],["Ad spend per website session",A.aps,B.aps,v=>$(v,2),false]);
+  rows.push(["Google Ads spend",A.gs,B.gs,v=>$(v),null],["Google Ads impressions",A.gi,B.gi,N,true],["Google Ads clicks",A.gc,B.gc,N,true],["Google Ads click-through rate",A.gctr,B.gctr,v=>P(v,2),true],["Google Ads cost per click",A.gcpc,B.gcpc,v=>$(v,2),false]);
+  rows.push(["LinkedIn spend",A.ls,B.ls,v=>$(v),null],["LinkedIn impressions",A.li,B.li,N,true],["LinkedIn clicks",A.lc,B.lc,N,true],["LinkedIn click-through rate",A.lctr,B.lctr,v=>P(v,2),true],["LinkedIn cost per click",A.lcpc,B.lcpc,v=>$(v,2),false],["LinkedIn conversions",A.lv,B.lv,N,true]);
+  if(A.cvp!=null&&B.cvp!=null) rows.push(["LinkedIn clicks from VP and C-suite",A.cvp,B.cvp,N,true],["LinkedIn clicks from real estate, finance & strategy roles",A.dm,B.dm,N,true]);
+  h+=`<div class="panel"><h3>${Pn} to ${Qn} scorecard</h3><div class="tbl-wrap"><table><thead><tr><th class="l">Metric</th><th>${Pn} 2026</th><th>${Qn} 2026</th><th>Change</th></tr></thead><tbody>
+    ${rows.map(([n,a,b,f,up])=>`<tr><td class="l">${n}</td><td>${a==null?"–":f(a)}</td><td>${b==null?"–":f(b)}</td>${chgCell(a,b,up)}</tr>`).join("")}</tbody></table></div>
+    <p class="note">Green and red mark whether the change is good or bad for that metric; spend changes are left neutral.</p></div>`;
+  const ga=qAdGroups(q), gp=qAdGroups(p), list=Object.values(ga).sort((x,y)=>y.s-x.s);
+  if(list.length) h+=`<div class="panel"><h3>Google Ads by ad group, ${Qn}</h3><p class="sub">Healthcare campaigns combined across tiers. Brand is shared, so half counts here.</p><div class="tbl-wrap"><table><thead><tr><th class="l">Ad group</th><th>Impressions</th><th>Clicks</th><th>Click-through rate</th><th>Spend</th><th>Cost per click</th><th>${Pn} cost per click</th><th>Clicks vs ${Pn}</th></tr></thead><tbody>
+    ${list.map(a=>{const b=gp[a.k];return `<tr><td class="l">${esc(a.k)}${a.shared?' <span class="chip">Shared</span>':""}</td><td>${N(a.i)}</td><td>${N(a.c)}</td><td>${a.i?P(a.c/a.i,2):"–"}</td><td>${$(a.s)}</td><td>${a.c?$(a.s/a.c,2):"–"}</td><td>${b&&b.c?$(b.s/b.c,2):"–"}</td>${chgCell(b?b.c:null,a.c,true)}</tr>`;}).join("")}</tbody></table></div>
+    ${Object.keys(gp).some(k=>!ga[k])?`<p class="note">Not running in ${Qn}: ${Object.keys(gp).filter(k=>!ga[k]).map(esc).join(", ")}.</p>`:""}</div>`;
+  if(Z&&Z.takeaway) h+=`<div class="panel q-take"><h3>Key takeaway</h3><p class="q-lede" style="font-size:15.5px">${esc(Z.takeaway)}</p>${Z.recs?`<p class="sec-note"><a href="#recs">See the recommendations</a> that follow from this quarter.</p>`:""}</div>`;
+  return h;
+};
+
+/* ---------- recommendations ---------- */
+R.recs=()=>{
+  const RC=D.recs||[], Z=D.qbr, qn=Z?Z.quarter.slice(5):"";
+  const tag=t=>t==="quick"?'<span class="chip good">Quick win</span>':'<span class="chip warn">Strategic</span>';
+  let h=head("Recommendations",`Healthcare. What to do next, from ${RM()}'s results${Z?` and the ${qn} quarterly review`:""}.${CAL?` Track the work on the <a href="tracker.html">project calendar</a>.`:""}`);
+  if(RC.length) h+=`<div class="panel"><h3>For ${NM()}</h3><p class="sub">From ${RM()}'s results, with priority and owner</p><ol class="recs">
+    ${RC.map(r=>`<li><div class="rec-h"><span class="chip ${r.pri==="High"?"bad":r.pri==="Medium"?"warn":""}">${esc(r.pri)}</span><b>${esc(r.title)}</b></div><p>${esc(r.detail)}</p><span class="note">Owner: ${esc(r.owner)}</span></li>`).join("")}</ol></div>`;
+  if(Z&&Z.recs&&Z.recs.length) h+=`<div class="panel"><h3>From the ${qn} review</h3><p class="sub">Improvements to the programs already running</p><ol class="recs">
+    ${Z.recs.map(r=>`<li><div class="rec-h">${tag(r.type)}<b>${esc(r.title)}</b></div><p>${esc(r.why)}</p><p class="rec-act"><b>Next step:</b> ${esc(r.action)}</p></li>`).join("")}</ol></div>`;
+  if(Z&&Z.expansion&&Z.expansion.length) h+=`<div class="panel"><h3>New channels and the rebrand</h3><p class="sub">In the order to run them</p><ol class="recs">
+    ${Z.expansion.map(r=>`<li><div class="rec-h">${tag(r.type)}<span class="chip">${esc(r.when)}</span><b>${esc(r.title)}</b></div><p>${esc(r.why)}</p><p class="rec-act"><b>Next step:</b> ${esc(r.action)}</p></li>`).join("")}</ol>
+    ${Z.note?`<p class="sec-note">${esc(Z.note)}</p>`:""}</div>`;
+  if(!RC.length&&!Z) h+=`<div class="panel"><p>Recommendations for this month are not available.</p></div>`;
+  return h;
+};
+
 R.plan=()=>{
   const T=trackerLists(), RC=D.recs||[];
   let h=head("Plan & next steps",`Projects from the marketing project calendar and recommendations for ${NM()}.${T.live?` <a href="/tracker.html">Open the project calendar</a>`:""}`);
@@ -664,11 +753,12 @@ function current(){const h=(location.hash||"").slice(1);return PAGES.some(p=>p[0
 function render(){
   if(!D)return;
   const pg=current();
-  document.getElementById("tabs").innerHTML=PAGES.map(([id,n])=>`<a href="#${id}" ${id===pg?'aria-current="page"':''}>${n}</a>`).join("")+(CAL?`<a href="tracker.html" class="cal-link">Project calendar ↗</a>`:"");
+  document.getElementById("tabs").innerHTML=PAGES.map(([id,n])=>`<a href="#${id}" ${id===pg?'aria-current="page"':''}>${n}</a>`).join("")+(CAL?`<a href="tracker.html" class="cal-link" title="Open the project calendar">Calendar ↗</a>`:"");
   let html=R[pg]();
   if(NARR[pg]){const [w,i]=NARR[pg]();const k=html.indexOf("</div>",html.indexOf("page-head"))+6;html=html.slice(0,k)+narrative(w,i)+html.slice(k);}
   document.getElementById("view").innerHTML=html;
   const cs=document.getElementById("camp-month"); if(cs) cs.addEventListener("change",()=>{CAMP_M=+cs.value;render();});
+  const qp=document.getElementById("q-pick"); if(qp) qp.addEventListener("change",()=>{QSEL=+qp.value;render();});
   const t=document.querySelector('.tabs a[aria-current="page"]'); if(t&&t.scrollIntoView) t.scrollIntoView({block:"nearest",inline:"nearest"});
 }
 addEventListener("hashchange",()=>{render();scrollTo(0,0);});

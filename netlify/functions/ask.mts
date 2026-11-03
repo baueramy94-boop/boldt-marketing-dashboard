@@ -59,6 +59,7 @@ function keyFigures(d: any): string {
       for (const i of [cm - 1, cm - 2].filter(i => i >= 0))
         out.push(`Paid media, ${MON[i]} (healthcare; Google includes half of shared Brand and National General): ${plat("LinkedIn", P.linkedin || {}, i)}. ${plat("Google Ads", P.google || {}, i)}.`);
     }
+    if (d.qbr?.headline) out.push(`Quarterly review (${String(d.qbr.quarter).slice(5)} vs the quarter before, dashboard Quarterly review page): ${d.qbr.headline}`);
   } catch { /* the full report JSON is still available below */ }
   return out.join("\n");
 }
@@ -101,6 +102,8 @@ Where to look:
 - MQLs, SQLs, cost per MQL and ROI: the key figures and the report's leads and roiAnnual sections.
 - Projects, what marketing delivered, what is coming up: get_project_calendar, plus the report's projects and upcoming sections.
 - Website: the report's factorsWeb section. Companies and MQL accounts: the report's accounts section.
+- Quarter comparisons and Google results by ad group: the report's qbr section (quarterly headline, takeaway and recommendations) and paid.googleAdGroups (monthly rows by ad group; rows marked shared count half). Add months up by quarter: Q1 is Jan to Mar.
+- Recommendations: the report's recs section (this month) and qbr.recs and qbr.expansion (quarterly).
 - Earlier months: get_month_report.
 Most questions need one or two lookups at most. Check these sources before saying something is not available.
 

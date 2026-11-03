@@ -34,6 +34,7 @@ Use the connectors listed here. If a source fails, keep last month's values for 
   - Google: name contains "senior", "demandgen", "demand gen" or "youtube" → senior living, exclude. "Brand" or "National General" → shared (`SH`), counted 50% to healthcare. Everything else → `HC`.
 - Update `paid.linkedin.HC.{impr,clicks,spend,conv}[i]`, `paid.google.HC[...]`, `paid.google.SH[...]`.
 - Replace `campaigns` rows for months `m-1` and `m` (objects: platform, month, div, name, impr, clicks, spend). Keep other months.
+- `paid.googleAdGroups`: Windsor `google_ads` fields campaign, ad_group_name, month, clicks, impressions, spend, April 2026 through month `m`. One row per campaign, ad group and month: `{campaign, adGroup, month, clicks, impr, spend, shared}` (month 1 to 12, spend to 2 decimals). Leave out senior living, DemandGen and YouTube campaigns. Brand and National General rows get `shared: true`; the dashboard counts them at half. Healthcare spend by month must match `paid.google.HC.spend` and shared must match `paid.google.SH.spend` within $1.
 - `searchTerms`: Google search terms for the last two months, healthcare and shared campaigns only, terms with 3 or more clicks (term, campaign, impr, clicks, spend, window, div). Set `searchTermsWindow`, for example "Oct 1 to Nov 30".
 
 ### Ads and creative (Windsor `linkedin`, creative level)
@@ -83,7 +84,8 @@ Write these from the new numbers. Keep each item to one or two sentences with th
 - `text.summaryWins`: 3 or 4 `[title, detail]` items.
 - `text.narrative.<page>` for paid, creative, website, leads, accounts, roi, budget: `{"well": [[title, detail]], "improve": [[title, detail, optional severity]]}`. Two or three of each.
 - `text.searchTermsNote`, `text.budgetNote`: one sentence each, or an empty string.
-- `recs`: 4 to 6 recommendations for next month, `{pri: High|Medium|Low, title, detail, owner}`. Tie each one to a number from this month. No setup or data-fix tasks.
+- `recs`: 4 to 6 recommendations for next month, `{pri: High|Medium|Low, title, detail, owner}`, shown on the Recommendations page. Tie each one to a number from this month. No setup or data-fix tasks.
+- `qbr` (Quarterly review and Recommendations pages). The Quarterly review page computes its scorecard from the monthly arrays; `qbr` holds only the words. When `m` is 3, 6, 9 or 12, write a new one for that quarter against the quarter before: `{quarter: "YYYY-Qn", headline, takeaway, recs: [3 × {type: quick|strategic, title, why, action}], expansion: [up to 4 × {type, when, title, why, action}], note}`. Compute every figure the way the page does (sessions = sum of `factorsWeb` sources; Google includes half of shared campaigns; marketing spend = `budget.hcSpend`) and recheck in Python. In other months copy `qbr` from the base file unchanged. Never include net-new ICP accounts, sales outreach, deal influence, engagement levels or vendor product updates. Don't repeat a `qbr` item in `recs`.
 - `exec` (the executive summary leadership reads first):
   - `prepared`: "Final report for [Month] 2026." (for example "Final report for November 2026.")
   - `headline`: two sentences on the month's story.
