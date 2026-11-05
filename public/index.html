@@ -800,7 +800,7 @@ R.leads=()=>{
   let h=head("Leads & accounts",`Healthcare MQLs and SQLs, when and where companies engage, the full journey of SQL companies, and healthcare companies on the site from every source. New MQLs follow our engagement definition.`);
   const mqlSql={v:P(sqlY/sum(s.mql.slice(0,SQLN())),1),d:`Year to date. 2025: ${P(D.roiAnnual["2025"].mqlSql,1)}`};
   const XN=D.defMql&&D.defMql.monthlyNew;
-  h+=XN?`<div class="grid g-2"><div class="panel"><h3>New MQLs by month</h3><p class="sub">${N(D.defMql.ytdNew)} new this year by our engagement definition. Each company counts once, in the month it became new.</p>
+  h+=XN?`<div class="grid g-2"><div class="panel"><h3>New MQLs by month</h3><p class="sub">${N(D.defMql.ytdNew)} new this year by our engagement definition. Each company counts once, in the month it became new.${String(D.year||"2026")==="2026"?" The year-over-year comparison starts in 2027, when both years are measured the same way.":""}</p>
     ${chart({labels:M().slice(0,XN.length),bars:[{name:"New MQLs",color:css("--c-hc"),values:XN}],refs:[{name:`Avg ${N(D.defMql.ytdNew/XN.length)}`,value:D.defMql.ytdNew/XN.length,color:css("--gold")}],half:true})}
     ${D.defMql.ytdNote?`<p class="sec-note">${esc(D.defMql.ytdNote)}</p>`:""}</div>
 `:`<div class="grid g-2">`;
