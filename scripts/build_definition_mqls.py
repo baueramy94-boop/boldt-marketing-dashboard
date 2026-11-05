@@ -77,6 +77,22 @@ for e in SE:
     r = root(e["domain"])
     if r in ORG and e["date"]: events[r].append((e["date"], "Email click", {"type": "1:1 email"}))
 
+# Google and Bing ad visits (Factors "Google Ads / Paid Search Website Session" and "Bing Ads Website Sessions" reports, from Mar 16, 2026)
+import glob
+SENC = re.compile(r"senior|demandgen", re.I)
+BING = [x for f in sorted(glob.glob("paid/bing_*.json")) for x in json.load(open(f)) if x.get("source") == "bing" and x.get("campaign") and not SENC.search(x["campaign"]) and not SENC.search(x.get("page") or "") and not SENC.search(x.get("keyword") or "")]
+bkey = {(root(x["domain"]), x["date"]) for x in BING}
+for x in BING:
+    r = root(x["domain"])
+    if r in ORG: events[r].append((x["date"], "Bing ad click", {"campaign": x["campaign"], "keyword": None if x["keyword"] in ("$none", None) else x["keyword"], "page": x.get("page")}))
+for f in sorted(glob.glob("paid/google_*.json")):
+    for x in json.load(open(f)):
+        c = x["campaign"]
+        if not c or c == "$none" or SENC.search(c) or SENC.search(x.get("keyword") or ""): continue   # healthcare only: drop senior living campaigns and searches
+        r = root(x["domain"])
+        if r not in ORG or (r, x["date"]) in bkey: continue
+        events[r].append((x["date"], "Google ad click", {"campaign": c, "keyword": None if x["keyword"] in ("$none", None) else x["keyword"], "n": x.get("n", 1)}))
+
 def active(r, a, b): return [ev[1] for ev in events[r] if a <= ev[0] <= b]
 W_OCT = ("2026-10-01", "2026-10-31")
 W_12 = ("2025-11-01", "2026-10-31")          # 12 months through October
@@ -99,7 +115,9 @@ for mth in range(1, 11):
     monthly_new[mth] = len(nn)
     for r in nn: first_new.setdefault(r, mth)
 ytd_new = len(first_new)
-engaged_ytd = len([r for r in HC if active(r, "2026-01-01", "2026-10-31")])
+W_YTD = ("2026-01-01", "2026-10-31")
+engaged_ytd_set = [r for r in HC if active(r, *W_YTD)]
+engaged_ytd = len(engaged_ytd_set)
 
 def bych(rs, w):
     c = defaultdict(int)
@@ -114,7 +132,7 @@ out = {
     "totalByChannel": bych(total, W_12), "octByChannel": bych(octa, W_OCT), "newByChannel": bych(new, W_OCT),
     "check_websiteKnownAll_Oct": len(known_oct_any),
     "newNames": [sorted(ORG[r]["names"], key=len)[0] for r in new],
-    "monthlyNew": monthly_new, "ytdNew": ytd_new, "engagedYtd": engaged_ytd,
+    "monthlyNew": monthly_new, "ytdNew": ytd_new, "engagedYtd": engaged_ytd, "ytdByChannel": bych(engaged_ytd_set, W_YTD),
     "newDomains": new,
 }
 json.dump(out, open("def_mql_oct.json", "w"), indent=1)
@@ -137,6 +155,7 @@ json.dump(out, open("def_mql_oct.json", "w"), indent=1)
 # from the Factors account timeline), Google and Bing ad visits (Factors), email clicks (HubSpot). Impressions by campaign only.
 import os
 FA = json.load(open("factors_new.json")) if os.path.exists("factors_new.json") else {}
+if os.path.exists("factors_v3.json"): FA.update(json.load(open("factors_v3.json")))   # newer runs add pages viewed, email names, calls and meetings
 ARCH = json.load(open("/home/claude/site/public/data/ads-archive.json"))
 GAD = {}
 for c in ARCH.get("google", []):
@@ -187,19 +206,22 @@ for r in new:
                 act = [x for x in pool if x["active"]] or pool
                 ads = [{k: x[k] for k in ("id", "title", "thumb")} for x in act][:6]; exact = False
             li.append({"date": a["date"], "campaign": nm, "ads": ads, "exactAd": exact, "group": camp_group(a.get("campaign") or a.get("ad") or ""), "clicks": a.get("clicks") or 1, "landing": a.get("landing_page")})
-        else:
-            m = re.search(r"(\d{9,})", a.get("ad") or "")
-            g = GAD.get(m.group(1)) if m else None
-            if not g and GCAMP.get(nk(a.get("campaign"))): g = {"campaign": GCAMP[nk(a.get("campaign"))], "adGroup": None, "headlines": []}
-            search.append({"date": a["date"], "channel": "Google Ads" if a["channel"].startswith("Google") else "Bing Ads",
-                           "campaign": g["campaign"] if g else camp(a.get("campaign")), "adGroup": g["adGroup"] if g else None,
-                           "headlines": g["headlines"] if g else [], "keyword": a.get("keyword"), "landing": a.get("landing_page"), "clicks": a.get("clicks") or 1})
-    # merge duplicate search rows (same day, campaign, keyword, page)
+    # Google and Bing visits come from the Factors paid search reports; the account journey adds the ad and landing page when it has them
+    agent_paid = [a for a in f.get("clicked_ads", []) if a.get("channel") in ("Google Ads", "Bing Ads") and a.get("date", "").startswith("2026-10")]
     ms = {}
-    for s_ in search:
-        k = (s_["date"], s_["channel"], s_["campaign"], s_["keyword"], s_["landing"])
-        if k in ms: ms[k]["clicks"] += s_["clicks"]
-        else: ms[k] = dict(s_)
+    for d, ch, x in ev:
+        if ch not in ("Google ad click", "Bing ad click"): continue
+        chn = "Google Ads" if ch.startswith("Google") else "Bing Ads"
+        k = (d, chn, x["campaign"], x.get("keyword"))
+        if k in ms: ms[k]["clicks"] += x.get("n", 1); continue
+        cname = GCAMP.get(nk(x["campaign"]), x["campaign"].replace("+", " "))
+        row = {"date": d, "channel": chn, "campaign": cname, "adGroup": None, "headlines": [], "keyword": x.get("keyword"), "landing": x.get("page"), "clicks": x.get("n", 1)}
+        for a_ in agent_paid:
+            if a_["date"] == d and a_["channel"] == chn:
+                m = re.search(r"(\d{9,})", a_.get("ad") or ""); gg = GAD.get(m.group(1)) if m else None
+                if gg: row.update(adGroup=gg["adGroup"], headlines=gg["headlines"])
+                row["landing"] = row["landing"] or a_.get("landing_page"); row["keyword"] = row["keyword"] or a_.get("keyword")
+        ms[k] = row
     search = sorted(ms.values(), key=lambda x: x["date"])
     if li_month and not li:      # Factors had no LinkedIn detail: campaign from the Windsor company report by campaign
         for cname, comp in LIC.items():
@@ -214,6 +236,18 @@ for r in new:
         else: ml[k] = dict(x)
     li = sorted(ml.values(), key=lambda x: x["date"])
     emails = sorted({(d, x["type"]) for d, ch, x in ev if ch == "Email click"})
+    # which marketing email was clicked: Factors records the email name for clicks it can see (last 180 days)
+    enames = [e for e in f.get("email_clicks", []) if not SENC.search(e.get("email") or "")]
+    def ename(d):
+        for e in enames:
+            if e.get("date") and abs((dt.date.fromisoformat(e["date"]) - dt.date.fromisoformat(d)).days) <= 1: return e.get("email"), e.get("link")
+        return None, None
+    visits = []
+    for v in f.get("page_visits", []):
+        if not v.get("date", "").startswith("2026-10"): continue
+        pg = [p for p in (v.get("pages") or []) if isinstance(p, str) and not SENC.search(p)]
+        if pg or v.get("source"): visits.append({"date": v["date"], "source": v.get("source"), "pages": pg[:4]})
+    visits.sort(key=lambda v: v["date"])
     imps = []
     for i in f.get("impression_campaigns", []):
         if re.search(r"senior", i.get("campaign", ""), re.I): continue
@@ -223,12 +257,17 @@ for r in new:
             [(d, "Email click", "day") for d, t in emails] + [(w["start"], "Website visit", "week") for w in web]
     if li_month and not any(not x["date"].endswith("-00") for x in li): cands.append(("2026-10-01", "LinkedIn ad click", "month"))
     first = min(cands, key=lambda c: (c[0], c[2] != "day")) if cands else (ev[0][0], ev[0][1], "day")
+    lcands = cands + [(v["date"], "Website visit", "day") for v in visits]
+    last = max(lcands, key=lambda c: (c[0], c[2] == "day")) if lcands else first
+    last = {"date": last[0], "label": {"day": dl(last[0]), "week": "Week of " + dl(last[0]), "month": "October"}[last[2]], "channel": last[1], "precision": last[2]}
     chans = sorted({ch for d, ch, x in ev})
     companies.append({
         "name": sorted(ORG[r]["names"], key=len)[0], "domain": r, "first": {"date": first[0], "label": {"day": dl(first[0]), "week": "Week of " + dl(first[0]), "month": "October"}[first[2]], "channel": first[1], "precision": first[2]},
         "channels": chans, "web": web, "pages": [p for p in f.get("top_pages", [])[:4] if isinstance(p, str)],
         "liClicksMonth": li_month, "li": li, "search": search,
-        "email": [{"date": d, "label": dl(d), "type": t} for d, t in emails],
+        "email": [dict(zip(("date", "label", "type", "name", "link"), (d, dl(d), t) + (ename(d) if t == "Marketing email" else (None, None)))) for d, t in emails],
+        "visits": visits,
+        "last": last,
         "impressions": sorted(imps, key=lambda x: -x["views"])[:6],
     })
 companies.sort(key=lambda c: (c["first"]["precision"] == "month", c["first"]["date"], c["name"]))

@@ -9,7 +9,7 @@
 :root{
   --navy:#033D51; --navy-deep:#022E3D; --yellow:#EBBC4E; --gold:#D19000; --olive:#70924C; --green:#296C51; --slate:#57788F;
   --bg:#F2F4F5; --surface:#FFFFFF; --ink:#0F1C22; --muted:#5A6870; --line:#DCE1E4; --soft:#E9EDEF;
-  --c-li:#033D51; --c-ga:#D19000; --c-hc:#033D51; --c-sl:#70924C; --c-budget:#9AA6AD;
+  --c-li:#033D51; --c-ga:#D19000; --c-hc:#033D51; --c-sl:#70924C; --c-budget:#9AA6AD; --mk-web:#4E9DBA; --mk-em:#B5547A;
   --good:#296C51; --warn:#B87A00; --bad:#B23B2A; --good-bg:#E3F0E9; --warn-bg:#FBF0D6; --bad-bg:#F8E3DF;
   --mast-ink:#FFFFFF;
   --f-display:"Archivo","Arial Narrow",Arial,sans-serif; --f-body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -17,12 +17,12 @@
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0A171D; --surface:#102229; --ink:#E7EDF0; --muted:#97A8B0; --line:#22404B; --soft:#16303A;
-  --c-li:#62AFCB; --c-ga:#EBBC4E; --c-hc:#62AFCB; --c-sl:#9BBE72; --c-budget:#5E737D;
+  --c-li:#62AFCB; --c-ga:#EBBC4E; --c-hc:#62AFCB; --c-sl:#9BBE72; --c-budget:#5E737D; --mk-web:#A8DCEE; --mk-em:#E58AAE;
   --good:#6CC096; --warn:#EBBC4E; --bad:#EE8773; --good-bg:#14352A; --warn-bg:#3A2F12; --bad-bg:#3C1E19;
   --navy:#04394B; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0A171D; --surface:#102229; --ink:#E7EDF0; --muted:#97A8B0; --line:#22404B; --soft:#16303A;
-  --c-li:#62AFCB; --c-ga:#EBBC4E; --c-hc:#62AFCB; --c-sl:#9BBE72; --c-budget:#5E737D;
+  --c-li:#62AFCB; --c-ga:#EBBC4E; --c-hc:#62AFCB; --c-sl:#9BBE72; --c-budget:#5E737D; --mk-web:#A8DCEE; --mk-em:#E58AAE;
   --good:#6CC096; --warn:#EBBC4E; --bad:#EE8773; --good-bg:#14352A; --warn-bg:#3A2F12; --bad-bg:#3C1E19;
   --navy:#04394B; color-scheme:dark}
 *{box-sizing:border-box}
@@ -185,6 +185,10 @@ tr.future td{color:var(--muted)}
 .sec-note{font-size:13px;color:var(--muted);margin:8px 0 0}
 .sec-h{font-size:18px;margin:26px 0 2px}
 .sec-sub{color:var(--muted);margin:0 0 12px;font-size:13.5px}
+.dm-list .jr summary{grid-template-columns:minmax(190px,1.2fr) 2fr minmax(120px,.7fr) minmax(120px,.7fr)}
+.dm-head{display:grid;grid-template-columns:minmax(190px,1.2fr) 2fr minmax(120px,.7fr) minmax(120px,.7fr);gap:10px 14px;padding:0 13px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.dm-lbl{display:none}
+@media (max-width:760px){.dm-list .jr summary{grid-template-columns:1fr}.dm-head{display:none}.dm-lbl{display:inline}}
 .jr-list{display:grid;gap:8px}
 .jr{border:1px solid var(--line);border-radius:10px;background:var(--surface)}
 .jr summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(200px,1.2fr) 2fr minmax(180px,1fr);gap:10px 14px;align-items:center;padding:10px 12px}
@@ -252,10 +256,22 @@ body.editing .ed-mod{background:color-mix(in srgb,var(--yellow) 16%,transparent)
 .dm-ads{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.dm-ads img,.dm-ads .ph{width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--line);font-size:11px}
 .strip{display:grid;grid-template-columns:minmax(150px,220px) 1fr;gap:6px 12px;align-items:center;font-size:12.5px}
 .strip .cells{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:2px}
-.strip .cells i{height:18px;border-radius:2px;background:var(--soft);position:relative}
+.strip .cells i{height:22px;border-radius:2px;background:var(--soft);position:relative}
 .strip .cells i.c::after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:var(--gold)}
 .strip .cells i.q{outline:2px solid var(--ink);outline-offset:-1px}
 .strip .ax{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:2px;font-size:10.5px;color:var(--muted)}
+.strip .cells i .mk{position:absolute;left:0;right:0;bottom:2px;display:flex;justify-content:center;gap:1px;flex-wrap:wrap}
+.strip .cells i .mk b,.mkd{width:6px;height:6px;border-radius:50%;display:inline-block;box-shadow:0 0 0 1px var(--surface)}
+.strip-key .mkd{width:8px;height:8px}
+.mk-li{background:var(--gold)} .mk-ad{background:var(--olive)} .mk-web{background:var(--mk-web)} .mk-em{background:var(--mk-em)} .mk-sa{background:var(--ink);border-radius:1px!important} .mk-q{background:transparent;box-shadow:0 0 0 2px var(--ink)!important}
+.jr-one{grid-template-columns:1fr!important}
+.jm-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.jm-h{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:3px;margin-bottom:4px}
+.jm ul{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:13px}
+.jm ul li{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+.jm ul li .mkd{flex:none;transform:translateY(-1px)}
+.jm-q{font-weight:600}
+.jm-run .jm-h{border-bottom-style:dashed}
 .strip-key{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:4px 0 10px}
 .strip-key span{display:inline-flex;align-items:center;gap:6px}
 .strip-key i{width:14px;height:12px;border-radius:2px;display:inline-block;background:var(--c-li)}
@@ -424,7 +440,7 @@ R.summary=()=>{
       <div class="bar"><i style="width:${Math.min(100,s.ytd/s.goalsYTD.o*100)}%"></i><u style="left:${s.goalsYTD.c/s.goalsYTD.o*100}%"></u><u style="left:${s.goalsYTD.b/s.goalsYTD.o*100}%"></u></div>
       <div class="bar-labels"><span>${P(pc,0)} of conservative goal (${s.goalsYTD.c})</span><span>${s.goalsYTD.o}</span></div></div>`;
     h+=kpi(`MQLs in ${RM()}${SOFAR()}`,N(s.oct),`Monthly goal ${s.goalMo} (conservative)`);
-    if(D.defMql) h+=kpi(`Definition MQLs, ${RM()}`,`${N(D.defMql.newOct)} new`,`${D.defMql.ytdNew!=null?N(D.defMql.ytdNew)+" new this year · ":""}${N(D.defMql.total12)} engaged in the past 12 months`);
+    if(D.defMql) h+=kpi(`New MQLs by engagement, ${RM()}`,`${N(D.defMql.newOct)}`,`${D.defMql.ytdNew!=null?N(D.defMql.ytdNew)+" new in "+(D.year||2026)+" · ":""}${N(D.defMql.engagedYtd??D.defMql.total12)} engaged in ${D.year||2026}`);
     h+=kpi("Cost per MQL, YTD",$(c.all),`2025: ${$(D.roiAnnual["2025"].cpMql)}. Ad spend per MQL ${$(c.ad)}`);
     h+=kpi("SQLs year to date",N(sqlY),`${P(sqlY/D.leads.sqlGoal,0)} of the ${D.leads.sqlGoal} goal. Same months 2025: ${sql25}`);
   }
@@ -483,19 +499,19 @@ const fdShort=iso=>{const d=String(iso||"").split("-");return d.length===3?`${M(
 function defMqlPanel(){
   const X=D.defMql, ch=o=>Object.entries(o||{}).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({k,v})), MM=X.manual||{};
   const mn=X.monthlyNew||[], C=X.companies||[];
+  const YR=String(D.year||"2026");
   let h=`<h3 class="sec-h">MQLs by our engagement definition, ${RM()}</h3><p class="sec-sub">${esc(X.definition)} ${esc(X.newRule)}</p>
-  <div class="grid g-kpi">${kpi(`New definition MQLs, ${RM()}`,N(X.newOct),`Engaged in ${RM()} for the first time in 12 months`)}
-    ${X.ytdNew!=null?kpi("New definition MQLs, this year",N(X.ytdNew),`January to ${RM()}. ${RM()} is ${P(X.newOct/X.ytdNew,0)} of the year.`):""}
-    ${kpi("Total definition MQLs",N(X.total12),"Engaged at least once in the 12 months through "+RM()+" 31")}
-    ${kpi(`Engaged in ${RM()}`,N(X.activeOct),"New plus returning companies")}
-    ${kpi(`MQLs entered in HubSpot, ${RM()}`,N(mqlStats().oct),MM.orgs?`${MM.activeOct} of these ${MM.orgs} companies engaged in ${RM()}`:"")}</div>`;
+  <div class="grid g-kpi">${kpi(`New MQLs, ${RM()}`,N(X.newOct),`Engaged in ${RM()} for the first time in 12 months`)}
+    ${X.ytdNew!=null?kpi(`New MQLs, ${YR}`,N(X.ytdNew),`January to ${RM()}. ${RM()} is ${P(X.newOct/X.ytdNew,0)} of the year.`):""}
+    ${kpi(`Total Engaged Companies, ${RM()}`,N(X.activeOct),"New plus returning companies")}
+    ${X.engagedYtd!=null?kpi(`Total Engaged Companies, ${YR}`,N(X.engagedYtd),`Engaged at least once, January to ${RM()}`):""}</div>`;
   h+=`<div class="grid g-2">`;
-  if(mn.length) h+=`<div class="panel"><h3>New definition MQLs by month</h3><p class="sub">${N(X.ytdNew)} new this year. Each company counts once, in the month it became new.</p>
-    ${chart({labels:M().slice(0,mn.length),bars:[{name:"New definition MQLs",color:css("--c-hc"),values:mn}],refs:[{name:"Monthly average",value:X.ytdNew/mn.length,color:css("--gold")}],half:true})}
+  if(mn.length) h+=`<div class="panel"><h3>New MQLs by month</h3><p class="sub">${N(X.ytdNew)} new this year. Each company counts once, in the month it became new.</p>
+    ${chart({labels:M().slice(0,mn.length),bars:[{name:"New MQLs",color:css("--c-hc"),values:mn}],refs:[{name:"Monthly average",value:X.ytdNew/mn.length,color:css("--gold")}],half:true})}
     ${X.ytdNote?`<p class="sec-note">${esc(X.ytdNote)}</p>`:""}</div>`;
   h+=`<div class="panel"><h3>How they engaged</h3><p class="sub">Companies with each type of engagement. One company can have more than one.</p>
-    <div class="grid g-2" style="gap:14px"><div><div class="eyebrow">New in ${RM()} (${N(X.newOct)})</div>${hbars(ch(X.newByChannel),{max:X.newOct})}</div>
-    <div><div class="eyebrow">All definition MQLs, 12 months (${N(X.total12)})</div>${hbars(ch(X.totalByChannel),{max:X.total12})}</div></div><p class="sec-note">${esc(X.window)}</p></div></div>`;
+    <div class="grid g-2" style="gap:14px"><div><div class="eyebrow">New MQLs, ${RM()} (${N(X.newOct)})</div>${hbars(ch(X.newByChannel),{max:X.newOct})}</div>
+    <div><div class="eyebrow">Total Engaged Companies, ${YR} (${N(X.engagedYtd??X.total12)})</div>${hbars(ch(X.ytdByChannel||X.totalByChannel),{max:X.engagedYtd??X.total12})}</div></div><p class="sec-note">${esc(X.window)}</p></div></div>`;
   if(C.length) h+=defMqlList(X,C);
   return h;
 }
@@ -517,17 +533,20 @@ function defMqlList(X,C){
     c.li.forEach(x=>r.push([x.date,`<b>LinkedIn ad click</b> ${pl(x.clicks,"click")} on <i>${esc(x.campaign)}</i>${x.group?` <span class="note" style="margin:0">(${esc(x.group)})</span>`:""}${seen.has(x.campaign)?"":(seen.add(x.campaign),adLine(x))}${x.landing?`<br><span class="note" style="margin:0">Landed on ${esc(x.landing)}</span>`:""}`]));
     if(!c.li.length&&c.liClicksMonth) r.push(["2026-10-00",`<b>LinkedIn ad click</b> ${pl(c.liClicksMonth,"click")} in ${RM()}. LinkedIn did not report which campaign.`]);
     c.search.forEach(x=>r.push([x.date,`<b>${esc(x.channel)} click</b> ${esc(x.campaign)}${x.adGroup?`, ad group ${esc(x.adGroup)}`:""}${x.keyword?`, searched “${esc(x.keyword)}”`:""}${x.headlines&&x.headlines.length?`<br><span class="note" style="margin:0">Ad headlines include ${x.headlines.map(esc).join(" · ")}</span>`:""}${x.landing?`<br><span class="note" style="margin:0">Landed on ${esc(x.landing)}</span>`:""}`]));
-    c.web.forEach(w=>r.push([w.start,`<b>Website visit</b> ${pl(w.sessions,"session")}, week of ${esc(w.week.split(" to ")[0])}`]));
-    c.email.forEach(e=>r.push([e.date,`<b>Email click</b> ${e.type==="1:1 email"?"Clicked a 1:1 email from Boldt":"Clicked a marketing email"}`]));
+    const PG=p=>esc(String(p).replace(/^https?:\/\//,"").replace("www.boldthealthcarerealestate.com","")||"/");
+    c.web.forEach(w=>{const end=new Date(w.start+"T12:00:00");end.setDate(end.getDate()+6);const e=end.toISOString().slice(0,10);
+      const vv=(c.visits||[]).filter(v=>v.date>=w.start&&v.date<=e), pages=[...new Set(vv.flatMap(v=>v.pages))].slice(0,5), src=[...new Set(vv.map(v=>v.source).filter(Boolean))];
+      r.push([w.start,`<b>Website visit</b> ${pl(w.sessions,"session")}, week of ${esc(w.week.split(" to ")[0])}${pages.length?`<br><span class="note" style="margin:0">Pages viewed: ${pages.map(PG).join(" · ")}${src.length?` (from ${src.map(esc).join(", ")})`:""}</span>`:""}`]);});
+    c.email.forEach(e=>r.push([e.date,`<b>Email click</b> ${e.type==="1:1 email"?"Clicked a 1:1 email from Boldt":`Clicked a marketing email${e.name?`: <i>${esc(e.name)}</i>`:""}`}${e.link?`<br><span class="note" style="margin:0">Link: ${PG(e.link)}</span>`:""}`]));
     return r.sort((a,b)=>a[0]<b[0]?-1:1).map(([d,t])=>`<li><span class="note" style="margin:0">${d.endsWith("-00")?RM():fdShort(d)}</span> ${t}</li>`).join("");};
-  const opts=[["all",`All ${C.length}`],["LinkedIn ad click",`LinkedIn clicks (${cnt("LinkedIn ad click")})`],["Website visit",`Website (${cnt("Website visit")})`],["Email click",`Email (${cnt("Email click")})`]];
+  const opts=[["all",`All ${C.length}`],["LinkedIn ad click",`LinkedIn clicks (${cnt("LinkedIn ad click")})`],["Google ad click",`Google ads (${cnt("Google ad click")})`],["Bing ad click",`Bing ads (${cnt("Bing ad click")})`],["Website visit",`Website (${cnt("Website visit")})`],["Email click",`Email (${cnt("Email click")})`]].filter(([v],i)=>i===0||cnt(v));
   return `<div class="panel" id="dm-panel"><div class="panel-h"><div><h3>New definition MQL companies, ${RM()}</h3><p class="sub">What each company engaged with, when and how. Earliest first. Open a company for the ads it clicked and the campaigns it saw.</p></div>
     <label class="sel">Show <select id="dm-filter">${opts.map(([v,t])=>`<option value="${esc(v)}">${esc(t)}</option>`).join("")}</select></label></div>
-    <div class="jr-list">${C.map(c=>`<details class="jr" data-ch="${esc(c.channels.join("|"))}"><summary><span class="jr-n"><b>${esc(c.name)}</b><span class="note" style="margin:0">${esc(c.domain)}</span></span><span class="jr-c">${chips(c)}</span>
-      <span class="jr-t">First in ${RM()}: ${esc(c.first.label)}<br>${esc(c.first.channel)}</span></summary>
-      <div class="jr-b"><div><div class="eyebrow">What they engaged with in ${RM()}</div><ul class="jr-tl">${rows(c)}</ul>${c.pages&&c.pages.length?`<p class="jr-p"><span class="note" style="margin:0">Pages viewed: ${c.pages.map(esc).join(" · ")}</span></p>`:""}</div>
+    <div class="jr-list dm-list"><div class="dm-head" aria-hidden="true"><span>Company</span><span>How they engaged</span><span>First engaged</span><span>Most recent engagement</span></div>${C.map(c=>`<details class="jr" data-ch="${esc(c.channels.join("|"))}"><summary><span class="jr-n"><b>${esc(c.name)}</b><span class="note" style="margin:0">${esc(c.domain)}</span></span><span class="jr-c">${chips(c)}</span>
+      <span class="jr-t"><span class="dm-lbl">First: </span>${esc(c.first.label)}<br>${esc(c.first.channel)}</span><span class="jr-t"><span class="dm-lbl">Most recent: </span>${c.last?`${esc(c.last.label)}<br>${esc(c.last.channel)}`:"–"}</span></summary>
+      <div class="jr-b"><div><div class="eyebrow">What they engaged with in ${RM()}</div><ul class="jr-tl">${rows(c)}</ul>${c.pages&&c.pages.length&&!(c.visits||[]).length?`<p class="jr-p"><span class="note" style="margin:0">Pages viewed: ${c.pages.map(p=>esc(String(p).replace("www.boldthealthcarerealestate.com","")||"/")).join(" · ")}</span></p>`:""}</div>
         <div><div class="eyebrow">LinkedIn impressions by campaign, May to ${RM()}</div>${c.impressions.length?`<ul class="jr-tl">${c.impressions.map(i=>`<li><b>${esc(i.campaign)}</b> ${pl(i.views,"impression")}<span class="note" style="margin:0"> · last ${fdShort(i.last)}</span></li>`).join("")}</ul>`:`<p class="jr-p note">No LinkedIn impressions recorded</p>`}</div></div></details>`).join("")}</div>
-    <p class="sec-note">${esc(X.listNote||"")}</p></div>`;
+    <p class="sec-note">${esc(X.listNote||"")}</p>${X.domainNote?`<p class="sec-note"><b>Note:</b> ${esc(X.domainNote)}</p>`:""}</div>`;
 }
 
 function sqlSection(){
@@ -535,30 +554,39 @@ function sqlSection(){
   const MS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], ml=m=>`${MS[+m.slice(5,7)-1]} ${m.slice(0,4)}`;
   const mx=Math.max(...C.flatMap(c=>c.monthly.map(x=>x.i)));
   const shade=v=>v?`background:color-mix(in srgb,var(--c-li) ${Math.round(18+82*Math.log1p(v)/Math.log1p(mx))}%,var(--soft))`:"";
-  let h=`<h3 class="sec-h">Did ${J.year} SQL companies see our ads first?</h3><p class="sec-sub">${n} healthcare companies became sales qualified in HubSpot in ${J.year}. LinkedIn shows which companies our healthcare ads reached each month, back to the first campaigns in ${ml(mo[0])}.</p>`;
+  const MK=[["c","LinkedIn ad click","mk-li"],["s","Google or Bing ad visit","mk-ad"],["w","Website visit","mk-web"],["e","Email click","mk-em"],["t","Call, meeting or 1:1 email","mk-sa"]];
+  let h=`<h3 class="sec-h">Customer journey for ${J.year} SQL companies</h3><p class="sec-sub">${n} healthcare companies became sales qualified in ${J.year}: their lifecycle stage in HubSpot moved to Sales qualified lead. Below is every touch we can track for each one: LinkedIn, Google and Bing ads, website visits, email clicks, 1:1 emails, calls and meetings.</p>`;
   h+=`<div class="grid g-kpi">${kpi("Saw our LinkedIn ads before becoming SQL",P(S.sawBefore/n,0),`${S.sawBefore} of ${n} SQL companies`)}
     ${kpi("Typical time from first ad to SQL",`${N(S.medianLead)} months`,`Median. The longest was ${S.maxLead} months.`)}
     ${kpi("First reached in our first campaign month",N(S.firstMonths[ml(mo[0])]||0),`${ml(mo[0])}, of the ${S.sawBy} reached before SQL`)}
     ${kpi("Still seeing our ads after SQL",N(S.stillReached),`${P(S.stillReached/n,0)} of ${n}, keeping Boldt in view while sales works the deal`)}</div>`;
+  if(S.touchesBefore) h+=`<div class="panel"><h3>Touches before becoming an SQL</h3><p class="sub">Number of the ${n} SQL companies with each kind of touch before their SQL date. Website, Google and Bing tracking starts March 16, 2026, so companies that became SQLs earlier show LinkedIn and HubSpot touches only.</p>${hbars(Object.entries(S.touchesBefore).map(([k,v])=>({k,v})),{max:n,fmt:v=>`${v} of ${n}`})}</div>`;
   const yr=mo.map((m,i)=>i===0||m.endsWith("-01")?m.slice(0,4):"");
-  h+=`<div class="panel"><h3>LinkedIn ad history for each SQL company</h3><p class="sub">Each square is a month. Darker means more impressions. A gold dot marks a month with ad clicks. The outlined square is the month the company became an SQL.</p>
-    <div class="strip-key"><span><i style="opacity:.3"></i>Fewer impressions</span><span><i></i>More impressions</span><span><i style="background:var(--soft);outline:2px solid var(--ink);outline-offset:-1px"></i>Became SQL</span></div>
+  const marks=x=>{const o=MK.filter(([k])=>x[k]).map(([k,t,c])=>`<b class="${c}"></b>`).join("");return o?`<span class="mk">${o}</span>`:"";};
+  const tip=(c,x)=>{const p=[`${N(x.i)} LinkedIn impressions`];if(x.c)p.push(`${x.c} LinkedIn clicks`);if(x.s)p.push(`${x.s} Google or Bing ad visit${x.s>1?"s":""}`);if(x.w)p.push(`${x.w} website session${x.w>1?"s":""}`);if(x.e)p.push(`${x.e} email click${x.e>1?"s":""}`);if(x.t)p.push(`${x.t} call, meeting or 1:1 email`);return `${esc(c.company)}, ${ml(x.m)}: ${p.join(", ")}`;};
+  h+=`<div class="panel"><h3>Journey by month for each SQL company</h3><p class="sub">Each square is a month. Darker means more LinkedIn impressions. Dots mark the other touches that month. The outlined square is the month the company became an SQL.</p>
+    <div class="strip-key"><span><i style="opacity:.3"></i>Fewer impressions</span><span><i></i>More impressions</span>${MK.map(([k,t,c])=>`<span><b class="mkd ${c}"></b>${t}</span>`).join("")}<span><i style="background:var(--soft);outline:2px solid var(--ink);outline-offset:-1px"></i>Became SQL</span></div>
     <div class="strip" style="--n:${nm}"><span></span><div class="ax">${mo.map((m,i)=>`<span>${i%3===0?MS[+m.slice(5,7)-1]:""}</span>`).join("")}</div>
     <span></span><div class="ax">${yr.map(y=>`<span><b>${y}</b></span>`).join("")}</div>
-    ${C.slice().sort((a,b)=>a.sql<b.sql?-1:1).map(c=>`<span><b>${esc(c.company)}</b><br><span class="note" style="margin:0">SQL ${fdShort(c.sql)}</span></span><div class="cells">${c.monthly.map(x=>`<i class="${x.c?"c ":""}${x.m===c.sql.slice(0,7)?"q":""}" style="${shade(x.i)}" title="${esc(c.company)}, ${ml(x.m)}: ${N(x.i)} impressions${x.c?`, ${x.c} clicks`:""}"></i>`).join("")}</div>`).join("")}</div></div>`;
+    ${C.slice().sort((a,b)=>a.sql<b.sql?-1:1).map(c=>`<span><b>${esc(c.company)}</b><br><span class="note" style="margin:0">SQL ${fdShort(c.sql)}</span></span><div class="cells">${c.monthly.map(x=>`<i class="${x.m===c.sql.slice(0,7)?"q":""}" style="${shade(x.i)}" title="${tip(c,x)}">${marks(x)}</i>`).join("")}</div>`).join("")}</div></div>`;
   const chips=c=>{const o=[];
     if(c.firstAd) o.push(`<span class="chip">First ad: ${esc(c.firstAd.label)}</span>`); else o.push(`<span class="chip warn">Not reached by LinkedIn ads</span>`);
     if(c.leadMonths!=null) o.push(`<span class="chip">${c.leadMonths} months of ads before SQL</span>`);
     const clk=c.before.clicks+c.sqlMonth.clicks; if(clk) o.push(`<span class="chip good">${clk} ad click${clk>1?"s":""} before SQL</span>`);
-    if(c.after.impr) o.push(`<span class="chip">Still seeing ads</span>`);
+    const all=(c.journey||[]).flatMap(m=>m.items), k=t=>all.some(i=>i.kind===t);
+    if(k("s")) o.push(`<span class="chip good">Google or Bing ad</span>`); if(k("w")) o.push(`<span class="chip">Website visits</span>`);
+    if(k("e")) o.push(`<span class="chip good">Email clicks</span>`); if(k("t")) o.push(`<span class="chip">Calls, meetings or 1:1 emails</span>`);
     return o.join("");};
-  h+=`<div class="panel"><h3>${J.year} SQL companies</h3><p class="sub">Newest first. Open a company for its LinkedIn numbers before and after it became an SQL, and its recent activity from Factors.</p><div class="jr-list">
+  const CHC={"LinkedIn ad click":"mk-li","Google ad visit":"mk-ad","Bing ad visit":"mk-ad","Website visit":"mk-web","Email click":"mk-em","1:1 email":"mk-sa","Call":"mk-sa","Meeting":"mk-sa","Form fill":"mk-em","Became an SQL":"mk-q"};
+  const jmonth=m=>`<li class="jm"><div class="jm-h"><b>${ml(m.m)}</b>${m.li?`<span class="note" style="margin:0">LinkedIn: ${N(m.li.i)} impressions${m.li.c?`, ${m.li.c} click${m.li.c>1?"s":""}`:""}</span>`:""}</div>${m.items.length?`<ul>${m.items.map(i=>`<li class="${i.kind==="q"?"jm-q":""}"><span class="note" style="margin:0">${fdShort(i.date)}</span> <b class="mkd ${CHC[i.channel]||""}"></b><b>${esc(i.channel)}</b> ${esc(i.what)}</li>`).join("")}</ul>`:""}</li>`;
+  const jgroup=js=>{const o=[];let run=null;js.forEach(m=>{if(!m.items.length&&m.li){if(!run){run=[];o.push({run});}run.push(m);}else{run=null;o.push(m);}});return o;};
+  const jrun=r=>{const i=r.reduce((s,m)=>s+m.li.i,0),c=r.reduce((s,m)=>s+m.li.c,0),a=r[r.length-1].m,b=r[0].m;
+    return `<li class="jm jm-run"><div class="jm-h"><b>${a===b?ml(a):`${ml(a)} to ${ml(b)}`}</b><span class="note" style="margin:0">LinkedIn: ${N(i)} impressions${c?`, ${c} click${c>1?"s":""}`:""}${r.length>1?` over ${r.length} months`:""}. No other tracked touches.</span></div></li>`;};
+  h+=`<div class="panel"><h3>${J.year} SQL company journeys</h3><p class="sub">Newest SQLs first. Open a company for its full journey, month by month, newest first.</p><div class="jr-list">
     ${C.map(c=>`<details class="jr"><summary><span class="jr-n"><b>${esc(c.company)}</b><span class="note" style="margin:0">SQL ${fdShort(c.sql)}</span></span><span class="jr-c">${chips(c)}</span>
-      <span class="jr-t">${c.firstAd?`Before SQL: ${N(c.before.impr+c.sqlMonth.impr)} impressions over ${c.before.months+(c.sqlMonth.impr?1:0)} months`:"No LinkedIn impressions recorded"}${c.firstClick?`<br>First click: ${esc(c.firstClick.label)}`:""}</span></summary>
-      <div class="jr-b"><div><div class="eyebrow">Recent activity, May to October ${J.year}</div><ul class="jr-tl">${(c.timeline||[]).map(t=>`<li><span class="note" style="margin:0">${fdShort(t.date)}</span> <b>${esc(t.channel)}</b> ${esc(t.what)}</li>`).join("")||'<li class="note">No tracked activity since May</li>'}</ul></div>
-        <div><div class="eyebrow">LinkedIn ads</div><p class="jr-p">Before SQL: ${N(c.before.impr)} impressions, ${N(c.before.clicks)} clicks<br>Month of SQL: ${N(c.sqlMonth.impr)} impressions, ${N(c.sqlMonth.clicks)} clicks<br>After SQL: ${N(c.after.impr)} impressions, ${N(c.after.clicks)} clicks</p>
-        ${c.recent.google||c.recent.pages?`<div class="eyebrow">Website since May</div><p class="jr-p">${c.recent.google?`${c.recent.google} Google Ads visit${c.recent.google>1?"s":""}`:""}${c.recent.google&&c.recent.pages?" · ":""}${c.recent.pages?`${c.recent.pages} page views`:""}</p>`:""}</div></div></details>`).join("")}</div>
-    <p class="sec-note">${esc(S.source)} ${esc(S.window)}</p></div>`;
+      <span class="jr-t">${c.firstAd?`Before SQL: ${N(c.before.impr+c.sqlMonth.impr)} LinkedIn impressions over ${c.before.months+(c.sqlMonth.impr?1:0)} months`:"No LinkedIn impressions recorded"}${c.salesActivities?`<br>${N(c.salesActivities)} sales activities logged in HubSpot`:""}</span></summary>
+      <div class="jr-b jr-one"><ul class="jm-list">${jgroup(c.journey||[]).map(m=>m.run?jrun(m.run):jmonth(m)).join("")}</ul></div></details>`).join("")}</div>
+    <p class="sec-note">${esc(S.source)} ${esc(S.window)}</p>${S.domainNote?`<p class="sec-note"><b>Note:</b> ${esc(S.domainNote)}</p>`:""}</div>`;
   return h;
 }
 
@@ -905,7 +933,7 @@ R.exec=()=>{
   h+=`<div class="grid g-kpi">${kpi(`MQLs, ${RM()}`,N(s.oct),`Monthly goal ${s.goalMo}`)}${kpi("MQLs year to date",N(s.ytd),`${P(s.ytd/s.goalsYTD.c,0)} of goal to date`)}
     ${kpi("SQLs year to date",N(sqlY),`${P(sqlY/D.leads.sqlGoal,0)} of the ${D.leads.sqlGoal} annual goal`)}${kpi("Cost per MQL, YTD",$(c.all),`2025: ${$(D.roiAnnual["2025"].cpMql)}`)}
     ${kpi("Marketing spend, YTD",$k(bt.ytdA),`${P(bt.ytdA/bt.ytdB,0)} of budget to date`)}
-    ${D.defMql?kpi(`Definition MQLs, ${RM()}`,`${N(D.defMql.newOct)} new`,`${D.defMql.ytdNew!=null?N(D.defMql.ytdNew)+" new this year · ":""}${N(D.defMql.total12)} engaged in the past 12 months`):""}</div>`;
+    ${D.defMql?kpi(`New MQLs by engagement, ${RM()}`,`${N(D.defMql.newOct)}`,`${D.defMql.ytdNew!=null?N(D.defMql.ytdNew)+" new in "+(D.year||2026)+" · ":""}${N(D.defMql.engagedYtd??D.defMql.total12)} engaged in ${D.year||2026}`):""}</div>`;
   h+=`<article class="panel ex-doc">`;
   if(E.headline||EDITING) h+=E_("exec.headline","p","ex-lede");
   live("exec.sections",E.sections).forEach(([sec,i])=>{const b=`exec.sections.${i}`;h+=`<section class="${gone(b).trim()}">${E_(b+".title","h3")}${sec.body!=null||EDITING&&!sec.bullets?E_(b+".body","p"):""}${sec.bullets?elist(b+".bullets"):""}${delBtn(b)}</section>`;});

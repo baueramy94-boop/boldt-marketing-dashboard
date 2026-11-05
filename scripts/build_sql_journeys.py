@@ -113,3 +113,120 @@ json.dump({"year": 2026, "summary": summary, "companies": sorted(out, key=lambda
 print(json.dumps(summary, indent=1))
 for x in sorted(out, key=lambda x: x["sql"]):
     print(f'{x["company"][:28]:28} sql {x["sql"]} first {x["firstAd"]["label"] if x["firstAd"] else "-":9} lead {x["leadMonths"]} before {x["before"]} sqlm {x["sqlMonth"]} after {x["after"]["impr"]} g {x["googleBefore"]}')
+
+# ---------------------------------------------------------------------------------------------------------------
+# Full customer journey (added Nov 5, 2026): every touch we can see for each SQL company, by month.
+#   LinkedIn ad impressions and clicks by month (Windsor, Nov 2024 on); LinkedIn clicks by campaign (Factors, May 9 on)
+#   Google and Bing ad visits (Factors paid search reports, Mar 16, 2026 on); website visits by week (Factors, Mar 16 on)
+#   with pages viewed (Factors account journey, May 9 on); marketing email clicks (HubSpot first and most recent click per
+#   contact, email name from Factors when it saw the click); 1:1 email clicks (HubSpot, most recent per contact);
+#   1:1 emails sent, calls and meetings (Factors from HubSpot, May 9 on) plus HubSpot's most recent call and meeting dates.
+# Never includes people's names, email addresses, titles or email subject lines.
+import os, io, contextlib, runpy
+_cwd = os.getcwd(); os.chdir("/home/claude/dashboard/defmql")
+with contextlib.redirect_stdout(io.StringIO()):
+    DM = runpy.run_path("compute.py")
+os.chdir(_cwd)
+EVENTS, ROOT, GCAMP, nk, SENC = DM["events"], DM["root"], DM["GCAMP"], DM["nk"], DM["SENC"]
+F3 = json.load(open("/home/claude/dashboard/defmql/factors_v3.json"))
+HSP = {k: v for k, v in json.load(open("hs_sql_props.json")).items() if not k.startswith("_")}
+REPORT_END = "2026-10-31"
+MS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+dl = lambda d: f"{MS[int(d[5:7]) - 1]} {int(d[8:10])}"
+def campn(s):
+    s = re.sub(r"^\d+-", "", (s or "").strip()); s = re.sub(r"\s*\|\s*2026\s*$", "", s)
+    return s.replace("Awareness | Healthcare | ", "").replace("Lead Generation | Healthcare | ", "").strip(" |")
+PAGE = lambda p: re.sub(r"^https?://", "", p or "").replace("www.boldthealthcarerealestate.com", "") or "/"
+
+def journey(x):
+    dom = x["domain"]; r = ROOT(dom); f = F3.get(dom, {}); hp = HSP.get(dom, {})
+    items = []   # (date, sortkey, channel, what, kind)
+    for d, ch, ev in EVENTS.get(r, []):
+        if d > REPORT_END: continue
+        if ch == "Website visit":
+            items.append((d, "w", "Website visit", f'{ev.get("sessions") or 1} session{"s" if (ev.get("sessions") or 1) != 1 else ""}, week of {dl(d)}', "w", ev.get("sessions") or 1))
+        elif ch in ("Google ad click", "Bing ad click"):
+            cn = GCAMP.get(nk(ev["campaign"]), ev["campaign"].replace("+", " "))
+            kw = f', searched "{ev["keyword"]}"' if ev.get("keyword") else ""
+            items.append((d, "s", ch.replace(" click", " visit"), f"{cn}{kw}", "s", ev.get("n", 1)))
+        elif ch == "Email click":
+            if ev["type"] == "Marketing email":
+                nm = next((e.get("email") for e in f.get("email_clicks", []) if e.get("date") and abs((dt.date.fromisoformat(e["date"]) - dt.date.fromisoformat(d)).days) <= 1 and not SENC.search(e.get("email") or "")), None)
+                items.append((d, "e", "Email click", f"Clicked a marketing email: {nm}" if nm else "Clicked a marketing email", "e", 1))
+            else:
+                items.append((d, "e", "Email click", "Clicked a 1:1 email from Boldt", "e", 1))
+    # pages viewed (Factors) attach to the website visits; paid landing pages attach to the ad visit
+    pv = {}
+    for v in f.get("page_visits", []):
+        pg = [PAGE(p) for p in (v.get("pages") or []) if isinstance(p, str) and not SENC.search(p)]
+        if pg: pv.setdefault(v["date"], []).append((v.get("source"), pg))
+    for a in f.get("clicked_ads", []):
+        if a.get("channel") == "LinkedIn ad click" and a.get("date") and not SENC.search(json.dumps(a)):
+            items.append((a["date"], "l", "LinkedIn ad click", f'{a.get("clicks") or 1} click{"s" if (a.get("clicks") or 1) != 1 else ""} on {campn(a.get("ad") or a.get("campaign"))}' + (f', landed on {PAGE(a["landing_page"])}' if a.get("landing_page") else ""), "c0", 0))
+    st = {"1:1 email": "Sent by Boldt", "Call": "Logged in HubSpot", "Meeting": "On the calendar"}
+    seen = set()
+    for t in f.get("sales_touches", []):
+        if not t.get("date") or t["date"] > REPORT_END: continue
+        k = (t["date"], t["type"])
+        if k in seen: continue
+        seen.add(k)
+        items.append((t["date"], "t", t["type"] if t["type"] != "1:1 email" else "1:1 email", st.get(t["type"], t["type"]), "t", 1))
+    for key, typ in (("lastCall", "Call"), ("lastMeeting", "Meeting")):
+        d = hp.get(key)
+        if d and d <= REPORT_END and (d, typ) not in seen:
+            items.append((d, "t", typ, "Most recent in HubSpot", "t", 1)); seen.add((d, typ))
+    if hp.get("conversion"):
+        items.append((hp["conversion"]["date"], "f", "Form fill", hp["conversion"]["what"], "f", 1))
+    # attach pages
+    out_items = []
+    for d, sk, ch, what, kind, n in items:
+        if kind == "w":
+            wk = [pv[k] for k in sorted(pv) if d <= k <= (dt.date.fromisoformat(d) + dt.timedelta(days=6)).isoformat()]
+            pages = sorted({p for grp in wk for src, pg in grp for p in pg})[:4]
+            srcs = sorted({src for grp in wk for src, pg in grp if src})
+            if pages: what += f'. Pages: {", ".join(pages)}'
+            if srcs: what += f' (from {", ".join(srcs)})'
+        if kind == "s" and d in pv:
+            pages = sorted({p for src, pg in pv[d] for p in pg})[:3]
+            if pages: what += f'. Landed on {", ".join(pages)}'
+        out_items.append({"date": d, "channel": ch, "what": what, "kind": kind, "n": n, "beforeSql": d < x["sql"]})
+    out_items.append({"date": x["sql"], "channel": "Became an SQL", "what": "Lifecycle stage set to Sales qualified lead in HubSpot", "kind": "q", "n": 0, "beforeSql": False})
+    # months: LinkedIn monthly summary plus the dated touches
+    months = {}
+    for mrow in x["monthly"]:
+        if mrow["i"] or mrow["c"]: months.setdefault(mrow["m"], {"m": mrow["m"], "li": {"i": mrow["i"], "c": mrow["c"]}, "items": []})
+    for it in out_items:
+        months.setdefault(it["date"][:7], {"m": it["date"][:7], "li": None, "items": []})["items"].append(it)
+    for m in months.values():
+        m["items"].sort(key=lambda it: (it["date"], it["kind"] != "q"), reverse=True)
+        if m["li"] is None:
+            mm = next((z for z in x["monthly"] if z["m"] == m["m"]), None)
+            if mm and (mm["i"] or mm["c"]): m["li"] = {"i": mm["i"], "c": mm["c"]}
+    # markers for the strip
+    mk = {}
+    for it in out_items:
+        z = mk.setdefault(it["date"][:7], {"s": 0, "w": 0, "e": 0, "t": 0})
+        if it["kind"] in z: z[it["kind"]] += it["n"] or 1
+    for mrow in x["monthly"]:
+        z = mk.get(mrow["m"], {})
+        mrow.update({k: z.get(k, 0) for k in ("s", "w", "e", "t")})
+    kinds_before = {it["kind"] for it in out_items if it["beforeSql"]}
+    if x["before"]["impr"] or x["before"]["clicks"]: kinds_before.add("li")
+    return sorted(months.values(), key=lambda m: m["m"], reverse=True), kinds_before, hp.get("salesActivities")
+
+J = json.load(open("sqlJourneys.json"))
+cb = {"li": 0, "s": 0, "w": 0, "e": 0, "t": 0}
+for x in J["companies"]:
+    x["journey"], kb, x["salesActivities"] = journey(x)
+    x.pop("timeline", None)
+    for k in cb:
+        if k in kb: cb[k] += 1
+J["summary"]["touchesBefore"] = {"LinkedIn ads": cb["li"], "Google or Bing ads": cb["s"], "Website visit": cb["w"], "Email click": cb["e"], "Call, meeting or 1:1 email": cb["t"]}
+J["summary"]["window"] = ("LinkedIn ads by company from November 2024 (first healthcare campaigns). Website visits and Google ads from March 16, 2026, Bing ads from "
+                          "their September 2026 launch. Pages viewed, LinkedIn campaigns clicked, 1:1 emails, calls and meetings from Factors cover May 9 to October 31, 2026; "
+                          "before May the journey shows HubSpot's most recent call and meeting date. Marketing email clicks show each contact's first and most recent click.")
+J["summary"]["domainNote"] = "Parent and child companies that share one website domain, such as a health system and its hospitals, can't always be told apart, so their activity may be combined. We're working through this with Factors."
+json.dump(J, open("sqlJourneys.json", "w"), indent=1)
+print("touches before SQL", J["summary"]["touchesBefore"])
+for x in J["companies"]:
+    print(f'{x["company"][:26]:26} months {len(x["journey"]):2} items {sum(len(m["items"]) for m in x["journey"]):3}')

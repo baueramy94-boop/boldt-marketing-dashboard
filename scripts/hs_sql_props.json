@@ -1,0 +1,16 @@
+{"_source": "HubSpot company properties pulled Nov 5, 2026 (calls, meetings and 1:1 email records are not readable with the current connection, so only the most recent dates are available before Factors' 180 days)",
+ "adventisthealthcare.com": {"lastCall": "2026-05-06", "lastMeeting": "2026-09-23", "salesActivities": 49},
+ "primehealthcare.com": {"lastCall": "2026-02-27", "lastMeeting": "2026-07-08", "salesActivities": 131},
+ "uvmhealth.org": {"lastCall": "2026-05-18", "lastMeeting": "2026-06-16", "salesActivities": 40},
+ "catawbavalleyhealth.org": {"lastCall": "2026-03-13", "lastMeeting": null, "salesActivities": 59},
+ "ashleyregional.com": {"lastCall": null, "lastMeeting": "2026-03-03", "salesActivities": 6},
+ "mercy.net": {"lastCall": "2026-02-03", "lastMeeting": "2026-09-24", "salesActivities": 82},
+ "northernlighthealth.org": {"lastCall": "2026-09-15", "lastMeeting": "2026-09-16", "salesActivities": 67, "conversion": {"date": "2026-01-21", "what": "LinkedIn lead gen form: 2026 Healthcare Real Estate Outlook"}},
+ "pennmedicine.org": {"lastCall": "2026-03-04", "lastMeeting": "2027-01-11", "salesActivities": 50},
+ "conehealth.com": {"lastCall": "2025-09-30", "lastMeeting": null, "salesActivities": 59},
+ "sinaichicago.org": {"lastCall": "2026-09-29", "lastMeeting": "2026-04-15", "salesActivities": 13},
+ "sih.net": {"lastCall": "2026-01-22", "lastMeeting": "2025-11-12", "salesActivities": 32},
+ "uchealth.org": {"lastCall": "2026-08-26", "lastMeeting": "2023-08-15", "salesActivities": 40, "conversion": {"date": "2025-04-22", "what": "LinkedIn lead gen form: remarketing campaign"}},
+ "encompasshealth.com": {"lastCall": "2025-10-22", "lastMeeting": "2025-11-14", "salesActivities": 30},
+ "eehealth.org": {"lastCall": null, "lastMeeting": null, "salesActivities": null}
+}
