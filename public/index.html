@@ -198,9 +198,16 @@ tr.future td{color:var(--muted)}
 .jstrip.strip{display:block;grid-column:1/-1;margin-top:2px}.jstrip .cells i{height:16px}
 .jstrip-ax.strip{display:grid;grid-template-columns:1fr;gap:2px;padding:0 13px}
 .dm-task-f[hidden]{display:none!important}
-.dm-list.dm-lc .jr summary,.dm-lc .dm-head{grid-template-columns:minmax(190px,1.1fr) 1.8fr minmax(140px,.7fr) minmax(170px,.8fr)}
+.dm-list.dm-lc .jr summary,.dm-lc .dm-head{grid-template-columns:minmax(180px,1.1fr) 1.6fr minmax(150px,auto) minmax(130px,.7fr) minmax(170px,.8fr)}
+.dm-list.hot-list .jr summary,.hot-list .dm-head{grid-template-columns:minmax(190px,1.1fr) 1.8fr minmax(150px,auto) minmax(140px,.7fr)}
+.co-link{color:inherit;text-decoration:none}.co-link:hover b,.co-link:focus b{text-decoration:underline}.co-link b::after{content:" ↗";font-weight:400;font-size:.8em;color:var(--muted)}
+.ex-row{margin-top:10px;font-size:13px}.ex-confirm{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}.ex-list{margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}.ex-list ul{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:6px}
+@media (max-width:760px){.dm-list.hot-list .jr summary{grid-template-columns:1fr}}
 .lc{display:flex;flex-direction:column;gap:3px}.lc-sel{font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);max-width:100%}
 @media (max-width:760px){.dm-list.dm-lc .jr summary{grid-template-columns:1fr}.dm-lc .dm-head{display:none}.jstrip-ax.strip{display:none}}
+.cap{margin:6px 0 8px;font-size:13px;color:var(--ink)}.cap summary{cursor:pointer;color:var(--muted);line-height:1.4}.cap p{margin:6px 0 0;line-height:1.45}
+.gad .body{padding-top:14px}.g-url{font-size:12px;color:var(--muted)}.g-h{color:#1a0dab;font-size:16px;line-height:1.3;margin:4px 0}.g-d{font-size:13px;line-height:1.45;margin-bottom:8px}
+:root[data-theme="dark"] .g-h{color:#8ab4f8}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .g-h{color:#8ab4f8}}
 .heat-wrap{max-width:100%;overflow-x:auto}.heat{min-width:640px}.hot-list{max-height:680px;overflow:auto}
 .heat td,.heat th{text-align:center;padding:8px 6px}.heat td.l,.heat th.l{text-align:left}
 .lp-rows .hb b{text-align:right;line-height:1.2}
@@ -353,7 +360,7 @@ body.editing .ed-mod{background:color-mix(in srgb,var(--yellow) 16%,transparent)
 
 <script>
 (function(){
-const PAGES=[["exec","Executive summary"],["trends","Month over month"],["paid","Paid media"],["creative","Ads & creative"],["website","Website"],["leads","Leads & accounts"],["roi","ROI & variables"],["budget","Budget"],["recs","Recommendations"]];
+const PAGES=[["exec","Executive Summary"],["trends","Month Over Month"],["paid","Paid Media"],["creative","Ads & Creative"],["website","Website"],["leads","Leads & Accounts"],["roi","ROI & Variables"],["budget","Budget"],["recs","Recommendations"]];
 let D=null; const DIV="HC";
 /* LinkedIn image links expire about a week after each pull; on the live site /api/img serves a saved copy. */
 const LIVE_IMG=/netlify\.app$|boldt/i.test(location.hostname)&&location.protocol==="https:";
@@ -516,7 +523,7 @@ R.paid=()=>{
   const cm=CM(), li=["impr","clicks","spend"].map(k=>paidSeries("linkedin",k)), ga=["impr","clicks","spend"].map(k=>paidSeries("google",k));
   const o=i=>({impr:li[0][i]+ga[0][i],clicks:li[1][i]+ga[1][i],spend:li[2][i]+ga[2][i]});
   const now=o(cm-1), prev=o(cm-2), ytd={spend:sum(li[2])+sum(ga[2]),clicks:sum(li[1])+sum(ga[1]),impr:sum(li[0])+sum(ga[0])};
-  let h=head("Paid media",`LinkedIn and Google Ads, healthcare. Brand and National General Google campaigns are shared, so half their spend counts here. ${MTD()}`);
+  let h=head("Paid Media",`LinkedIn and Google Ads, healthcare. Brand and National General Google campaigns are shared, so half their spend counts here. ${MTD()}`);
   h+=`<div class="grid g-kpi">${kpi(`Spend, ${RM()}${SOFAR()}`,$(now.spend),`${MONTHS_LONG[CM()-2]}: ${$(prev.spend)}`)}${kpi("Spend, year to date",$k(ytd.spend),`LinkedIn ${$k(sum(li[2]))} · Google ${$k(sum(ga[2]))}`)}${kpi(`Clicks, ${RM()}`,N(now.clicks),`${MONTHS_LONG[CM()-2]}: ${N(prev.clicks)}`)}${kpi("Click-through rate",P(now.clicks/now.impr,2),`${MONTHS_LONG[CM()-2]}: ${P(prev.clicks/prev.impr,2)}`)}${kpi("Cost per click",$(now.spend/now.clicks,2),`YTD: ${$(ytd.spend/ytd.clicks,2)}`)}</div>`;
   const lab=M().slice(0,cm);
   h+=`<div class="grid g-2">${pacingPanel()}<div class="panel"><h3>Cost per click by month</h3><p class="sub">Spend ÷ clicks</p>${legend([{name:"LinkedIn",color:css("--c-li")},{name:"Google Ads",color:css("--c-ga")}])}
@@ -601,17 +608,18 @@ function defMqlList(X,C){
     return `What they engaged with in ${RM()}:\n${L.map(([d,t])=>`- ${d?fdShort(d):RM()}: ${t}`).join("\n")}${imp?`\nLinkedIn campaigns seen (impressions): ${imp}`:""}`;};
   C.forEach(c=>{if(c.hubspotId)DM_NOTES[c.hubspotId]=plain(c);});
   const rows=c=>events(c).map(x=>`<li><span class="note" style="margin:0">${x.d.endsWith("-00")?RM():fdShort(x.d)}</span> ${x.h}</li>`).join("");
-  const taskBtn=c=>c.hubspotId?`<div class="dm-task"><button type="button" class="btn-sm" data-task="${esc(c.hubspotId)}">Create follow-up task in HubSpot</button><div class="dm-task-f" hidden></div></div>`:"";
+  const taskBtn=c=>c.hubspotId?`<span class="jr-task"><button type="button" class="btn-sm" data-task="${esc(c.hubspotId)}">Create follow-up task</button></span>`:`<span class="jr-task"></span>`;
   const opts=[["all",`All ${C.length}`],["LinkedIn ad click",`LinkedIn clicks (${cnt("LinkedIn ad click")})`],["Google ad click",`Google ads (${cnt("Google ad click")})`],["Bing ad click",`Bing ads (${cnt("Bing ad click")})`],["Website visit",`Website (${cnt("Website visit")})`],["Email click",`Email (${cnt("Email click")})`]].filter(([v],i)=>i===0||cnt(v));
   const sorted=C.slice().sort((a,b)=>((b.last||b.first).date+(b.last||b.first).precision.replace("day","z")).localeCompare((a.last||a.first).date+(a.last||a.first).precision.replace("day","z")));
-  const list=`<div class="jr-list dm-list dm-lc" id="dm-list"><div class="dm-head" aria-hidden="true"><span>Company</span><span>How they engaged</span><span>Most recent engagement</span><span>HubSpot lifecycle stage</span></div>${sorted.map(c=>`<details class="jr" id="dm-${esc(c.domain)}" data-ch="${esc(c.channels.join("|"))}"><summary><span class="jr-n"><b>${esc(c.name)}</b><span class="note" style="margin:0">${esc(c.domain)}</span></span><span class="jr-c">${chips(c)}</span>
+  const list=`<div class="jr-list dm-list dm-lc" id="dm-list"><div class="dm-head" aria-hidden="true"><span>Company</span><span>How they engaged</span><span>Follow-up</span><span>Most recent engagement</span><span>HubSpot lifecycle stage</span></div>${sorted.map(c=>`<details class="jr" id="dm-${esc(c.domain)}" data-ch="${esc(c.channels.join("|"))}"><summary><span class="jr-n">${coName(c.name,c.hubspotId)}<span class="note" style="margin:0">${esc(c.domain)}</span></span><span class="jr-c">${chips(c)}</span>${taskBtn(c)}
       <span class="jr-t"><span class="dm-lbl">Most recent: </span>${c.last?`${esc(c.last.label)}<br>${esc(c.last.channel)}`:"–"}</span>${lcCell(c)}</summary>
-      <div class="jr-b"><div><div class="eyebrow">What they engaged with in ${RM()}</div><ul class="jr-tl">${rows(c)}</ul>${taskBtn(c)}</div>
+      <div class="jr-b"><div><div class="eyebrow">What they engaged with in ${RM()}</div><ul class="jr-tl">${rows(c)}</ul><div class="dm-task-f" hidden></div>${exBtn(c.domain,c.name)}</div>
         <div><div class="eyebrow">LinkedIn impressions by campaign, May to ${RM()}</div>${c.impressions.length?`<ul class="jr-tl">${c.impressions.map(i=>`<li><b>${esc(i.campaign)}</b> ${pl(i.views,"impression")}<span class="note" style="margin:0"> · last ${fdShort(i.last)}</span></li>`).join("")}</ul>`:`<p class="jr-p note">No LinkedIn impressions recorded</p>`}</div></div></details>`).join("")}</div>`;
   return `<div class="panel" id="dm-panel"><div class="panel-h"><div><h3>New MQL companies, ${RM()}</h3><p class="sub">What each company engaged with, when and how. Most recent first. Open a company for the ads it clicked, the campaigns it saw and a follow-up task button.</p></div>
     <div class="dm-ctl"><div class="seg" role="group" aria-label="View"><button type="button" data-dmv="list" class="${DM_VIEW==="list"?"on":""}">List</button><button type="button" data-dmv="cal" class="${DM_VIEW==="cal"?"on":""}">Calendar</button></div>
     <label class="sel">Show <select id="dm-filter">${opts.map(([v,t])=>`<option value="${esc(v)}">${esc(t)}</option>`).join("")}</select></label></div></div>
     <div id="dm-view-list" ${DM_VIEW==="cal"?"hidden":""}>${list}</div><div id="dm-view-cal" ${DM_VIEW==="list"?"hidden":""}>${dmCalendar(C,events)}</div>
+    ${(X.excluded||[]).length?`<div class="ex-list"><div class="eyebrow">Removed from the MQL counts (${X.excluded.length})</div><ul>${X.excluded.map(e=>`<li><b>${esc(e.name||e.domain)}</b> <span class="note" style="margin:0">${esc(e.domain)} · removed by ${esc(e.by||"")}${e.at?` on ${fdShort(e.at.slice(0,10))}`:""}</span> <button type="button" class="btn-sm" data-exback="${esc(e.domain)}">Put back</button></li>`).join("")}</ul></div>`:""}
     <p class="sec-note">${esc(X.listNote||"")}</p>${X.domainNote?`<p class="sec-note"><b>Note:</b> ${esc(X.domainNote)}</p>`:""}</div>`;
 }
 function dmCalendar(C,events){
@@ -631,6 +639,31 @@ function dmCalendar(C,events){
   h+=`</div></div>`;
   if(undated.length) h+=`<p class="sec-note">LinkedIn clicks in ${RM()} with no date reported: ${undated.map(e=>item(e)).join(" ")}</p>`;
   return h;
+}
+const HS_PORTAL="4587932";
+const coName=(n,id)=>id?`<a class="co-link" href="https://app.hubspot.com/contacts/${HS_PORTAL}/record/0-2/${esc(String(id))}" target="_blank" rel="noopener" title="Open ${esc(n)} in HubSpot"><b>${esc(n)}</b></a>`:`<b>${esc(n)}</b>`;
+let EXCL={}, EXCL_OK=false;
+const exBtn=(d,n)=>EXCL_OK?`<div class="ex-row"><button type="button" class="btn-sm ex-btn" data-ex="${esc(d)}" data-exn="${esc(n)}">Remove from MQL counts</button><span class="ex-confirm" hidden>Remove ${esc(n)} from the MQL list and every MQL count? <button type="button" class="btn-sm primary" data-exgo="1">Remove</button> <button type="button" class="btn-sm" data-exno="1">Cancel</button></span></div>`:"";
+async function loadExcl(){try{const r=await fetch("/api/exclusions",{cache:"no-store"});if(!r.ok||!/json/.test(r.headers.get("content-type")||""))throw 0;const j=await r.json();if(!j.ok)throw 0;EXCL_OK=true;EXCL=j.list||{};}catch(e){EXCL_OK=false;EXCL={};}rebuild();}
+function applyExcl(){
+  const X=D.defMql; if(!X||!X.lists)return; const ex=new Set(Object.keys(EXCL)); const ym=+String(X.month||"2026-10").slice(5,7);
+  X.excluded=Object.entries(EXCL).map(([d,v])=>({domain:d,...v}));
+  if(!ex.size)return;
+  const L=X.lists, nw=L.newYtd.filter(x=>!ex.has(x[0]));
+  X.companies=(X.companies||[]).filter(c=>!ex.has(c.domain));
+  X.ytdNew=nw.length; X.newOct=nw.filter(x=>x[1]===ym).length;
+  X.monthlyNew=(X.monthlyNew||[]).map((_,i)=>nw.filter(x=>x[1]===i+1).length);
+  if(X.newBySource){const B=X.newBySource.bySource;Object.keys(B).forEach(k=>{B[k]=B[k].map((_,i)=>nw.filter(x=>x[1]===i+1&&x[2].includes(k)).length);});X.newBySource.total=X.monthlyNew.slice();}
+  X.engagedYtd=L.engagedYtd.filter(d=>!ex.has(d)).length; X.activeOct=L.activeOct.filter(d=>!ex.has(d)).length;
+  const nb={};X.companies.forEach(c=>c.channels.forEach(k=>nb[k]=(nb[k]||0)+1));X.newByChannel=nb;
+  if(X.hot)X.hot=X.hot.filter(h=>!ex.has(h.domain));
+}
+async function setExcl(d,n,on){try{const r=await fetch("/api/exclusions",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({domain:d,name:n,exclude:on})});const j=await r.json();if(!j.ok)throw 0;EXCL=j.list||{};rebuild();return true;}catch(e){return false;}}
+function exInit(){
+  document.querySelectorAll(".ex-btn").forEach(b=>b.addEventListener("click",()=>{b.hidden=true;b.nextElementSibling.hidden=false;}));
+  document.querySelectorAll(".ex-confirm [data-exno]").forEach(b=>b.addEventListener("click",()=>{const w=b.closest(".ex-row");w.querySelector(".ex-confirm").hidden=true;w.querySelector(".ex-btn").hidden=false;}));
+  document.querySelectorAll(".ex-confirm [data-exgo]").forEach(b=>b.addEventListener("click",async()=>{const x=b.closest(".ex-row").querySelector(".ex-btn");b.disabled=true;b.textContent="Removing…";if(!await setExcl(x.dataset.ex,x.dataset.exn,true)){b.disabled=false;b.textContent="Couldn't save. Try again";}}));
+  document.querySelectorAll("[data-exback]").forEach(b=>b.addEventListener("click",async()=>{b.disabled=true;b.textContent="Putting back…";if(!await setExcl(b.dataset.exback,"",false)){b.disabled=false;b.textContent="Couldn't save. Try again";}}));
 }
 let HOT_NOTES={}, HOT_SORT="total";
 const LC_LABEL=v=>{const o=(D.defMql.lifecycleStages||[]).find(x=>x[0]===v);return o?o[1]:"Not set";};
@@ -673,15 +706,16 @@ function hotPanel(X){
   return `<div class="panel" id="hot-panel"><div class="panel-h"><div><h3>Hot MQLs</h3><p class="sub">${N(H.length)} companies with 5 or more engagements or a contact page visit in the past 12 months. Each row shows engagement by month, November 2025 to ${RM()} ${String(D.year||"2026")}.</p></div>
     <div class="dm-ctl"><div class="seg" role="group" aria-label="Sort"><button type="button" data-hsort="total" class="${HOT_SORT==="total"?"on":""}">Most engagements</button><button type="button" data-hsort="last" class="${HOT_SORT==="last"?"on":""}">Most recent</button></div>
     <label class="sel">Show <select id="hot-filter"><option value="all">All ${N(H.length)}</option><option value="contact">Visited the contact page (${cp})</option><option value="new">New MQLs, ${RM()} (${nw})</option><option value="10">10 or more engagements (${H.filter(h=>h.total>=10).length})</option></select></label></div></div>
-    ${KEY}<div class="jr-list dm-list hot-list jr-strips" id="hot-list"><div class="dm-head" aria-hidden="true"><span>Company</span><span>Engagement, past 12 months</span><span>Most recent engagement</span></div>${AX}
-    ${H.map(h=>`<details class="jr" data-contact="${h.contact?1:0}" data-new="${h.newOct?1:0}" data-total="${h.total}" data-last="${esc(h.last)}"><summary><span class="jr-n"><b>${esc(h.name)}</b><span class="note" style="margin:0">${esc(h.domain)}${h.state?` · ${esc(h.state)}`:""}</span></span><span class="jr-c">${chips(h)}</span><span class="jr-t"><span class="dm-lbl">Most recent: </span>${ms(h.last)}</span>${strip(h)}</summary>
-      <div class="jr-b jr-one"><div><div class="eyebrow">Engagement by month, newest first</div>${body(h)}${h.contact?`<p class="jr-p">Visited the contact page.</p>`:""}<div class="dm-task"><button type="button" class="btn-sm" data-task="${esc(h.hubspotId)}" data-intro="hot">Create follow-up task in HubSpot</button><div class="dm-task-f" hidden></div></div></div></div></details>`).join("")}</div>
+    ${KEY}<div class="jr-list dm-list hot-list jr-strips" id="hot-list"><div class="dm-head" aria-hidden="true"><span>Company</span><span>Engagement, past 12 months</span><span>Follow-up</span><span>Most recent engagement</span></div>${AX}
+    ${H.map(h=>`<details class="jr" data-contact="${h.contact?1:0}" data-new="${h.newOct?1:0}" data-total="${h.total}" data-last="${esc(h.last)}"><summary><span class="jr-n">${coName(h.name,h.hubspotId)}<span class="note" style="margin:0">${esc(h.domain)}${h.state?` · ${esc(h.state)}`:""}</span></span><span class="jr-c">${chips(h)}</span><span class="jr-task"><button type="button" class="btn-sm" data-task="${esc(h.hubspotId)}" data-intro="hot">Create follow-up task</button></span><span class="jr-t"><span class="dm-lbl">Most recent: </span>${ms(h.last)}</span>${strip(h)}</summary>
+      <div class="jr-b jr-one"><div><div class="eyebrow">Engagement by month, newest first</div>${body(h)}${h.contact?`<p class="jr-p">Visited the contact page.</p>`:""}<div class="dm-task-f" hidden></div>${exBtn(h.domain,h.name)}</div></div></details>`).join("")}</div>
     <p class="sec-note">${esc(X.hotRule||"")} Website sessions include visits from ad clicks.</p></div>`;
 }
 function hotSort(){const L=document.getElementById("hot-list");if(!L)return;const ds=[...L.querySelectorAll(":scope > details.jr")];
   ds.sort((a,b)=>HOT_SORT==="last"?(b.dataset.last.localeCompare(a.dataset.last)||(+b.dataset.total-+a.dataset.total)):(+b.dataset.total-+a.dataset.total||b.dataset.last.localeCompare(a.dataset.last)));ds.forEach(d=>L.appendChild(d));}
 function dmTaskForm(btn){
-  const box=btn.nextElementSibling, cid=btn.dataset.task, card=btn.closest("details"), name=card.querySelector(".jr-n b").textContent;
+  const cid=btn.dataset.task, card=btn.closest("details"), box=card.querySelector(".dm-task-f"), name=card.querySelector(".jr-n b").textContent;
+  card.open=true; setTimeout(()=>box.scrollIntoView({block:"nearest",behavior:"smooth"}),50);
   const last=card.querySelector(".jr-t").innerText.replace("Most recent: ","").replace(/\n/g,", ");
   const due=new Date(); due.setDate(due.getDate()+3); const ds=due.toISOString().slice(0,10);
   box.hidden=false; box.innerHTML=`<p class="note" style="margin:0">Checking the HubSpot connection…</p>`;
@@ -761,7 +795,7 @@ function sqlSection(mqlSql){
     return `<li class="jm jm-run"><div class="jm-h"><b>${a===b?ml(a):`${ml(a)} to ${ml(b)}`}</b><span class="note" style="margin:0">LinkedIn: ${N(i)} impressions${c?`, ${c} click${c>1?"s":""}`:""}${r.length>1?` over ${r.length} months`:""}. No other tracked touches.</span></div></li>`;};
   h+=`<div class="panel"><h3>${J.year} SQL company journeys</h3><p class="sub">Newest SQLs first. Each row shows the company's journey by month: each square is a month, darker means more LinkedIn impressions, dots mark the other touches and the outlined square is the month it became an SQL. Open a company for the full journey, newest month first.</p>
     ${KEY}<div class="jr-list jr-strips">${AX}
-    ${C.map(c=>`<details class="jr"><summary><span class="jr-n"><b>${esc(c.company)}</b><span class="note" style="margin:0">SQL ${fdShort(c.sql)}</span></span><span class="jr-c">${chips(c)}</span>
+    ${C.map(c=>`<details class="jr"><summary><span class="jr-n">${coName(c.company,c.hubspotId)}<span class="note" style="margin:0">SQL ${fdShort(c.sql)}</span></span><span class="jr-c">${chips(c)}</span>
       <span class="jr-t">${c.firstAd?`Before SQL: ${N(c.before.impr+c.sqlMonth.impr)} LinkedIn impressions over ${c.before.months+(c.sqlMonth.impr?1:0)} months`:"No LinkedIn impressions recorded"}${c.salesActivities?`<br>${N(c.salesActivities)} sales activities logged in HubSpot`:""}</span>${strip(c)}</summary>
       <div class="jr-b jr-one"><ul class="jm-list">${jgroup(c.journey||[]).map(m=>m.run?jrun(m.run):jmonth(m)).join("")}</ul></div></details>`).join("")}</div>
     <p class="sec-note">${esc(S.source)} ${esc(S.window)}</p>${S.domainNote?`<p class="sec-note"><b>Note:</b> ${esc(S.domainNote)}</p>`:""}</div>`;
@@ -797,7 +831,7 @@ function journeySection(){
 R.leads=()=>{
   const s=mqlStats(), cm=CM(), L=D.leads, lab=M().slice(0,cm);
   const sqlY=sum(L.sql.filter(x=>x!=null)), sql25=sum(D.sql2025.slice(0,SQLN()));
-  let h=head("Leads & accounts",`Healthcare MQLs and SQLs, when and where companies engage, the full journey of SQL companies, and healthcare companies on the site from every source. New MQLs follow our engagement definition.`);
+  let h=head("Leads & Accounts",`Healthcare MQLs and SQLs, when and where companies engage, the full journey of SQL companies, and healthcare companies on the site from every source. New MQLs follow our engagement definition.`);
   const mqlSql={v:P(sqlY/sum(s.mql.slice(0,SQLN())),1),d:`Year to date. 2025: ${P(D.roiAnnual["2025"].mqlSql,1)}`};
   const XN=D.defMql&&D.defMql.monthlyNew;
   h+=XN?`<div class="grid g-2"><div class="panel"><h3>New MQLs by month</h3><p class="sub">${N(D.defMql.ytdNew)} new this year by our engagement definition. Each company counts once, in the month it became new.${String(D.year||"2026")==="2026"?" The year-over-year comparison starts in 2027, when both years are measured the same way.":""}</p>
@@ -852,7 +886,7 @@ R.roi=()=>{
   const cm=CM(), L=D.leads, s=mqlStats(), sp=D.budget.hcSpend, ad=D.budget.hcAdSpend, mq=s.mql, sq=L.sql.slice(0,cm), A=D.roiAnnual;
   const r=(a,b,f=$)=>b?f(a/b):"–";
   const ytdSql=sum(sq.filter(x=>x!=null)), ytdSp=sum(sp), ytdAd=sum(ad);
-  let h=head("ROI & healthcare variables","Healthcare ROI and healthcare variables, from the budget workbook.");
+  let h=head("ROI & Healthcare Variables","Healthcare ROI and healthcare variables, from the budget workbook.");
   h+=`<div class="grid g-kpi">${kpi("Healthcare marketing spend, YTD",$k(ytdSp),`2025 full year: ${$k(A["2025"].spend)}`)}${kpi("Cost per MQL, YTD",$(ytdSp/s.ytd),`2025: ${$(A["2025"].cpMql)}`)}${kpi("Cost per SQL, YTD",$(ytdSp/ytdSql),`2025: ${$(A["2025"].cpSql)}`)}
     ${phKpi("Awarded projects, YTD","Count, value and estimated return")}${phKpi("Awarded ROI","Estimated return ÷ marketing spend")}</div>`;
   h+=`<div class="panel"><h3>Healthcare ROI by month</h3><p class="sub">Marketing spend = Healthcare Budget tab total. Ad spend = Google and LinkedIn healthcare lines.${MTD()}</p><div class="tbl-wrap"><table>
@@ -952,7 +986,7 @@ function blogSources(){
 R.creative=()=>{
   const CA=D.creativeAnalysis, div="HC", T=CA.HC_image, all=CA.HC;
   const ads=D.creatives.filter(a=>inDiv(a.div)&&a.impr>=1000).map(a=>({...a,ctr:a.clicks/a.impr,cpc:a.clicks?a.spend/a.clicks:null})).sort((a,b)=>b.ctr-a.ctr);
-  let h=head("Ads & creative",`How copy and creative choices perform on LinkedIn, healthcare. Every healthcare ad from January through ${CA.through||RM()}.`);
+  let h=head("Ads & Creative",`How copy and creative choices perform on LinkedIn, healthcare. Every healthcare ad from January through ${CA.through||RM()}.`);
   h+=`<details class="panel method"><summary><h3>How this analysis works</h3><span class="sub">Method, data and limits</span></summary><ol class="steps">
     <li><b>Data.</b> Monthly impressions, clicks, spend and conversions for every healthcare LinkedIn ad from January 1 through ${CA.through||RM()} (${CA.ads||56} ads, ${CA.adMonths||182} ad-months), pulled from LinkedIn through Windsor.ai.</li>
     <li><b>Tagging.</b> Each headline is tagged by theme, headline form (point-of-view statement, command such as "View" or "Discover", or question), whether it names Boldt, length (6 words or fewer vs 7 or more), whether it says "you" or "your", and whether it includes a number. Format (single image, document or lead gen, video) comes from the campaign.</li>
@@ -972,14 +1006,41 @@ R.creative=()=>{
     ${showNote("fatigueNote")}</div>`;
   const BP=TXT("bestPractices");
   h+=`<div class="panel"><h3>Best practices to apply</h3><p class="sub">Drawn from this year's results. Saved as standing guidance for new ads.</p><ol class="bp">${live("text.bestPractices",BP).map(([b,i])=>`<li class="${gone("text.bestPractices."+i).trim()}"><b>${E(`text.bestPractices.${i}.0`)}.</b> ${E(`text.bestPractices.${i}.1`)}${delBtn("text.bestPractices."+i)}</li>`).join("")}</ol>${addBtn("text.bestPractices","pair")}</div>`;
+  if(D.adPerf) h+=adPerfSection(); else {
   h+=`<div class="panel"><h3>Ads running now</h3><p class="sub">August 1 to today, at least 1,000 impressions, ranked by click-through rate</p></div>`;
-  h+=`<div class="ads">${ads.map((a,i)=>`<article class="ad"><div class="thumb">${a.id||a.thumb?`<img src="${LIVE_IMG&&a.id?`/api/img?id=${a.id}`:a.thumb}" data-fb="${LIVE_IMG&&a.thumb?esc(a.thumb):""}" data-ph="${esc(a.format)} ad" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="imgFail(this)">`:`<div class="ph">${a.format} ad</div>`}<span class="rank ${i<3?'top':''}">#${i+1}</span></div>
-    <div class="body"><div class="hl">${esc(a.headline)}</div><div class="chips">${chipDiv(a.div)}<span class="chip">${a.format}</span>${a.status==="PAUSED"?'<span class="chip warn">Paused</span>':''}${a.impr<10000?'<span class="chip">Directional</span>':''}</div>
-    <dl><div><dt>CTR</dt><dd>${P(a.ctr,2)}</dd></div><div><dt>CPC</dt><dd>${a.cpc?$(a.cpc,2):"–"}</dd></div><div><dt>Spend</dt><dd>${$k(a.spend)}</dd></div><div><dt>Conv.</dt><dd>${a.conv}</dd></div></dl>
-    <div class="note" style="margin:0">${N(a.impr)} impressions · ${N(a.clicks)} clicks</div></div></article>`).join("")}</div>`;
+  h+=`<div class="ads">${ads.map(a=>`<article class="ad"><div class="body"><div class="hl">${esc(a.headline)}</div></div></article>`).join("")}</div>`;}
   return h;
 };
 
+let AP_RANGE="month", AP_PLAT="linkedin";
+function adPerfSection(){
+  const AP=D.adPerf, cm=Math.min(CM(),AP.months), MS=M();
+  const RG={month:[cm-1,cm-1],q:[Math.max(0,cm-3),cm-1],ytd:[0,cm-1]};
+  const [a0,a1]=RG[AP_RANGE], lab=a0===a1?MS[a0]:`${MS[a0]} to ${MS[a1]}`;
+  const agg=m=>m.slice(a0,a1+1).reduce((s,x)=>s.map((v,i)=>v+(x[i]||0)),m[0].map(()=>0));
+  const seg=(k,cur,opts)=>`<div class="seg" role="group">${opts.map(([v,t])=>`<button type="button" data-${k}="${v}" class="${v===cur?"on":""}">${t}</button>`).join("")}</div>`;
+  let h=`<div class="panel ap-head"><div class="panel-h"><div><h3>Ad performance</h3><p class="sub">Healthcare ads, ${lab} 2026, ranked by click-through rate. ${AP_PLAT==="linkedin"?"At least 1,000 impressions.":"At least 300 impressions."}</p></div>
+    <div class="dm-ctl">${seg("applat",AP_PLAT,[["linkedin","LinkedIn"],["google","Google search"]])}${seg("aprange",AP_RANGE,[["month",MS[cm-1]],["q","Last 3 months"],["ytd","Year to date"]])}</div></div></div>`;
+  if(AP_PLAT==="linkedin"){
+    const ads=AP.linkedin.map(a=>{const [i,c,sp,cv]=agg(a.m);return {...a,impr:i,clicks:c,spend:sp,conv:cv,ctr:i?c/i:0,cpc:c?sp/c:null};}).filter(a=>a.impr>=1000).sort((x,y)=>y.ctr-x.ctr);
+    if(!ads.length) return h+`<p class="note">No LinkedIn ads reached 1,000 impressions in ${lab}.</p>`;
+    h+=`<div class="ads">${ads.map(a=>`<article class="ad"><div class="thumb">${a.id||a.thumb?`<img src="${LIVE_IMG&&a.id?`/api/img?id=${a.id}`:esc(a.thumb)}" data-fb="${LIVE_IMG&&a.thumb?esc(a.thumb):""}" data-ph="${esc(a.format)} ad" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="imgFail(this)">`:`<div class="ph">${esc(a.format)} ad</div>`}</div>
+      <div class="body"><div class="hl">${esc(a.headline||"(no headline)")}</div><div class="chips"><span class="chip">${esc(a.format)}</span>${/paused/i.test(a.status)?'<span class="chip warn">Paused</span>':''}${a.impr<10000?'<span class="chip">Directional</span>':''}</div>
+      ${a.caption?`<details class="cap"><summary>${esc(a.caption.split("\n")[0].slice(0,140))}${a.caption.length>140||a.caption.includes("\n")?"…":""}</summary><p>${esc(a.caption).replace(/\n/g,"<br>")}</p></details>`:""}
+      <dl><div><dt>CTR</dt><dd>${P(a.ctr,2)}</dd></div><div><dt>CPC</dt><dd>${a.cpc?$(a.cpc,2):"–"}</dd></div><div><dt>Spend</dt><dd>${$k(a.spend)}</dd></div><div><dt>Conv.</dt><dd>${a.conv}</dd></div></dl>
+      <div class="note" style="margin:0">${N(a.impr)} impressions · ${N(a.clicks)} clicks · ${esc(a.campaign.replace(/^Awareness \| Healthcare \| /,"").replace(/ \| 2026$/,""))}</div></div></article>`).join("")}</div>`;
+  } else {
+    const ads=AP.google.map(a=>{const [i,c,sp]=agg(a.m);return {...a,impr:i,clicks:c,spend:sp,ctr:i?c/i:0,cpc:c?sp/c:null};}).filter(a=>a.impr>=300).sort((x,y)=>y.ctr-x.ctr);
+    if(!ads.length) return h+`<p class="note">No Google search ads reached 300 impressions in ${lab}.</p>`;
+    h+=`<div class="ads gads">${ads.map(a=>`<article class="ad gad"><div class="body"><div class="g-url">Ad · ${esc((a.url||"boldthealthcarerealestate.com").replace(/^https?:\/\/(www\.)?/,"").replace(/\/$/,""))}</div>
+      <div class="g-h">${esc(a.headlines.slice(0,3).join(" | ")||a.adGroup)}</div><div class="g-d">${esc(a.descriptions.slice(0,2).join(" "))}</div>
+      <div class="chips"><span class="chip">${esc(a.campaign)}</span><span class="chip">${esc(a.adGroup)}</span>${a.shared?'<span class="chip">Shared campaign</span>':''}</div>
+      ${a.headlines.length>3||a.descriptions.length>2?`<details class="cap"><summary>All ${a.headlines.length} headlines and ${a.descriptions.length} descriptions</summary><p>${a.headlines.map(esc).join(" · ")}</p><p>${a.descriptions.map(esc).join("<br>")}</p></details>`:""}
+      <dl><div><dt>CTR</dt><dd>${P(a.ctr,2)}</dd></div><div><dt>CPC</dt><dd>${a.cpc?$(a.cpc,2):"–"}</dd></div><div><dt>Spend</dt><dd>${$k(a.spend)}</dd></div><div><dt>Clicks</dt><dd>${N(a.clicks)}</dd></div></dl>
+      <div class="note" style="margin:0">${N(a.impr)} impressions. Google rotates these headlines and descriptions; the preview shows the first ones.</div></div></article>`).join("")}</div>`;
+  }
+  return h;
+}
 R.trends=()=>{
   const cm=CM(), mon=M().slice(0,cm), L=D.leads, s=mqlStats(), F=D.factorsWeb;
   const liS=paidSeries("linkedin","spend"), liC=paidSeries("linkedin","clicks"), liI=paidSeries("linkedin","impr");
@@ -995,7 +1056,7 @@ R.trends=()=>{
   const spark=(vals)=>{const v=vals.map(x=>x==null||!isFinite(x)?null:x), nn=v.filter(x=>x!=null);if(nn.length<2)return"";const mx=Math.max(...nn),mn=Math.min(...nn),W=110,H=26;
     const pts=v.map((x,i)=>x==null?null:[i*(W/(v.length-1)),H-2-(mx===mn?0.5:(x-mn)/(mx-mn))*(H-4)]);let d="";pts.forEach((p,i)=>{if(p)d+=(d&&pts[i-1]?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1);});
     const last=pts.filter(Boolean).pop();return `<svg class="spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><path d="${d}" fill="none" stroke="${css("--c-hc")}" stroke-width="1.6"/><circle cx="${last[0]}" cy="${last[1]}" r="2.5" fill="${css("--gold")}"/></svg>`;};
-  let h=head("Month over month",`Healthcare. Each metric by month with the change from the month before.${DONE()?"":` ${RM()} is month to date, so totals (spend, MQLs, sessions) will rise by month-end; rates are comparable now.`}`);
+  let h=head("Month Over Month",`Healthcare. Each metric by month with the change from the month before.${DONE()?"":` ${RM()} is month to date, so totals (spend, MQLs, sessions) will rise by month-end; rates are comparable now.`}`);
   h+=`<div class="panel"><div class="tbl-wrap"><table class="mom"><thead><tr><th class="l">Metric</th>${mon.map(m=>`<th>${m}</th>`).join("")}<th>Trend</th><th>${PMs()} to ${RMs()}</th></tr></thead><tbody>
     ${rows.map(([n,vals,f,upGood])=>{const a=vals[cm-2],b=vals[cm-1];const ch=a&&b!=null&&isFinite(a)&&isFinite(b)?b/a-1:null;const cls=ch==null||upGood==null?"":(ch>=0)===upGood?"up":"dn";
       return `<tr><td class="l">${n}</td>${vals.map(v=>`<td>${v==null||!isFinite(v)?"–":f(v)}</td>`).join("")}<td>${spark(vals)}</td><td class="${cls}">${ch==null?"–":(ch>=0?"+":"")+P(ch,0)}</td></tr>`;}).join("")}
@@ -1052,13 +1113,13 @@ const chg=(a,b)=>a&&b!=null&&a!==0?b/a-1:null;
 function chgCell(a,b,upGood){const c=chg(a,b);if(c==null)return `<td>–</td>`;const cls=upGood==null||Math.abs(c)<.005?"":(c>=0)===upGood?"up":"dn";return `<td class="${cls}">${c>=0?"+":""}${P(c,0)}</td>`;}
 R.quarter=()=>{
   const qs=quartersDone();
-  if(!qs.length) return head("Quarterly review","The quarter comparison appears once two full quarters are complete.");
+  if(!qs.length) return head("Quarterly Review","The quarter comparison appears once two full quarters are complete.");
   const q=qs.includes(QSEL)?QSEL:qs[qs.length-1], p=q-1, Qn=`Q${q}`, Pn=`Q${p}`, mon=M();
   const rng=x=>`${mon[(x-1)*3]} to ${mon[(x-1)*3+2]}`;
   const A=qMetrics(p), B=qMetrics(q), Z=D.qbr&&D.qbr.quarter===`2026-Q${q}`?D.qbr:null;
   const pick=qs.length>1?` <select id="q-pick" class="q-pick" aria-label="Quarter">${qs.map(x=>`<option value="${x}" ${x===q?"selected":""}>Q${x} vs Q${x-1}</option>`).join("")}</select>`:"";
   const vs=(a,b,f,upGood)=>{const c=chg(a,b);return `${Pn}: ${a==null?"–":f(a)}${c==null?"":` · <span class="${upGood==null||Math.abs(c)<.005?"":(c>=0)===upGood?"up":"dn"}">${c>=0?"+":""}${P(c,0)}</span>`}`;};
-  let h=head("Quarterly review",`Healthcare. ${Qn} 2026 (${rng(q)}) compared with ${Pn} (${rng(p)}). Google includes half of the shared Brand and National General campaigns.${pick}`);
+  let h=head("Quarterly Review",`Healthcare. ${Qn} 2026 (${rng(q)}) compared with ${Pn} (${rng(p)}). Google includes half of the shared Brand and National General campaigns.${pick}`);
   if(Z) h+=`<div class="panel"><p class="q-lede">${esc(Z.headline)}</p></div>`;
   h+=`<div class="grid g-kpi">${kpi(`Website sessions, ${Qn}`,N(B.sess),vs(A.sess,B.sess,N,true))}${kpi(`Paid ad spend, ${Qn}`,$k(B.ad),vs(A.ad,B.ad,$k,null))}
     ${kpi("Ad spend per session",$(B.aps,2),vs(A.aps,B.aps,v=>$(v,2),false))}${kpi(`MQLs, ${Qn}`,N(B.mql),vs(A.mql,B.mql,N,true))}
@@ -1106,7 +1167,7 @@ R.recs=()=>{
 
 R.plan=()=>{
   const T=trackerLists(), RC=D.recs||[];
-  let h=head("Plan & next steps",`Projects from the marketing project calendar and recommendations for ${NM()}.${T.live?` <a href="/tracker.html">Open the project calendar</a>`:""}`);
+  let h=head("Plan & Next Steps",`Projects from the marketing project calendar and recommendations for ${NM()}.${T.live?` <a href="/tracker.html">Open the project calendar</a>`:""}`);
   h+=`<div class="grid g-2"><div class="panel"><h3>Completed in ${RM()}</h3><p class="sub">${T.done.length} project${T.done.length===1?"":"s"}</p><div class="tbl-wrap"><table><thead><tr><th class="l">Project</th><th class="l">Workstream</th><th class="l">Owner</th><th class="l">Status</th></tr></thead><tbody>${projRows(T.done)}</tbody></table></div></div>
     <div class="panel"><h3>Coming up in ${NM()}</h3><p class="sub">${T.next.length} project${T.next.length===1?"":"s"} due</p><div class="tbl-wrap"><table><thead><tr><th class="l">Project</th><th class="l">Workstream</th><th class="l">Owner</th><th class="l">Due</th></tr></thead><tbody>${projRows(T.next,true)}</tbody></table></div></div></div>`;
   if(T.active.length) h+=`<div class="panel"><h3>In progress</h3><div class="tbl-wrap"><table><thead><tr><th class="l">Project</th><th class="l">Workstream</th><th class="l">Owner</th><th class="l">Status</th></tr></thead><tbody>${projRows(T.active)}</tbody></table></div></div>`;
@@ -1120,7 +1181,7 @@ R.exec=()=>{
   const E=D.exec||{}, s=mqlStats(), c=costPerMql(), bt=budgetTotals(budgetLines()), sqlY=sum(D.leads.sql.filter(x=>x!=null)), T=trackerLists();
   const list=(arr)=>`<ul class="ex-list">${(arr||[]).map(x=>`<li>${x}</li>`).join("")}</ul>`;
   const elist=(p)=>`<ul class="ex-list">${live(p,gp(D,p)||[]).map(([x,i])=>`<li class="${gone(p+"."+i).trim()}">${E_(`${p}.${i}`)}${delBtn(p+"."+i)}</li>`).join("")}</ul>${addBtn(p,"str")}`;
-  let h=`<div class="page-head ex-head"><div><div class="eyebrow">Executive summary</div><h2>${RM()} 2026 marketing report</h2><p>Healthcare. ${E_("exec.prepared")}</p></div><button type="button" class="btn-print" onclick="window.print()">Print or save as PDF</button></div>`;
+  let h=`<div class="page-head ex-head"><div><div class="eyebrow">Executive Summary</div><h2>${RM()} 2026 marketing report</h2><p>Healthcare. ${E_("exec.prepared")}</p></div><button type="button" class="btn-print" onclick="window.print()">Print or save as PDF</button></div>`;
   const SP=summaryParts(); h+=SP.kp;
   h+=`<article class="panel ex-doc">`;
   if(E.headline||EDITING) h+=E_("exec.headline","p","ex-lede");
@@ -1182,8 +1243,12 @@ function render(){
     t.style.display="";t.open=true;t.scrollIntoView({behavior:"smooth",block:"start"});}));
   document.querySelectorAll("[data-hsort]").forEach(b=>b.addEventListener("click",()=>{HOT_SORT=b.dataset.hsort;document.querySelectorAll("[data-hsort]").forEach(x=>x.classList.toggle("on",x===b));hotSort();}));
   hotSort(); lcInit();
+  document.querySelectorAll("[data-applat]").forEach(b=>b.addEventListener("click",()=>{AP_PLAT=b.dataset.applat;const y=scrollY;render();scrollTo(0,y);}));
+  document.querySelectorAll("[data-aprange]").forEach(b=>b.addEventListener("click",()=>{AP_RANGE=b.dataset.aprange;const y=scrollY;render();scrollTo(0,y);}));
   const hf=document.getElementById("hot-filter"); if(hf) hf.addEventListener("change",()=>{const v=hf.value;document.querySelectorAll("#hot-panel details.jr").forEach(d=>{d.style.display=v==="all"||(v==="contact"&&d.dataset.contact==="1")||(v==="new"&&d.dataset.new==="1")||(v==="10"&&+d.dataset.total>=10)?"":"none";});});
-  document.querySelectorAll("#dm-panel [data-task], #hot-panel [data-task]").forEach(b=>b.addEventListener("click",()=>dmTaskForm(b)));
+  document.querySelectorAll("#dm-panel [data-task], #hot-panel [data-task]").forEach(b=>b.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();dmTaskForm(b);}));
+  document.querySelectorAll(".co-link").forEach(a=>a.addEventListener("click",e=>e.stopPropagation()));
+  exInit();
   const ls=document.getElementById("loc-sel"); if(ls) ls.addEventListener("change",()=>{LOC_SEL=ls.value;document.getElementById("loc-body").innerHTML=locBody();});
   const af=document.getElementById("as-filter"); if(af) af.addEventListener("change",()=>{const v=af.value;document.querySelectorAll("#as-list li").forEach(li=>{const ok=v==="all"||(v==="hs"&&li.dataset.hs==="1")||(v==="new"&&li.dataset.hs==="0")||li.dataset.ch.split("|").includes(v);li.style.display=ok?"":"none";});});
   const qp=document.getElementById("q-pick"); if(qp) qp.addEventListener("change",()=>{QSEL=+qp.value;render();});
@@ -1195,13 +1260,13 @@ new MutationObserver(render).observe(document.documentElement,{attributes:true,a
 
 function boot(data,m){ORIG=JSON.parse(JSON.stringify(data));D=data;CURM=m||null;EDITS={};DELS=new Set();
   document.getElementById("asof").textContent=(DONE()?`${RM()} 2026 · final`:`Updated ${D.asOfLabel}`);
-  document.getElementById("foot").textContent="Sources: LinkedIn Ads and Google Ads through Windsor.ai; HubSpot; Factors.ai; 2026 Marketing Budget Google Sheet; marketing project calendar.";render();loadEdits();}
+  document.getElementById("foot").textContent="Sources: LinkedIn Ads and Google Ads through Windsor.ai; HubSpot; Factors.ai; 2026 Marketing Budget Google Sheet; marketing project calendar.";render();loadEdits();loadExcl();}
 async function loadEdits(){const m=CURM||reportYM();
   try{const r=await fetch(`/api/edits?month=${m}`,{cache:"no-store"});if(!r.ok||!/json/.test(r.headers.get("content-type")||""))throw 0;const j=await r.json();if(!j.ok)throw 0;EDIT_OK=true;EDITS=j.edits||{};}
   catch(e){EDIT_OK=false;EDITS={};}
   document.getElementById("editBtn").hidden=!EDIT_OK; if(!EDIT_OK&&EDITING) setEditing(false);
   if(Object.keys(EDITS).length) rebuild();}
-function rebuild(){D=JSON.parse(JSON.stringify(ORIG));applyEdits();const y=scrollY;render();scrollTo(0,y);}
+function rebuild(){D=JSON.parse(JSON.stringify(ORIG));applyEdits();applyExcl();const y=scrollY;render();scrollTo(0,y);}
 async function saveEdits(changes){const st=document.getElementById("edStatus");st.textContent="Saving…";
   try{const r=await fetch("/api/edits",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({month:CURM||reportYM(),changes})});const j=await r.json();if(!j.ok)throw 0;EDITS=j.edits||{};st.textContent="Saved";return true;}
   catch(e){st.textContent="Couldn't save. Try again in a moment.";return false;}}

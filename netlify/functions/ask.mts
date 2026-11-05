@@ -177,12 +177,45 @@ async function withEdits(month: string, d: any) {
   return d;
 }
 
+// Companies Amy removed from the MQL counts (anomalies), applied the same way the page applies them.
+async function withExcl(d: any) {
+  try {
+    const ex: Record<string, any> = (await getStore({ name: "dashboard-exclusions", consistency: "strong" }).get("mql", { type: "json" })) || {};
+    const X = d?.defMql, L = X?.lists, set = new Set(Object.keys(ex));
+    if (!X || !L || !set.size) return d;
+    const ym = +String(X.month || "2026-10").slice(5, 7), nw = L.newYtd.filter((x: any) => !set.has(x[0]));
+    X.companies = (X.companies || []).filter((c: any) => !set.has(c.domain));
+    X.ytdNew = nw.length; X.newOct = nw.filter((x: any) => x[1] === ym).length;
+    X.monthlyNew = (X.monthlyNew || []).map((_: any, i: number) => nw.filter((x: any) => x[1] === i + 1).length);
+    if (X.newBySource) for (const k of Object.keys(X.newBySource.bySource)) X.newBySource.bySource[k] = X.newBySource.bySource[k].map((_: any, i: number) => nw.filter((x: any) => x[1] === i + 1 && x[2].includes(k)).length);
+    X.engagedYtd = L.engagedYtd.filter((x: string) => !set.has(x)).length; X.activeOct = L.activeOct.filter((x: string) => !set.has(x)).length;
+    if (X.hot) X.hot = X.hot.filter((h: any) => !set.has(h.domain));
+    X.removedByHand = Object.keys(ex).map(k => ex[k].name || k);
+  } catch {}
+  return d;
+}
 function strip(d: any) {
   const c = structuredClone(d);
   (c.mqlJourneys?.companies || []).forEach((a: any) => delete a.label);
   (c.creatives || []).forEach((a: any) => delete a.thumb);
   (c.defMql?.companies || []).forEach((co: any) => (co.li || []).forEach((x: any) => (x.ads || []).forEach((a: any) => delete a.thumb)));
   delete c.asOfLabel;
+  // keep the prompt small: summaries instead of the page's per-month detail
+  if (c.defMql) {
+    c.defMql.hotCount = (c.defMql.hot || []).length;
+    c.defMql.hot = (c.defMql.hot || []).slice(0, 80).map((h: any) => ({ name: h.name, domain: h.domain, total: h.total, sessions: h.sessions, liClicks: h.liClicks, emailClicks: h.emailClicks, adVisits: h.adVisits, contact: h.contact, last: h.last, newOct: h.newOct }));
+    delete c.defMql.lists;
+  }
+  if (c.adPerf) {
+    const sum = (m: number[][], a: number, b: number) => m.slice(a, b + 1).reduce((s, x) => s.map((v, i) => v + (x[i] || 0)), m[0].map(() => 0));
+    const last = (c.adPerf.months || 10) - 1;
+    c.adPerf = {
+      note: "Per-ad totals: [impressions, clicks, spend, conversions] for LinkedIn and [impressions, clicks, cost] for Google, for the report month and year to date.",
+      linkedin: (c.adPerf.linkedin || []).map((a: any) => ({ id: a.id, headline: a.headline, caption: String(a.caption || "").slice(0, 160), campaign: a.campaign, format: a.format, month: sum(a.m, last, last), ytd: sum(a.m, 0, last) })),
+      google: (c.adPerf.google || []).map((a: any) => ({ id: a.id, campaign: a.campaign, adGroup: a.adGroup, headlines: (a.headlines || []).slice(0, 3), month: sum(a.m, last, last), ytd: sum(a.m, 0, last) })),
+    };
+  }
+  if (c.accounts?.allSources) c.accounts.allSources.companies = (c.accounts.allSources.companies || []).slice(0, 40).map((x: any) => ({ name: x.name, hubspot: x.hubspot, sessions: x.sessions, channels: x.channels }));
   for (const k of ["HC", "SH"]) if (c.paid?.google?.[k]) delete c.paid.google[k].conv;   // Google conversions are not part of reporting
   return c;
 }
@@ -233,7 +266,7 @@ export default async (req: Request, context: Context) => {
   try {
     months = (await site("/data/index.json")).months || [];
     latest = months[0];
-    latestData = strip(await withEdits(latest, await site(`/data/${latest}.json`)));
+    latestData = strip(await withExcl(await withEdits(latest, await site(`/data/${latest}.json`))));
   } catch {
     return json({ ok: false, error: "The report data could not be loaded. Refresh the page and try again." }, 502);
   }
@@ -321,6 +354,7 @@ export default async (req: Request, context: Context) => {
     { type: "text", text: SYSTEM(latest, months, today, keyFigures(latestData)) },
     { type: "text", text: `Latest report (${latest}) data:\n${JSON.stringify(latestData)}`, cache_control: { type: "ephemeral" } },
   ];
+
   const messages: Anthropic.MessageParam[] = [...history, { role: "user", content: question }];
   const call = async (final: boolean) => {
     let lastErr: any = null;

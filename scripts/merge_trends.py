@@ -10,6 +10,7 @@ D["trends"]["dow"]["all"] = T["dow"]["all"]
 D["trends"]["dow"]["allNote"] = "Share of each source's activity by day, January to October 2026. LinkedIn and Google clicks and GA4 sessions are daily totals from each platform. LinkedIn click dates in the MQL calendar come from Factors, which loads LinkedIn company data every two to four days, so they bunch up on those load days; LinkedIn's own daily clicks peak on Monday and Tuesday."
 D["defMql"]["newBySource"] = T["newBySource"]
 D["defMql"]["hot"] = T["hot"]
+D["defMql"]["lists"] = T["lists"]
 LC = json.load(open("hs_lifecycle.json"))
 for c in D["defMql"]["companies"]:
     if c.get("hubspotId"): c["lifecycle"] = LC.get(str(c["hubspotId"]), "")

@@ -89,6 +89,15 @@ for mth in range(1, 11):
     nmon.append(len(nn))
     for ch in CHS: nbs[ch].append(sum(1 for r in nn if ch in active(r, a_, b_)))
 newBySource = {"months": 10, "total": nmon, "bySource": nbs}
+# per-company lists so the page can drop companies Amy removes from the counts
+newYtd = []
+for mth in range(1, 11):
+    a_ = f"2026-{mth:02d}-01"; b_ = f"2026-{mth:02d}-{calendar.monthrange(2026, mth)[1]}"
+    pa = dt.date(2025, mth, 1).isoformat(); pb = (dt.date(2026, mth, 1) - dt.timedelta(days=1)).isoformat()
+    for r in HC:
+        if active(r, a_, b_) and not active(r, pa, pb) and r not in {x[0] for x in newYtd}:
+            newYtd.append([r, mth, sorted(set(active(r, a_, b_)) & set(CHS))])
+lists = {"newYtd": newYtd, "engagedYtd": sorted(r for r in HC if active(r, "2026-01-01", "2026-10-31")), "activeOct": sorted(r for r in HC if active(r, "2026-10-01", "2026-10-31"))}
 # --- hot MQLs: 5+ engagements or a contact page visit in the 12 months through October ---
 import glob as _g
 W12 = ("2025-11-01", "2026-10-31")
@@ -127,6 +136,6 @@ for r in HC:
                     "name": nm, "domain": r, "hubspotId": list(ORG[r]["ids"].values())[0], "total": tot, "sessions": s_, "liClicks": li_,
                     "emailClicks": len(emd), "adVisits": gb, "contact": cp, "last": last, "newOct": r in newset, "state": state_of(r)})
 hot.sort(key=lambda h: (-h["total"], h["name"]))
-json.dump({"newBySource": newBySource, "hot": hot, "dow": dow, "loc": loc, "outreach": out_s, "firstOutreach": {str(c["hubspotId"]): c.get("firstOutreach") for c in S}}, open("trends_oct.json", "w"), indent=1)
+json.dump({"lists": lists, "newBySource": newBySource, "hot": hot, "dow": dow, "loc": loc, "outreach": out_s, "firstOutreach": {str(c["hubspotId"]): c.get("firstOutreach") for c in S}}, open("trends_oct.json", "w"), indent=1)
 print(json.dumps(dow["all"]["avgShare"]), json.dumps(newBySource), len(hot), sum(1 for h in hot if h["contact"])); print(json.dumps({k: {"top": v["states"][:8], "regions": v["regions"], "unknown": v["unknown"], "n": v["n"]} for k, v in loc.items()})); print(out_s)
 print(sorted(round(g) for g in gaps))

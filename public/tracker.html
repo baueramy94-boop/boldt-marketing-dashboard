@@ -330,6 +330,7 @@ body[data-view="archive"] #kpis, body[data-view="archive"] section.filters, body
 }
 [hidden]{display:none!important}
 .sync{font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;white-space:nowrap;align-self:center}.sync.ok::before{content:"✓ "}.sync.busy{opacity:.8}.sync.err{background:#B5452F;color:#fff}
+.cap{margin:4px 0 6px;font-size:12.5px}.cap summary{cursor:pointer;color:var(--muted);line-height:1.4}.cap p{margin:6px 0 0;line-height:1.45}
 </style>
 </head>
 <body>
@@ -1312,10 +1313,10 @@ function renderAds(){
   let body = "", nAds = 0;
   if (ADF.plat === "linkedin") {
     (ADS.linkedin || []).forEach(g => {
-      const camps = g.campaigns.map(c => ({ ...c, ads: c.ads.filter(a => keep([g.group, c.campaign, a.title, a.landing].join(" "), a.status)) })).filter(c => c.ads.length);
+      const camps = g.campaigns.map(c => ({ ...c, ads: c.ads.filter(a => keep([g.group, c.campaign, a.title, a.landing, a.caption||""].join(" "), a.status)) })).filter(c => c.ads.length);
       if (!camps.length) return; const n = camps.reduce((s,c) => s + c.ads.length, 0); nAds += n;
       body += `<details class="adgrp" open><summary><span>${esc(g.group)}</span><span class="sm">${n} ad${n>1?"s":""}</span></summary>${camps.map(c => `<div class="camp"><h4>${esc(c.campaign)}</h4><div class="adcards">${c.ads.map(a => `<div class="adc"><div class="im">${a.thumb || a.id ? `<img src="${/^https:$/.test(location.protocol) && !/claude/.test(location.hostname) && a.id ? "/api/img?id=" + esc(a.id) : esc(a.thumb)}" data-fb="${esc(a.thumb || "")}" alt="" loading="lazy" onerror="if(this.dataset.fb&&this.src.indexOf('/api/img')>-1){this.src=this.dataset.fb;this.dataset.fb=''}else{this.remove()}">` : ""}<div class="ph">${esc(a.title || "Document ad")}</div></div>
-        <div class="bd"><div class="h">${esc(a.title || "(no headline)")}</div><div class="m"><span class="st ${on(a.status)?"on":"off"}">${on(a.status)?"Active":"Paused"}</span><span>${fmtN(a.impr)} impr.</span><span>${fmtN(a.clicks)} clicks</span><span>${a.impr ? (a.clicks/a.impr*100).toFixed(2)+"% CTR" : ""}</span></div>
+        <div class="bd"><div class="h">${esc(a.title || "(no headline)")}</div>${a.caption ? `<details class="cap"><summary>${esc(a.caption.split("\n")[0].slice(0,120))}${a.caption.length>120||a.caption.includes("\n")?"…":""}</summary><p>${esc(a.caption).replace(/\n/g,"<br>")}</p></details>` : ""}<div class="m"><span class="st ${on(a.status)?"on":"off"}">${on(a.status)?"Active":"Paused"}</span><span>${fmtN(a.impr)} impr.</span><span>${fmtN(a.clicks)} clicks</span><span>${a.impr ? (a.clicks/a.impr*100).toFixed(2)+"% CTR" : ""}</span></div>
         ${a.landing ? `<a href="${esc(a.landing)}" target="_blank" rel="noopener">${esc(a.landing.replace(/^https?:\/\/(www\.)?/,""))}</a>` : `<span class="m">Lead gen form or document ad</span>`}</div></div>`).join("")}</div></div>`).join("")}</details>`;
     });
   } else {
@@ -1329,7 +1330,7 @@ function renderAds(){
     });
   }
   $("#v-ads").innerHTML = `<div class="adbar"><div class="boards" style="margin:0;background:#E3E6E9"><button type="button" data-aplat="linkedin" aria-pressed="${ADF.plat==="linkedin"}" style="color:var(--navy)">LinkedIn</button><button type="button" data-aplat="google" aria-pressed="${ADF.plat==="google"}" style="color:var(--navy)">Google Ads</button></div>
-    <input type="search" id="adq" placeholder="Search headlines, campaigns, pages" value="${esc(ADF.q)}"><select id="adst"><option value="active" ${ADF.status==="active"?"selected":""}>Active ads</option><option value="all" ${ADF.status==="all"?"selected":""}>Active and paused</option></select><span class="count">${nAds} ad${nAds===1?"":"s"}</span></div>
+    <input type="search" id="adq" placeholder="Search headlines, captions, campaigns, pages" value="${esc(ADF.q)}"><select id="adst"><option value="active" ${ADF.status==="active"?"selected":""}>Active ads</option><option value="all" ${ADF.status==="all"?"selected":""}>Active and paused</option></select><span class="count">${nAds} ad${nAds===1?"":"s"}</span></div>
     ${body || '<div class="empty">No ads match.</div>'}
     <footer class="note">Healthcare and shared campaigns, ${esc(ADS.window || "2026")}. Updated ${esc(ADS.updated || "")} with each monthly report. LinkedIn images expire about a week after each update, so older cards show the headline instead.</footer>`;
 }
