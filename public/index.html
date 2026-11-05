@@ -194,6 +194,7 @@ tr.future td{color:var(--muted)}
 .dm-task{margin-top:12px}
 .dm-task-f{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--soft);font-size:13px}
 .dm-task-f label{display:flex;flex-direction:column;gap:3px} .dm-task-f .wide{grid-column:1/-1}
+.loc-reg{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
 .dm-task-f input,.dm-task-f select,.dm-task-f textarea{font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
 .dm-np{font-style:italic}
 .cal-key{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted);margin:4px 0 10px}
@@ -550,7 +551,7 @@ function defMqlPanel(){
   if(C.length) h+=defMqlList(X,C);
   return h;
 }
-let DM_VIEW="list";
+let DM_VIEW="list", DM_NOTES={};
 function defMqlList(X,C){
   const pl=(n,w)=>`${N(n)} ${w}${n===1?"":"s"}`;
   const cnt=k=>C.filter(c=>c.channels.includes(k)).length;
@@ -576,6 +577,18 @@ function defMqlList(X,C){
       r.push({d:w.start,k:"Website visit",wk:1,h:`<b>Website visit</b> ${pl(w.sessions,"session")}, week of ${esc(w.week.split(" to ")[0])}${pages.length?`<br><span class="note" style="margin:0">Pages viewed: ${pages.map(PG).join(" · ")}${src.length?` (from ${src.map(esc).join(", ")})`:""}</span>`:fallback.length?`<br><span class="note" style="margin:0">Pages viewed in ${RM()}: ${fallback.map(PG).join(" · ")}</span>`:NOPAGE}`});});
     c.email.forEach(e=>r.push({d:e.date,k:"Email click",h:`<b>Email click</b> ${e.type==="1:1 email"?`Clicked a 1:1 email from Boldt${e.name?`: <i>${esc(e.name)}</i>${e.sent?` <span class="note" style="margin:0">(sent ${fdShort(e.sent)})</span>`:""}`:""}`:`Clicked a marketing email${e.name?`: <i>${esc(e.name)}</i>`:""}`}${e.link?`<br><span class="note" style="margin:0">Link: ${PG(e.link)}</span>`:""}`}));
     return r.sort((a,b)=>a.d<b.d?-1:1);};
+  const plain=c=>{const L=[];const seenC=new Set();
+    c.li.forEach(x=>L.push([x.date,`LinkedIn ad click: ${pl(x.clicks,"click")} on ${x.campaign}${x.ads&&x.ads.length&&x.exactAd?` (ad: ${x.ads[0].title})`:""}`]));
+    if(!c.li.length&&c.liClicksMonth) L.push(["",`LinkedIn ad click: ${pl(c.liClicksMonth,"click")} in ${RM()}`]);
+    c.search.forEach(x=>L.push([x.date,`${x.channel} click: ${x.campaign}${x.keyword?`, searched "${x.keyword}"`:""}`]));
+    c.web.forEach(w=>{const end=new Date(w.start+"T12:00:00");end.setDate(end.getDate()+6);const e=end.toISOString().slice(0,10);
+      const pages=[...new Set((c.visits||[]).filter(v=>v.date>=w.start&&v.date<=e).flatMap(v=>v.pages))].slice(0,4).map(p=>String(p).replace(/^https?:\/\//,"").replace("www.boldthealthcarerealestate.com","")||"/");
+      L.push([w.start,`Website visit: ${pl(w.sessions,"session")}, week of ${w.week.split(" to ")[0]}${pages.length?`, pages ${pages.join(", ")}`:""}`]);});
+    c.email.forEach(e=>L.push([e.date,e.type==="1:1 email"?`Clicked a 1:1 email from Boldt${e.name?`: ${e.name}`:""}`:`Clicked a marketing email${e.name?`: ${e.name}`:""}`]));
+    L.sort((a,b)=>a[0]<b[0]?-1:1);
+    const imp=c.impressions.slice(0,4).map(i=>`${i.campaign} (${N(i.views)})`).join("; ");
+    return `What they engaged with in ${RM()}:\n${L.map(([d,t])=>`- ${d?fdShort(d):RM()}: ${t}`).join("\n")}${imp?`\nLinkedIn campaigns seen (impressions): ${imp}`:""}`;};
+  C.forEach(c=>{if(c.hubspotId)DM_NOTES[c.hubspotId]=plain(c);});
   const rows=c=>events(c).map(x=>`<li><span class="note" style="margin:0">${x.d.endsWith("-00")?RM():fdShort(x.d)}</span> ${x.h}</li>`).join("");
   const taskBtn=c=>c.hubspotId?`<div class="dm-task"><button type="button" class="btn-sm" data-task="${esc(c.hubspotId)}">Create follow-up task in HubSpot</button><div class="dm-task-f" hidden></div></div>`:"";
   const opts=[["all",`All ${C.length}`],["LinkedIn ad click",`LinkedIn clicks (${cnt("LinkedIn ad click")})`],["Google ad click",`Google ads (${cnt("Google ad click")})`],["Bing ad click",`Bing ads (${cnt("Bing ad click")})`],["Website visit",`Website (${cnt("Website visit")})`],["Email click",`Email (${cnt("Email click")})`]].filter(([v],i)=>i===0||cnt(v));
@@ -619,7 +632,7 @@ function dmTaskForm(btn){
       <label>Assign to <select data-f="ownerId"><option value="">Unassigned</option>${(o.owners||[]).map(w=>`<option value="${esc(w.id)}">${esc(w.name)}</option>`).join("")}</select></label>
       <label>Due <input type="date" value="${ds}" data-f="due"></label>
       <label>Priority <select data-f="priority"><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="LOW">Low</option></select></label>
-      <label class="wide">Notes <textarea rows="3" maxlength="1800" data-f="notes">${esc(`${name} became a new MQL by our engagement definition in ${RM()}. Most recent engagement: ${last}.`)}</textarea></label>
+      <label class="wide">Notes <textarea rows="8" maxlength="1800" data-f="notes">${esc(`${name} became a new MQL by our engagement definition in ${RM()}.\n\n${DM_NOTES[cid]||`Most recent engagement: ${last}.`}`.slice(0,1800))}</textarea></label>
       <div class="wide"><button type="button" class="btn-sm primary" data-send="1">Create task</button> <button type="button" class="btn-sm" data-cancel="1">Cancel</button> <span class="note dm-ts" style="margin:0"></span></div>`;
     box.querySelector("[data-cancel]").onclick=()=>{box.hidden=true;box.innerHTML="";};
     box.querySelector("[data-send]").onclick=ev=>{const b={companyId:cid};box.querySelectorAll("[data-f]").forEach(f=>b[f.dataset.f]=f.value);
@@ -630,8 +643,33 @@ function dmTaskForm(btn){
   }).catch(()=>{box.innerHTML=`<p class="note" style="margin:0">Couldn't reach the dashboard server. Try again.</p>`;});
 }
 
-function sqlSection(){
-  const J=D.sqlJourneys, S=J.summary, n=S.n, C=J.companies, mo=C[0].monthly.map(x=>x.m), nm=mo.length;
+let LOC_SEL="ytd";
+function locBody(){
+  const L=D.trends.loc[LOC_SEL], top=L.states.slice(0,10), rest=L.states.slice(10);
+  const RG=Object.keys(L.regions).sort((a,b)=>L.regions[b]-L.regions[a]);
+  return `<div class="loc-reg">${RG.map(r=>`<span class="chip">${r}: ${N(L.regions[r])} (${P(L.regions[r]/L.n,0)})</span>`).join("")}</div>
+    ${hbars(top.map(s=>({k:s.state,v:s.n})),{max:top[0]?top[0].n:1})}
+    ${rest.length?`<p class="note" style="margin:8px 0 0">Also: ${rest.map(s=>`${esc(s.state)} ${s.n}`).join(" · ")}</p>`:""}`;
+}
+function trendsSection(){
+  const T=D.trends, W=T.dow, L=T.loc, YR=String(D.year||"2026");
+  const peak=W.days[W.engagements.indexOf(Math.max(...W.engagements))], vpk=W.days[W.visitsAvg.indexOf(Math.max(...W.visitsAvg))];
+  const wk=sum(W.engagements.slice(0,5)), we=sum(W.engagements.slice(5));
+  const opts=[["ytd",`Total Engaged Companies, ${YR} (${N(L.ytd.n)})`],["oct",`Total Engaged Companies, ${RM()} (${N(L.oct.n)})`],["new",`New MQLs, ${RM()} (${N(L.new.n)})`]];
+  let h=`<h3 class="sec-h">When and where companies engage</h3><p class="sec-sub">Day of week and location trends for healthcare companies in HubSpot.</p><div class="grid g-2">`;
+  h+=`<div class="panel"><h3>Engagement by day of the week</h3><p class="sub">${N(W.total)} dated ad visits and email clicks, January to ${RM()}. ${peak} is the busiest day; ${P(wk/W.total,0)} land on weekdays.</p>
+    ${legend([{name:"Google or Bing ad visits",color:css("--c-hc"),box:1},{name:"Email clicks",color:css("--c-ga"),box:1}])}
+    ${chart({labels:W.days,bars:[{name:"Ad visits",color:css("--c-hc"),values:W.ads},{name:"Email clicks",color:css("--c-ga"),values:W.emails}],stacked:true,h:210,half:true})}
+    <div class="eyebrow" style="margin-top:10px">HubSpot companies on the site, average per day, ${RM()}</div>
+    ${chart({labels:W.days,bars:[{name:"Companies on the site",color:css("--c-li"),values:W.visitsAvg}],fmt:v=>N(v,v%1?1:0),h:170,half:true})}
+    <p class="sec-note">${esc(W.note)} Site visits peak on ${vpk}.</p></div>`;
+  h+=`<div class="panel" id="loc-panel"><div class="panel-h"><div><h3>Where they are</h3><p class="sub">Companies by state</p></div>
+    <label class="sel">Show <select id="loc-sel">${opts.map(([v,t])=>`<option value="${v}" ${v===LOC_SEL?"selected":""}>${esc(t)}</option>`).join("")}</select></label></div>
+    <div id="loc-body">${locBody()}</div><p class="sec-note">${esc(L.note)}</p></div></div>`;
+  return h;
+}
+function sqlSection(mqlSql){
+  const J=D.sqlJourneys, S=J.summary, n=S.n, C=J.companies, mo=C[0].monthly.map(x=>x.m), nm=mo.length, O=S.outreach;
   const MS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], ml=m=>`${MS[+m.slice(5,7)-1]} ${m.slice(0,4)}`;
   const mx=Math.max(...C.flatMap(c=>c.monthly.map(x=>x.i)));
   const shade=v=>v?`background:color-mix(in srgb,var(--c-li) ${Math.round(18+82*Math.log1p(v)/Math.log1p(mx))}%,var(--soft))`:"";
@@ -639,8 +677,8 @@ function sqlSection(){
   let h=`<h3 class="sec-h">Customer journey for ${J.year} SQL companies</h3><p class="sec-sub">${n} healthcare companies became sales qualified in ${J.year}: their lifecycle stage in HubSpot moved to Sales qualified lead. Below is every touch we can track for each one: LinkedIn, Google and Bing ads, website visits, email clicks, 1:1 emails, calls and meetings.</p>`;
   h+=`<div class="grid g-kpi">${kpi("Saw our LinkedIn ads before becoming SQL",P(S.sawBefore/n,0),`${S.sawBefore} of ${n} SQL companies`)}
     ${kpi("Typical time from first ad to SQL",`${N(S.medianLead)} months`,`Median. The longest was ${S.maxLead} months.`)}
-    ${kpi("First reached in our first campaign month",N(S.firstMonths[ml(mo[0])]||0),`${ml(mo[0])}, of the ${S.sawBy} reached before SQL`)}
-    ${kpi("Still seeing our ads after SQL",N(S.stillReached),`${P(S.stillReached/n,0)} of ${n}, keeping Boldt in view while sales works the deal`)}</div>`;
+    ${O?kpi("Typical time from first outreach to SQL",`${N(O.medianMonths)} months`,`Median from the first 1:1 email or call. Range ${O.minMonths} to ${O.maxMonths} months; ${O.within12} of ${O.n} within a year.`):""}
+    ${mqlSql?kpi("MQL to SQL conversion",mqlSql.v,mqlSql.d):""}</div>`;
   if(S.touchesBefore) h+=`<div class="panel"><h3>Touches before becoming an SQL</h3><p class="sub">Number of the ${n} SQL companies with each kind of touch before their SQL date. Website, Google and Bing tracking starts March 16, 2026, so companies that became SQLs earlier show LinkedIn and HubSpot touches only.</p>${hbars(Object.entries(S.touchesBefore).map(([k,v])=>({k,v})),{max:n,fmt:v=>`${v} of ${n}`})}</div>`;
   const yr=mo.map((m,i)=>i===0||m.endsWith("-01")?m.slice(0,4):"");
   const marks=x=>{const o=MK.filter(([k])=>x[k]).map(([k,t,c])=>`<b class="${c}"></b>`).join("");return o?`<span class="mk">${o}</span>`:"";};
@@ -653,6 +691,7 @@ function sqlSection(){
   const chips=c=>{const o=[];
     if(c.firstAd) o.push(`<span class="chip">First ad: ${esc(c.firstAd.label)}</span>`); else o.push(`<span class="chip warn">Not reached by LinkedIn ads</span>`);
     if(c.leadMonths!=null) o.push(`<span class="chip">${c.leadMonths} months of ads before SQL</span>`);
+    if(c.firstOutreach) o.push(`<span class="chip">First outreach: ${MS[+c.firstOutreach.date.slice(5,7)-1]} ${c.firstOutreach.date.slice(0,4)}, ${c.firstOutreach.type}</span>`);
     const clk=c.before.clicks+c.sqlMonth.clicks; if(clk) o.push(`<span class="chip good">${clk} ad click${clk>1?"s":""} before SQL</span>`);
     const all=(c.journey||[]).flatMap(m=>m.items), k=t=>all.some(i=>i.kind===t);
     if(k("s")) o.push(`<span class="chip good">Google or Bing ad</span>`); if(k("w")) o.push(`<span class="chip">Website visits</span>`);
@@ -700,9 +739,8 @@ function journeySection(){
 R.leads=()=>{
   const s=mqlStats(), cm=CM(), L=D.leads, lab=M().slice(0,cm);
   const sqlY=sum(L.sql.filter(x=>x!=null)), sql25=sum(D.sql2025.slice(0,SQLN()));
-  let h=head("Leads & accounts",`Healthcare MQLs and SQLs, ${D.sqlJourneys?"whether SQL companies saw our ads before they qualified":"how MQL companies engaged before they qualified"}, and HubSpot companies on the site. MQLs count leads entering New in HubSpot's Lead pipeline.`);
-  h+=`<div class="grid g-kpi">${kpi("SQLs year to date",N(sqlY),`Goal ${L.sqlGoal}. Same months 2025: ${sql25}`)}
-    ${kpi("MQL to SQL, YTD",P(sqlY/sum(s.mql.slice(0,SQLN())),1),`2025: ${P(D.roiAnnual["2025"].mqlSql,1)}`)}</div>`;
+  let h=head("Leads & accounts",`Healthcare MQLs and SQLs, when and where companies engage, the full journey of SQL companies, and healthcare companies on the site from every source. MQLs count leads entering New in HubSpot's Lead pipeline.`);
+  const mqlSql={v:P(sqlY/sum(s.mql.slice(0,SQLN())),1),d:`Year to date. 2025: ${P(D.roiAnnual["2025"].mqlSql,1)}`};
   h+=`<div class="grid g-2"><div class="panel"><h3>MQLs by month</h3><p class="sub">2026 vs 2025, with the three goal levels</p>
     ${legend([{name:"2026",color:css("--c-hc"),box:1},{name:"2025",color:css("--c-budget"),box:1},{name:"Goals 37 / 42 / 47",color:css("--gold"),dash:1}])}
     ${chart({labels:lab,bars:[{name:"2026",color:css("--c-hc"),values:s.mql},{name:"2025",color:css("--c-budget"),values:L.mql2025.slice(0,cm)}],refs:[{name:"37",value:37,color:css("--gold")},{name:"42",value:42,color:css("--gold")},{name:"47",value:47,color:css("--gold")}],partialLast:true,half:true})}</div>
@@ -710,21 +748,41 @@ R.leads=()=>{
     ${legend([{name:"2026",color:css("--c-hc"),box:1},{name:"2025",color:css("--c-budget"),box:1},{name:"Goal 3",color:css("--gold"),dash:1}])}
     ${chart({labels:lab,bars:[{name:"2026",color:css("--c-hc"),values:L.sql.slice(0,cm)},{name:"2025",color:css("--c-budget"),values:D.sql2025.slice(0,cm)}],refs:[{name:"3",value:3,color:css("--gold")}],half:true})}</div></div>`;
   if(D.defMql) h+=defMqlPanel();
-  h+=D.sqlJourneys?sqlSection():D.mqlJourneys?journeySection():`<div class="panel"><h3>${RM()} MQL accounts</h3><p class="sub">${D.mqlMonth.length} companies entered as MQLs in HubSpot${DONE()?"":" so far"} this month</p><ul class="list-2">
+  if(D.trends) h+=trendsSection();
+  h+=D.sqlJourneys?sqlSection(mqlSql):D.mqlJourneys?journeySection():`<div class="panel"><h3>${RM()} MQL accounts</h3><p class="sub">${D.mqlMonth.length} companies entered as MQLs in HubSpot${DONE()?"":" so far"} this month</p><ul class="list-2">
     ${D.mqlMonth.map(m=>`<li><span>${esc(m.name)}</span>${m.engaged?'<span class="chip good">Saw LinkedIn ads</span>':`<span class="note" style="margin:0">${m.date}</span>`}</li>`).join("")}</ul></div>`;
   h+=accountsSection();
   return h;
 };
 
 function accountsSection(){
-  const A=D.accounts, halo=A.liHalo.HC, vis=A.liVisitors, O=D.overlap, JT=D.jobTitles.HC;
-  let h=`<h3 class="sec-h">Known accounts on the site</h3><p class="sec-sub">Factors.ai, ${A.window}. HubSpot companies on the site and companies that visited after seeing our LinkedIn ads.</p>`;
-  h+=`<div class="grid g-kpi">${kpi("HubSpot companies on the site",N(A.knownVisitsMonth??A.knownVisitsWeek),`Unique companies with a session, ${A.window}`)}
-    ${kpi("LinkedIn to website",P(halo.visited/halo.reached,1),`${halo.visited} of ${N(halo.reached)} companies that saw ads visited the site`)}
-    ${kpi("LinkedIn to paid search",P(O.liToSearch.next/O.liToSearch.start,1),`${O.liToSearch.next} of ${N(O.liToSearch.start)} companies, about ${Math.round(O.liToSearch.hours/24)} days later on average`)}
-    ${kpi("Paid search to LinkedIn",P(O.searchToLi.next/O.searchToLi.start,1),`${O.searchToLi.next} of ${O.searchToLi.start} companies, about ${Math.round(O.searchToLi.hours)} hours later`)}</div>`;
-  h+=`<div class="grid g-2"><div class="panel"><h3>HubSpot companies visiting by day</h3><p class="sub">Companies in HubSpot with at least one session</p>${chart({labels:A.knownVisitsDaily.map((d,i)=>A.knownVisitsDaily.length>10&&i%3?"":d.day),bars:[{name:"Companies",color:css("--c-hc"),values:A.knownVisitsDaily.map(d=>d.count)}],h:220,half:true})}</div>
-    <div class="panel"><h3>Companies that visited after seeing LinkedIn ads</h3><p class="sub">${vis.length} companies reached by healthcare LinkedIn ads, ${A.window}, then visited the site</p><ul class="list-2 acct-vis">${vis.map(v=>`<li><span><b>${esc(v.name)}</b>${v.date?`<br><span class="note" style="margin:0">${fdShort(v.date)}${v.pages&&v.pages.length?` · ${v.pages.map(esc).join(", ")}`:""}</span>`:""}</span>${v.hubspot||v.hubspotLead?'<span class="chip good">In HubSpot</span>':`<span class="note" style="margin:0">${esc(v.domain)}</span>`}</li>`).join("")}</ul></div></div>`;
+  const A=D.accounts, halo=A.liHalo.HC, vis=A.liVisitors, O=D.overlap, AS=A.allSources;
+  const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
+  const PG=p=>esc(p==="/"?"Home page":p==="/boldt-real-estate"?"Boldt Real Estate page":p.startsWith("/blog/")?"Blog: "+cap(p.slice(6).replace(/-/g," ")):cap(p.replace(/^\//,"").replace(/[-/]/g," ")));
+  let h=`<h3 class="sec-h">Known accounts on the site</h3><p class="sec-sub">Factors.ai, ${A.window}. Healthcare companies identified on the site from every source: paid search, LinkedIn ads, organic search, direct visits, referrals and social.</p>`;
+  if(AS){
+    const ord=o=>Object.entries(o||{}).map(([k,v])=>({k,v}));
+    h+=`<div class="grid g-kpi">${kpi("Healthcare companies on the site",N(AS.healthcareCompanies),`${N(AS.sessions)} sessions, ${A.window}`)}
+      ${kpi("Already in HubSpot",N(AS.inHubspot),`${P(AS.inHubspot/AS.healthcareCompanies,0)} of healthcare visitors`)}
+      ${kpi("Not in HubSpot yet",N(AS.notInHubspot),"Healthcare organizations to consider adding")}
+      ${kpi("HubSpot companies on the site, all industries",N(A.knownVisitsMonth??A.knownVisitsWeek),`Unique companies with a session, ${A.window}`)}</div>`;
+    h+=`<div class="grid g-2"><div class="panel"><h3>How they arrived</h3><p class="sub">Healthcare companies by the source of their visits. One company can arrive more than one way.</p>
+      <div class="grid g-2" style="gap:14px"><div><div class="eyebrow">In HubSpot (${N(AS.inHubspot)})</div>${hbars(ord(AS.byChannelKnown),{max:AS.inHubspot})}</div>
+      <div><div class="eyebrow">Not in HubSpot yet (${N(AS.notInHubspot)})</div>${hbars(ord(AS.byChannelNew),{max:AS.notInHubspot})}</div></div></div>
+      <div class="panel"><h3>Pages they landed on</h3><p class="sub">Healthcare companies by first page of the visit</p>${hbars(AS.topPages.map(x=>({k:PG(x.page),v:x.companies})),{max:AS.healthcareCompanies})}</div></div>`;
+    const chs=[...new Set(AS.companies.flatMap(c=>c.channels))];
+    const opts=[["all",`All ${AS.companies.length}`],["hs",`In HubSpot (${AS.inHubspot})`],["new",`Not in HubSpot yet (${AS.notInHubspot})`],...chs.map(k=>[k,`${k} (${AS.companies.filter(c=>c.channels.includes(k)).length})`])];
+    h+=`<div class="panel"><div class="panel-h"><div><h3>Healthcare companies on the site, ${RM()}</h3><p class="sub">Most sessions first</p></div>
+      <label class="sel">Show <select id="as-filter">${opts.map(([v,t])=>`<option value="${esc(v)}">${esc(t)}</option>`).join("")}</select></label></div>
+      <ul class="list-2 acct-vis as-list" id="as-list">${AS.companies.map(c=>`<li data-hs="${c.hubspot?1:0}" data-ch="${esc(c.channels.join("|"))}"><span><b>${esc(c.name)}</b><br><span class="note" style="margin:0">${N(c.sessions)} session${c.sessions>1?"s":""} · ${c.channels.map(esc).join(", ")} · ${c.pages.map(PG).join(", ")}</span></span>${c.hubspot?'<span class="chip good">In HubSpot</span>':`<span class="note" style="margin:0">${esc(c.domain)}</span>`}</li>`).join("")}</ul>
+      <p class="sec-note">${esc(AS.note)}</p></div>`;
+  }
+  h+=`<div class="grid g-2"><div class="panel"><h3>HubSpot companies visiting by day</h3><p class="sub">Companies in HubSpot with at least one session, any source</p>${chart({labels:A.knownVisitsDaily.map((d,i)=>A.knownVisitsDaily.length>10&&i%3?"":d.day),bars:[{name:"Companies",color:css("--c-hc"),values:A.knownVisitsDaily.map(d=>d.count)}],h:220,half:true})}</div>
+    <div class="panel"><h3>LinkedIn and paid search together</h3><p class="sub">How companies move between our LinkedIn ads, paid search and the site</p>
+      ${hbars([{k:"Saw LinkedIn ads, then visited the site",v:halo.visited/halo.reached*100},{k:"Saw LinkedIn ads, then came through paid search",v:O.liToSearch.next/O.liToSearch.start*100},{k:"Came through paid search, then saw LinkedIn ads",v:O.searchToLi.next/O.searchToLi.start*100}],{fmt:v=>N(v,1)+"%",max:Math.max(halo.visited/halo.reached,O.liToSearch.next/O.liToSearch.start,O.searchToLi.next/O.searchToLi.start)*100})}
+      <p class="note" style="margin:8px 0 0">${halo.visited} of ${N(halo.reached)} companies reached by LinkedIn ads visited. ${O.liToSearch.next} of ${N(O.liToSearch.start)} LinkedIn-reached companies later searched, about ${Math.round(O.liToSearch.hours/24)} days later. ${O.searchToLi.next} of ${O.searchToLi.start} paid search visitors later saw LinkedIn ads, about ${Math.round(O.searchToLi.hours)} hours later.</p></div></div>`;
+  h+=`<div class="panel"><h3>Companies that visited after seeing LinkedIn ads</h3><p class="sub">${vis.length} companies reached by healthcare LinkedIn ads, ${A.window}, then visited the site</p><ul class="list-2 acct-vis">${vis.map(v=>`<li><span><b>${esc(v.name)}</b>${v.date?`<br><span class="note" style="margin:0">${fdShort(v.date)}${v.pages&&v.pages.length?` · ${v.pages.map(esc).join(", ")}`:""}</span>`:""}</span>${v.hubspot||v.hubspotLead?'<span class="chip good">In HubSpot</span>':`<span class="note" style="margin:0">${esc(v.domain)}</span>`}</li>`).join("")}</ul></div>`;
+  const JT=D.jobTitles.HC;
   if(JT){
     const TR=D.jobTitleTrend;
     if(TR) h+=`<div class="panel"><h3>Decision makers engaging with LinkedIn ads</h3><p class="sub">Clicks on healthcare LinkedIn ads by the viewer's job title, ${TR.months[0]} to ${TR.months[TR.months.length-1]}</p>
@@ -1070,6 +1128,8 @@ function render(){
     DM_VIEW="list";document.querySelectorAll("[data-dmv]").forEach(x=>x.classList.toggle("on",x.dataset.dmv==="list"));document.getElementById("dm-view-list").hidden=false;document.getElementById("dm-view-cal").hidden=true;
     t.style.display="";t.open=true;t.scrollIntoView({behavior:"smooth",block:"start"});}));
   document.querySelectorAll("#dm-panel [data-task]").forEach(b=>b.addEventListener("click",()=>dmTaskForm(b)));
+  const ls=document.getElementById("loc-sel"); if(ls) ls.addEventListener("change",()=>{LOC_SEL=ls.value;document.getElementById("loc-body").innerHTML=locBody();});
+  const af=document.getElementById("as-filter"); if(af) af.addEventListener("change",()=>{const v=af.value;document.querySelectorAll("#as-list li").forEach(li=>{const ok=v==="all"||(v==="hs"&&li.dataset.hs==="1")||(v==="new"&&li.dataset.hs==="0")||li.dataset.ch.split("|").includes(v);li.style.display=ok?"":"none";});});
   const qp=document.getElementById("q-pick"); if(qp) qp.addEventListener("change",()=>{QSEL=+qp.value;render();});
   const t=document.querySelector('.tabs a[aria-current="page"]'); if(t&&t.scrollIntoView) t.scrollIntoView({block:"nearest",inline:"nearest"});
 }

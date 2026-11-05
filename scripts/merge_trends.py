@@ -1,0 +1,17 @@
+"""Merge trends_oct.json (day of week, locations, first outreach) and accounts/all_sources_oct.json into the month file."""
+import json
+P = "/home/claude/site/public/data/2026-10.json"
+D = json.load(open(P)); T = json.load(open("trends_oct.json")); A = json.load(open("/home/claude/dashboard/accounts/all_sources_oct.json"))
+D["trends"] = {
+    "dow": {**T["dow"], "note": "Google and Bing ad visits and email clicks by healthcare companies in HubSpot, January to October 2026, one per company per day. LinkedIn ad clicks and website visits are reported by month and week, so they aren't placed on a day."},
+    "loc": {**T["loc"], "note": "State from each company's HubSpot record. Health systems are listed at their headquarters state."},
+}
+S = D["sqlJourneys"]["summary"]; S["outreach"] = T["outreach"]
+S["outreachNote"] = "From HubSpot: the date a Boldt sales owner first emailed or called a contact at the company. Shown for the companies with a recorded first email or call."
+for c in D["sqlJourneys"]["companies"]:
+    fo = T["firstOutreach"].get(str(c["hubspotId"]))
+    if fo: c["firstOutreach"] = fo
+    else: c.pop("firstOutreach", None)
+D["accounts"]["allSources"] = {**{k: v for k, v in A.items()}, "note": "Email clicks are tracked in HubSpot and appear in the MQL list above."}
+json.dump(D, open(P, "w"), indent=1, ensure_ascii=False)
+print("ok", len(A["companies"]))
