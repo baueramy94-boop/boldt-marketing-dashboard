@@ -1,7 +1,7 @@
 import type { Config, Context } from "@netlify/functions";
 
 // Read and update a HubSpot company's lifecycle stage from the dashboard.
-// GET  /api/hs-company?ids=1,2,3   -> { ok, ready, stages: { id: stage } }   (needs companies read)
+// GET  /api/hs-company?ids=1,2,3   -> { ok, ready, stages: { id: stage }, outreach: { id: { date, type } } }   (needs companies read)
 // POST /api/hs-company             -> body { companyId, lifecyclestage } -> { ok, stage }  (needs companies write)
 // Uses the same HUBSPOT_TOKEN as hs-task. The edge gate has already checked the site password.
 
@@ -22,13 +22,17 @@ export default async (req: Request, context: Context) => {
     try {
       const r = await fetch(`${API}/crm/v3/objects/companies/batch/read`, {
         method: "POST", headers: auth,
-        body: JSON.stringify({ properties: ["lifecyclestage"], inputs: ids.map((id) => ({ id })) }),
+        body: JSON.stringify({ properties: ["lifecyclestage", "hs_last_logged_outgoing_email_date", "hs_last_logged_call_date"], inputs: ids.map((id) => ({ id })) }),
       });
       if (!r.ok) return json({ ok: true, ready: true, stages: {}, note: `HubSpot ${r.status}` });
       const d: any = await r.json();
-      const stages: Record<string, string> = {};
-      (d.results || []).forEach((x: any) => { stages[String(x.id)] = x.properties?.lifecyclestage || ""; });
-      return json({ ok: true, ready: true, stages });
+      const stages: Record<string, string> = {}, outreach: Record<string, any> = {};
+      (d.results || []).forEach((x: any) => {
+        const p = x.properties || {}, e = String(p.hs_last_logged_outgoing_email_date || "").slice(0, 10), c = String(p.hs_last_logged_call_date || "").slice(0, 10);
+        stages[String(x.id)] = p.lifecyclestage || "";
+        outreach[String(x.id)] = e || c ? { date: e >= c ? e : c, type: e >= c ? "1:1 email" : "Call" } : null;
+      });
+      return json({ ok: true, ready: true, stages, outreach });
     } catch {
       return json({ ok: true, ready: true, stages: {} });
     }

@@ -26,6 +26,8 @@ for x in GM:
     o = go.setdefault(i, {"id": i, "campaign": x["campaign"], "adGroup": x["ad_group_name"], "shared": a.get("shared", x["campaign"] == "National General"),
         "headlines": a.get("headlines", [])[:15], "descriptions": a.get("descriptions", [])[:4], "url": a.get("url", ""), "status": a.get("status", ""), "m": [[0, 0, 0] for _ in range(NM)]})
     m = o["m"][mi(x["year_month"])]; m[0] += x["impressions"]; m[1] += x["clicks"]; m[2] = round(m[2] + x["cost"], 2)
+POST = json.load(open("li_post_urls.json"))
+for o in li.values(): o["post"] = POST.get(o["id"], "")
 out = {"months": NM, "linkedin": sorted(li.values(), key=lambda a: -sum(m[0] for m in a["m"])), "google": sorted(go.values(), key=lambda a: -sum(m[0] for m in a["m"]))}
 P = SITE + "2026-10.json"; D = json.load(open(P)); D["adPerf"] = out; json.dump(D, open(P, "w"), indent=1, ensure_ascii=False)
 # captions into the archive
@@ -35,5 +37,12 @@ for g in A["linkedin"]:
         for a in c["ads"]:
             t = LT.get(a["id"])
             if t and t.get("sponsored_creative_content_commentary"): a["caption"] = clean(t["sponsored_creative_content_commentary"]); n += 1
+            if POST.get(a["id"]): a["post"] = POST[a["id"]]
 json.dump(A, open(SITE + "ads-archive.json", "w"), indent=1, ensure_ascii=False)
+# post links on the ads each new MQL company clicked
+for c in D["defMql"]["companies"]:
+    for x in c.get("li", []):
+        for ad in x.get("ads", []):
+            if POST.get(str(ad.get("id"))): ad["post"] = POST[str(ad["id"])]
+json.dump(D, open(P, "w"), indent=1, ensure_ascii=False)
 print(len(li), len(go), "captions", n, sum(1 for a in go.values() if not a["headlines"]))
