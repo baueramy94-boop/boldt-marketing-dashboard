@@ -8,6 +8,7 @@ HS = json.load(open("hs_companies.json"))
 V = json.load(open("visits.json"))
 LI = json.load(open("li_clicks.json"))
 EM = json.load(open("email_clicks.json"))
+SE = json.load(open("sales_email_clicks.json"))
 
 def root(d):
     d = (d or "").lower().strip().removeprefix("http://").removeprefix("https://").split("/")[0].removeprefix("www.")
@@ -49,7 +50,7 @@ for k, rows in V.items():
     start = k.split(":")[0]
     for d in rows:
         r = root(d)
-        if r in ORG: events[r].append((start, "Website visit"))
+        if r in ORG: events[r].append((start, "Website visit", {"end": k.split(":")[1], "sessions": rows[d][2] if isinstance(rows, dict) else None}))
 # LinkedIn ad clicks by company (month)
 unmatched = []; FUZZY = []
 BAD_FUZZY = {"Saint Luke's", "Indiana University Health", "Methodist Healthcare System", "HCA Houston Healthcare", "UNC Health Johnston"}
@@ -64,16 +65,19 @@ for m, rows in LI.items():
             if hit: FUZZY.append((nm, sorted({sorted(ORG[r]["names"], key=len)[0] for r in hit})))
         if hit:
             key = sorted(hit)[0]                 # one organization per LinkedIn company, even if several HubSpot records share the name
-            events[key].append((m + "-01", "LinkedIn ad click"))
+            events[key].append((m + "-01", "LinkedIn ad click", {"clicks": x.get("clicks", 0)}))
         else: unmatched.append(nm)
-# marketing email clicks (HubSpot contact last/first click)
+# email clicks, all types: marketing emails (first and last click) and 1:1 sales emails (last click)
 for e in EM:
     r = root(e["domain"])
     if r not in ORG: continue
     for f in ("first", "last"):
-        if e[f]: events[r].append((e[f][:10], "Marketing email click"))
+        if e[f]: events[r].append((e[f][:10], "Email click", {"type": "Marketing email"}))
+for e in SE:
+    r = root(e["domain"])
+    if r in ORG and e["date"]: events[r].append((e["date"], "Email click", {"type": "1:1 email"}))
 
-def active(r, a, b): return [ch for d, ch in events[r] if a <= d <= b]
+def active(r, a, b): return [ev[1] for ev in events[r] if a <= ev[0] <= b]
 W_OCT = ("2026-10-01", "2026-10-31")
 W_12 = ("2025-11-01", "2026-10-31")          # 12 months through October
 W_PRIOR = ("2025-10-01", "2026-09-30")       # 12 months before October
@@ -83,6 +87,20 @@ octa = sorted(r for r in HC if active(r, *W_OCT))
 new = sorted(r for r in octa if not active(r, *W_PRIOR))
 known_oct_any = sorted(r for r in ORG if active(r, *W_OCT) and any(ch == "Website visit" for ch in active(r, *W_OCT)))
 
+import calendar
+def mrange(y, m): return (f"{y}-{m:02d}-01", f"{y}-{m:02d}-{calendar.monthrange(y, m)[1]}")
+def prior12(y, m):
+    a = dt.date(y - 1, m, 1); b = dt.date(y, m, 1) - dt.timedelta(days=1); return (a.isoformat(), b.isoformat())
+monthly_new = {}
+first_new = {}
+for mth in range(1, 11):
+    w = mrange(2026, mth); p = prior12(2026, mth)
+    nn = [r for r in HC if active(r, *w) and not active(r, *p)]
+    monthly_new[mth] = len(nn)
+    for r in nn: first_new.setdefault(r, mth)
+ytd_new = len(first_new)
+engaged_ytd = len([r for r in HC if active(r, "2026-01-01", "2026-10-31")])
+
 def bych(rs, w):
     c = defaultdict(int)
     for r in rs:
@@ -91,11 +109,13 @@ def bych(rs, w):
 
 out = {
     "month": "2026-10",
-    "definition": "HubSpot companies (healthcare) with a website visit, LinkedIn ad click or marketing email click. Counted by organization.",
+    "definition": "HubSpot companies (healthcare) with a website visit, LinkedIn ad click or email click (marketing or 1:1). Counted by organization.",
     "total12": len(total), "activeOct": len(octa), "newOct": len(new),
     "totalByChannel": bych(total, W_12), "octByChannel": bych(octa, W_OCT), "newByChannel": bych(new, W_OCT),
     "check_websiteKnownAll_Oct": len(known_oct_any),
     "newNames": [sorted(ORG[r]["names"], key=len)[0] for r in new],
+    "monthlyNew": monthly_new, "ytdNew": ytd_new, "engagedYtd": engaged_ytd,
+    "newDomains": new,
 }
 json.dump(out, open("def_mql_oct.json", "w"), indent=1)
 print(json.dumps({k: v for k, v in out.items() if k != "newNames"}, indent=1))
@@ -111,3 +131,108 @@ both_oct = sorted(r for r in mq if r in set(octa)); both_12 = sorted(r for r in 
 print("Oct HubSpot MQL orgs", len(mq), "active by definition in Oct", len(both_oct), "active in 12 months", len(both_12), "new in Oct", len([r for r in mq if r in set(new)]))
 out["manual"] = {"orgs": len(mq), "activeOct": len(both_oct), "active12": len(both_12), "newOct": len([r for r in mq if r in set(new)])}
 json.dump(out, open("def_mql_oct.json", "w"), indent=1)
+
+# ---- October new definition MQLs: what each company engaged with, when and how ----
+# Website visits by week (Factors account report), LinkedIn ad clicks (LinkedIn company data, by month; campaign and date
+# from the Factors account timeline), Google and Bing ad visits (Factors), email clicks (HubSpot). Impressions by campaign only.
+import os
+FA = json.load(open("factors_new.json")) if os.path.exists("factors_new.json") else {}
+ARCH = json.load(open("/home/claude/site/public/data/ads-archive.json"))
+GAD = {}
+for c in ARCH.get("google", []):
+    for g in c.get("adGroups", []):
+        for a in g.get("ads", []):
+            GAD[str(a.get("id"))] = {"campaign": c["campaign"], "adGroup": g["adGroup"], "headlines": a.get("headlines", [])[:3]}
+LAD, LCAMP = {}, {}
+for g in ARCH.get("linkedin", []):
+    for c in g.get("campaigns", []):
+        ads = [{"id": str(a["id"]), "title": a.get("title") or "", "thumb": a.get("thumb") or "", "active": a.get("status") == "ACTIVE"} for a in c.get("ads", [])]
+        for a in ads: LAD[a["id"]] = dict(a, campaign=c["campaign"])
+        LCAMP.setdefault(re.sub(r"\s*\|\s*2026\s*$", "", c["campaign"]).replace("Awareness | Healthcare | ", "").strip(), []).extend(ads)
+nk = lambda s: re.sub(r"[^a-z0-9]", "", (s or "").lower())
+GCAMP = {nk(c["campaign"]): c["campaign"] for c in ARCH.get("google", [])}
+LIC = {k: v for k, v in json.load(open("li_oct_by_campaign.json")).items() if not k.startswith("_")}
+MONS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+def dl(d): return f"{MONS[int(d[5:7]) - 1]} {int(d[8:10])}"
+def camp(s):
+    s = re.sub(r"^\d+-", "", (s or "").strip())
+    s = re.sub(r"\s*\([A-Z][a-z]{2} \d{1,2}\)$", "", s)
+    while s.startswith("Awareness | Healthcare | Awareness | Healthcare"): s = s[len("Awareness | Healthcare | "):]
+    s = re.sub(r"\s*\|\s*2026\s*$", "", s)
+    s = s.replace("Awareness | Healthcare | ", "").replace("Lead Generation | Healthcare | ", "")
+    s = s.replace("—", "-").replace("–", "-")
+    return re.sub(r"\s+", " ", s).strip(" |")
+def camp_group(s):
+    return "Awareness" if s.startswith("Awareness") else "Lead generation" if s.startswith("Lead Gen") else ""
+
+companies = []
+for r in new:
+    ev = sorted([e for e in events[r] if W_OCT[0] <= e[0] <= W_OCT[1]], key=lambda e: e[0])
+    f = FA.get(r, {})
+    web = {}
+    for d, ch, x in ev:
+        if ch == "Website visit":
+            w = web.setdefault(d, {"start": d, "end": x["end"], "sessions": 0}); w["sessions"] += x.get("sessions") or 0
+    web = [{"week": dl(w["start"]) + (" to " + dl(w["end"]) if w["end"] != w["start"] else ""), "start": w["start"], "sessions": w["sessions"]} for w in sorted(web.values(), key=lambda w: w["start"])]
+    li_month = sum(x.get("clicks", 0) for d, ch, x in ev if ch == "LinkedIn ad click")
+    li, search = [], []
+    for a in f.get("clicked_ads", []):
+        if not a.get("date", "").startswith("2026-10") or re.search(r"senior", json.dumps(a), re.I): continue
+        if a["channel"] == "LinkedIn ad click":
+            aid = (a.get("ad") or "").strip()
+            if aid.isdigit() and aid in LAD:
+                nm = camp(a.get("campaign")) or camp(LAD[aid]["campaign"]); ads = [{k: LAD[aid][k] for k in ("id", "title", "thumb")}]; exact = True
+            else:
+                nm = camp(a.get("ad") or a.get("campaign")); pool = LCAMP.get(nm, [])
+                act = [x for x in pool if x["active"]] or pool
+                ads = [{k: x[k] for k in ("id", "title", "thumb")} for x in act][:6]; exact = False
+            li.append({"date": a["date"], "campaign": nm, "ads": ads, "exactAd": exact, "group": camp_group(a.get("campaign") or a.get("ad") or ""), "clicks": a.get("clicks") or 1, "landing": a.get("landing_page")})
+        else:
+            m = re.search(r"(\d{9,})", a.get("ad") or "")
+            g = GAD.get(m.group(1)) if m else None
+            if not g and GCAMP.get(nk(a.get("campaign"))): g = {"campaign": GCAMP[nk(a.get("campaign"))], "adGroup": None, "headlines": []}
+            search.append({"date": a["date"], "channel": "Google Ads" if a["channel"].startswith("Google") else "Bing Ads",
+                           "campaign": g["campaign"] if g else camp(a.get("campaign")), "adGroup": g["adGroup"] if g else None,
+                           "headlines": g["headlines"] if g else [], "keyword": a.get("keyword"), "landing": a.get("landing_page"), "clicks": a.get("clicks") or 1})
+    # merge duplicate search rows (same day, campaign, keyword, page)
+    ms = {}
+    for s_ in search:
+        k = (s_["date"], s_["channel"], s_["campaign"], s_["keyword"], s_["landing"])
+        if k in ms: ms[k]["clicks"] += s_["clicks"]
+        else: ms[k] = dict(s_)
+    search = sorted(ms.values(), key=lambda x: x["date"])
+    if li_month and not li:      # Factors had no LinkedIn detail: campaign from the Windsor company report by campaign
+        for cname, comp in LIC.items():
+            n_ = sum(v for k, v in comp.items() if norm(k) in {norm(x) for x in ORG[r]["names"]} or any(norm(x).startswith(norm(k)) for x in ORG[r]["names"]))
+            if n_:
+                pool = LCAMP.get(cname, []); act = [x for x in pool if x["active"]] or pool
+                li.append({"date": "2026-10-00", "campaign": cname, "ads": [{k: x[k] for k in ("id", "title", "thumb")} for x in act][:6], "exactAd": False, "group": "Awareness", "clicks": n_, "landing": None})
+    ml = {}
+    for x in li:
+        k = (x["date"], x["campaign"])
+        if k in ml: ml[k]["clicks"] += x["clicks"]; ml[k]["landing"] = ml[k]["landing"] or x["landing"]
+        else: ml[k] = dict(x)
+    li = sorted(ml.values(), key=lambda x: x["date"])
+    emails = sorted({(d, x["type"]) for d, ch, x in ev if ch == "Email click"})
+    imps = []
+    for i in f.get("impression_campaigns", []):
+        if re.search(r"senior", i.get("campaign", ""), re.I): continue
+        imps.append({"campaign": camp(i["campaign"]) or i["campaign"].strip(), "group": camp_group(i["campaign"]), "views": i.get("views", 0), "last": i.get("last_date")})
+    # first touch in October: exact dates where we have them, week start for website, month for LinkedIn without a Factors date
+    cands = [(x["date"], x["channel"].replace(" Ads", "") + " ad click", "day") for x in search] + [(x["date"], "LinkedIn ad click", "day") for x in li if not x["date"].endswith("-00")] + \
+            [(d, "Email click", "day") for d, t in emails] + [(w["start"], "Website visit", "week") for w in web]
+    if li_month and not any(not x["date"].endswith("-00") for x in li): cands.append(("2026-10-01", "LinkedIn ad click", "month"))
+    first = min(cands, key=lambda c: (c[0], c[2] != "day")) if cands else (ev[0][0], ev[0][1], "day")
+    chans = sorted({ch for d, ch, x in ev})
+    companies.append({
+        "name": sorted(ORG[r]["names"], key=len)[0], "domain": r, "first": {"date": first[0], "label": {"day": dl(first[0]), "week": "Week of " + dl(first[0]), "month": "October"}[first[2]], "channel": first[1], "precision": first[2]},
+        "channels": chans, "web": web, "pages": [p for p in f.get("top_pages", [])[:4] if isinstance(p, str)],
+        "liClicksMonth": li_month, "li": li, "search": search,
+        "email": [{"date": d, "label": dl(d), "type": t} for d, t in emails],
+        "impressions": sorted(imps, key=lambda x: -x["views"])[:6],
+    })
+companies.sort(key=lambda c: (c["first"]["precision"] == "month", c["first"]["date"], c["name"]))
+out["companies"] = companies
+out["missingFactors"] = [r for r in new if r not in FA]
+json.dump(out, open("def_mql_oct.json", "w"), indent=1)
+print("companies", len(companies), "without Factors detail", len(out["missingFactors"]))

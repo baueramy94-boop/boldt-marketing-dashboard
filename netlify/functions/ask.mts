@@ -102,7 +102,7 @@ Where to look:
 - Ad results: the report's paid, campaigns and creative sections. For the current month, recent weeks or a custom date range, call get_ad_performance.
 - MQLs, SQLs, cost per MQL and ROI: the key figures and the report's leads and roiAnnual sections.
 - Projects, what marketing delivered, what is coming up: get_project_calendar, plus the report's projects and upcoming sections.
-- Website: the report's factorsWeb section; top blog posts by traffic source: blogBySource. Companies and MQL accounts: the report's accounts section. Whether SQL companies saw LinkedIn ads before they qualified: sqlJourneys (summary and one row per SQL company).
+- Website: the report's factorsWeb section; top blog posts by traffic source: blogBySource. Companies and MQL accounts: the report's accounts section. Whether SQL companies saw LinkedIn ads before they qualified: sqlJourneys (summary and one row per SQL company). MQLs by Boldt's engagement definition (website visit, LinkedIn ad click, or marketing or 1:1 email click in the past 12 months): defMql, with newOct, ytdNew, monthlyNew, total12 and one row per new October company in defMql.companies (what it engaged with, when, and which LinkedIn campaigns and Google or Bing ads it clicked).
 - Quarter comparisons and Google results by ad group: the report's qbr section (quarterly headline, takeaway and recommendations) and paid.googleAdGroups (monthly rows by ad group; rows marked shared count half). Add months up by quarter: Q1 is Jan to Mar.
 - Recommendations: the report's recs section (this month) and qbr.recs and qbr.expansion (quarterly).
 - Earlier months: get_month_report.
@@ -181,6 +181,7 @@ function strip(d: any) {
   const c = structuredClone(d);
   (c.mqlJourneys?.companies || []).forEach((a: any) => delete a.label);
   (c.creatives || []).forEach((a: any) => delete a.thumb);
+  (c.defMql?.companies || []).forEach((co: any) => (co.li || []).forEach((x: any) => (x.ads || []).forEach((a: any) => delete a.thumb)));
   delete c.asOfLabel;
   for (const k of ["HC", "SH"]) if (c.paid?.google?.[k]) delete c.paid.google[k].conv;   // Google conversions are not part of reporting
   return c;

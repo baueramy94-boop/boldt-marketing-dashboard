@@ -1,0 +1,22 @@
+"""Write the October definition MQL block into the site's month file."""
+import json
+SITE = "/home/claude/site/public/data/2026-10.json"
+o = json.load(open("def_mql_oct.json"))
+d = json.load(open(SITE))
+keep = {k: d.get("defMql", {}).get(k) for k in ("newRule",)}
+d["defMql"] = {
+    "month": "2026-10",
+    "definition": "A healthcare company in HubSpot that actively engaged in the past 12 months: a website visit (including visits from ad clicks), a LinkedIn ad click or an email click (marketing or 1:1). Counted by organization.",
+    "newRule": keep["newRule"] or "New = engaged in October with no engagement in the 12 months before.",
+    "newOct": o["newOct"], "total12": o["total12"], "activeOct": o["activeOct"],
+    "ytdNew": o["ytdNew"], "engagedYtd": o["engagedYtd"],
+    "monthlyNew": [o["monthlyNew"][str(m)] for m in range(1, 11)],
+    "totalByChannel": o["totalByChannel"], "octByChannel": o["octByChannel"], "newByChannel": o["newByChannel"],
+    "manual": o["manual"],
+    "window": "LinkedIn clicks and email clicks cover November 2025 to October 2026. Website visits are counted from March 16, 2026. For 1:1 emails HubSpot keeps the most recent click on each contact.",
+    "ytdNote": "Website visits are tracked from March 16, so January and February count LinkedIn and email engagement only.",
+    "listNote": "LinkedIn reports clicks by company for each campaign, not for each ad within it. LinkedIn click dates come from Factors, which records LinkedIn activity every few days. Google and Bing clicks are website visits from those ads. Impressions cover May 9 to October 31.",
+    "companies": o["companies"],
+}
+json.dump(d, open(SITE, "w"), separators=(",", ":"), ensure_ascii=False)
+print("written", len(d["defMql"]["companies"]), "companies")

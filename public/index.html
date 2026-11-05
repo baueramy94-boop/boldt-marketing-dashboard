@@ -249,6 +249,7 @@ body.editing .ed-mod{background:color-mix(in srgb,var(--yellow) 16%,transparent)
 .ed-bar button{font:inherit;font-weight:700;padding:6px 14px;border-radius:999px;border:0;background:var(--yellow);color:#1B1B1B;cursor:pointer}
 @media print{.edit-btn,.ed-bar,.ed-del,.ed-add,.ed-rs{display:none!important}body.editing .ed{outline:none;background:none}}
 /* SQL company ad history */
+.dm-ads{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.dm-ads img,.dm-ads .ph{width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--line);font-size:11px}
 .strip{display:grid;grid-template-columns:minmax(150px,220px) 1fr;gap:6px 12px;align-items:center;font-size:12.5px}
 .strip .cells{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:2px}
 .strip .cells i{height:18px;border-radius:2px;background:var(--soft);position:relative}
@@ -423,7 +424,7 @@ R.summary=()=>{
       <div class="bar"><i style="width:${Math.min(100,s.ytd/s.goalsYTD.o*100)}%"></i><u style="left:${s.goalsYTD.c/s.goalsYTD.o*100}%"></u><u style="left:${s.goalsYTD.b/s.goalsYTD.o*100}%"></u></div>
       <div class="bar-labels"><span>${P(pc,0)} of conservative goal (${s.goalsYTD.c})</span><span>${s.goalsYTD.o}</span></div></div>`;
     h+=kpi(`MQLs in ${RM()}${SOFAR()}`,N(s.oct),`Monthly goal ${s.goalMo} (conservative)`);
-    if(D.defMql) h+=kpi(`Definition MQLs, ${RM()}`,`${N(D.defMql.newOct)} new`,`${N(D.defMql.total12)} total engaged in the past 12 months`);
+    if(D.defMql) h+=kpi(`Definition MQLs, ${RM()}`,`${N(D.defMql.newOct)} new`,`${D.defMql.ytdNew!=null?N(D.defMql.ytdNew)+" new this year · ":""}${N(D.defMql.total12)} engaged in the past 12 months`);
     h+=kpi("Cost per MQL, YTD",$(c.all),`2025: ${$(D.roiAnnual["2025"].cpMql)}. Ad spend per MQL ${$(c.ad)}`);
     h+=kpi("SQLs year to date",N(sqlY),`${P(sqlY/D.leads.sqlGoal,0)} of the ${D.leads.sqlGoal} goal. Same months 2025: ${sql25}`);
   }
@@ -480,14 +481,53 @@ R.paid=()=>{
 /* ---------- MQL company journeys (Factors account journeys + HubSpot email) ---------- */
 const fdShort=iso=>{const d=String(iso||"").split("-");return d.length===3?`${M()[+d[1]-1]} ${+d[2]}`:"";};
 function defMqlPanel(){
-  const X=D.defMql, ch=o=>Object.entries(o||{}).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({k,v})), M=X.manual||{};
-  return `<h3 class="sec-h">MQLs by our engagement definition, ${RM()}</h3><p class="sec-sub">${esc(X.definition)} ${esc(X.newRule)}</p>
+  const X=D.defMql, ch=o=>Object.entries(o||{}).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({k,v})), MM=X.manual||{};
+  const mn=X.monthlyNew||[], C=X.companies||[];
+  let h=`<h3 class="sec-h">MQLs by our engagement definition, ${RM()}</h3><p class="sec-sub">${esc(X.definition)} ${esc(X.newRule)}</p>
   <div class="grid g-kpi">${kpi(`New definition MQLs, ${RM()}`,N(X.newOct),`Engaged in ${RM()} for the first time in 12 months`)}
+    ${X.ytdNew!=null?kpi("New definition MQLs, this year",N(X.ytdNew),`January to ${RM()}. ${RM()} is ${P(X.newOct/X.ytdNew,0)} of the year.`):""}
     ${kpi("Total definition MQLs",N(X.total12),"Engaged at least once in the 12 months through "+RM()+" 31")}
     ${kpi(`Engaged in ${RM()}`,N(X.activeOct),"New plus returning companies")}
-    ${kpi(`MQLs entered in HubSpot, ${RM()}`,N(mqlStats().oct),M.orgs?`${M.activeOct} of these ${M.orgs} companies engaged in ${RM()}`:"")}</div>
-  <div class="grid g-2"><div class="panel"><h3>How new ${RM()} MQLs engaged</h3><p class="sub">Companies with each type of engagement. One company can have more than one.</p>${hbars(ch(X.newByChannel),{max:X.newOct})}</div>
-    <div class="panel"><h3>How all definition MQLs engaged</h3><p class="sub">12 months through ${RM()}</p>${hbars(ch(X.totalByChannel),{max:X.total12})}<p class="sec-note">${esc(X.window)}</p></div></div>`;
+    ${kpi(`MQLs entered in HubSpot, ${RM()}`,N(mqlStats().oct),MM.orgs?`${MM.activeOct} of these ${MM.orgs} companies engaged in ${RM()}`:"")}</div>`;
+  h+=`<div class="grid g-2">`;
+  if(mn.length) h+=`<div class="panel"><h3>New definition MQLs by month</h3><p class="sub">${N(X.ytdNew)} new this year. Each company counts once, in the month it became new.</p>
+    ${chart({labels:M().slice(0,mn.length),bars:[{name:"New definition MQLs",color:css("--c-hc"),values:mn}],refs:[{name:"Monthly average",value:X.ytdNew/mn.length,color:css("--gold")}],half:true})}
+    ${X.ytdNote?`<p class="sec-note">${esc(X.ytdNote)}</p>`:""}</div>`;
+  h+=`<div class="panel"><h3>How they engaged</h3><p class="sub">Companies with each type of engagement. One company can have more than one.</p>
+    <div class="grid g-2" style="gap:14px"><div><div class="eyebrow">New in ${RM()} (${N(X.newOct)})</div>${hbars(ch(X.newByChannel),{max:X.newOct})}</div>
+    <div><div class="eyebrow">All definition MQLs, 12 months (${N(X.total12)})</div>${hbars(ch(X.totalByChannel),{max:X.total12})}</div></div><p class="sec-note">${esc(X.window)}</p></div></div>`;
+  if(C.length) h+=defMqlList(X,C);
+  return h;
+}
+function defMqlList(X,C){
+  const pl=(n,w)=>`${N(n)} ${w}${n===1?"":"s"}`, A={"Website visit":"Website","LinkedIn ad click":"LinkedIn","Email click":"Email"};
+  const cnt=k=>C.filter(c=>c.channels.includes(k)).length;
+  const chips=c=>{const o=[];
+    const li=c.li.reduce((s,x)=>s+x.clicks,0)||c.liClicksMonth; if(li) o.push(`<span class="chip good">LinkedIn: ${pl(li,"click")}</span>`);
+    const g=c.search.filter(x=>x.channel==="Google Ads"), b=c.search.filter(x=>x.channel==="Bing Ads");
+    if(g.length) o.push(`<span class="chip good">Google ad</span>`); if(b.length) o.push(`<span class="chip good">Bing ad</span>`);
+    const ws=c.web.reduce((s,w)=>s+w.sessions,0); if(ws) o.push(`<span class="chip">Website: ${pl(ws,"session")}</span>`);
+    const e1=c.email.filter(e=>e.type==="1:1 email").length, em=c.email.length-e1;
+    if(em) o.push(`<span class="chip good">Marketing email click</span>`); if(e1) o.push(`<span class="chip good">1:1 email click</span>`);
+    return o.join("");};
+  const rows=c=>{const r=[];
+    const thumbs=ads=>ads&&ads.length?`<span class="dm-ads">${ads.map(a=>`<img src="${LIVE_IMG?`/api/img?id=${a.id}`:esc(a.thumb)}" data-fb="${LIVE_IMG?esc(a.thumb):""}" data-ph="Ad" alt="${esc(a.title)}" title="${esc(a.title)}" loading="lazy" referrerpolicy="no-referrer" onerror="imgFail(this)">`).join("")}</span>`:"";
+    const adLine=x=>!x.ads||!x.ads.length?"":x.exactAd?`<br><span class="note" style="margin:0">Ad clicked: ${esc(x.ads[0].title)}</span>${thumbs(x.ads)}`:`<br><span class="note" style="margin:0">${x.ads.length>1?`One of the ${x.ads.length} ads running in this campaign${new Set(x.ads.map(a=>a.title)).size===1?`, all titled “${esc(x.ads[0].title)}”`:""}`:`Ad: ${esc(x.ads[0].title)}`}</span>${thumbs(x.ads)}`;
+    const seen=new Set();
+    c.li.forEach(x=>r.push([x.date,`<b>LinkedIn ad click</b> ${pl(x.clicks,"click")} on <i>${esc(x.campaign)}</i>${x.group?` <span class="note" style="margin:0">(${esc(x.group)})</span>`:""}${seen.has(x.campaign)?"":(seen.add(x.campaign),adLine(x))}${x.landing?`<br><span class="note" style="margin:0">Landed on ${esc(x.landing)}</span>`:""}`]));
+    if(!c.li.length&&c.liClicksMonth) r.push(["2026-10-00",`<b>LinkedIn ad click</b> ${pl(c.liClicksMonth,"click")} in ${RM()}. LinkedIn did not report which campaign.`]);
+    c.search.forEach(x=>r.push([x.date,`<b>${esc(x.channel)} click</b> ${esc(x.campaign)}${x.adGroup?`, ad group ${esc(x.adGroup)}`:""}${x.keyword?`, searched “${esc(x.keyword)}”`:""}${x.headlines&&x.headlines.length?`<br><span class="note" style="margin:0">Ad headlines include ${x.headlines.map(esc).join(" · ")}</span>`:""}${x.landing?`<br><span class="note" style="margin:0">Landed on ${esc(x.landing)}</span>`:""}`]));
+    c.web.forEach(w=>r.push([w.start,`<b>Website visit</b> ${pl(w.sessions,"session")}, week of ${esc(w.week.split(" to ")[0])}`]));
+    c.email.forEach(e=>r.push([e.date,`<b>Email click</b> ${e.type==="1:1 email"?"Clicked a 1:1 email from Boldt":"Clicked a marketing email"}`]));
+    return r.sort((a,b)=>a[0]<b[0]?-1:1).map(([d,t])=>`<li><span class="note" style="margin:0">${d.endsWith("-00")?RM():fdShort(d)}</span> ${t}</li>`).join("");};
+  const opts=[["all",`All ${C.length}`],["LinkedIn ad click",`LinkedIn clicks (${cnt("LinkedIn ad click")})`],["Website visit",`Website (${cnt("Website visit")})`],["Email click",`Email (${cnt("Email click")})`]];
+  return `<div class="panel" id="dm-panel"><div class="panel-h"><div><h3>New definition MQL companies, ${RM()}</h3><p class="sub">What each company engaged with, when and how. Earliest first. Open a company for the ads it clicked and the campaigns it saw.</p></div>
+    <label class="sel">Show <select id="dm-filter">${opts.map(([v,t])=>`<option value="${esc(v)}">${esc(t)}</option>`).join("")}</select></label></div>
+    <div class="jr-list">${C.map(c=>`<details class="jr" data-ch="${esc(c.channels.join("|"))}"><summary><span class="jr-n"><b>${esc(c.name)}</b><span class="note" style="margin:0">${esc(c.domain)}</span></span><span class="jr-c">${chips(c)}</span>
+      <span class="jr-t">First in ${RM()}: ${esc(c.first.label)}<br>${esc(c.first.channel)}</span></summary>
+      <div class="jr-b"><div><div class="eyebrow">What they engaged with in ${RM()}</div><ul class="jr-tl">${rows(c)}</ul>${c.pages&&c.pages.length?`<p class="jr-p"><span class="note" style="margin:0">Pages viewed: ${c.pages.map(esc).join(" · ")}</span></p>`:""}</div>
+        <div><div class="eyebrow">LinkedIn impressions by campaign, May to ${RM()}</div>${c.impressions.length?`<ul class="jr-tl">${c.impressions.map(i=>`<li><b>${esc(i.campaign)}</b> ${pl(i.views,"impression")}<span class="note" style="margin:0"> · last ${fdShort(i.last)}</span></li>`).join("")}</ul>`:`<p class="jr-p note">No LinkedIn impressions recorded</p>`}</div></div></details>`).join("")}</div>
+    <p class="sec-note">${esc(X.listNote||"")}</p></div>`;
 }
 
 function sqlSection(){
@@ -865,7 +905,7 @@ R.exec=()=>{
   h+=`<div class="grid g-kpi">${kpi(`MQLs, ${RM()}`,N(s.oct),`Monthly goal ${s.goalMo}`)}${kpi("MQLs year to date",N(s.ytd),`${P(s.ytd/s.goalsYTD.c,0)} of goal to date`)}
     ${kpi("SQLs year to date",N(sqlY),`${P(sqlY/D.leads.sqlGoal,0)} of the ${D.leads.sqlGoal} annual goal`)}${kpi("Cost per MQL, YTD",$(c.all),`2025: ${$(D.roiAnnual["2025"].cpMql)}`)}
     ${kpi("Marketing spend, YTD",$k(bt.ytdA),`${P(bt.ytdA/bt.ytdB,0)} of budget to date`)}
-    ${D.defMql?kpi(`Definition MQLs, ${RM()}`,`${N(D.defMql.newOct)} new`,`${N(D.defMql.total12)} total engaged in the past 12 months`):""}</div>`;
+    ${D.defMql?kpi(`Definition MQLs, ${RM()}`,`${N(D.defMql.newOct)} new`,`${D.defMql.ytdNew!=null?N(D.defMql.ytdNew)+" new this year · ":""}${N(D.defMql.total12)} engaged in the past 12 months`):""}</div>`;
   h+=`<article class="panel ex-doc">`;
   if(E.headline||EDITING) h+=E_("exec.headline","p","ex-lede");
   live("exec.sections",E.sections).forEach(([sec,i])=>{const b=`exec.sections.${i}`;h+=`<section class="${gone(b).trim()}">${E_(b+".title","h3")}${sec.body!=null||EDITING&&!sec.bullets?E_(b+".body","p"):""}${sec.bullets?elist(b+".bullets"):""}${delBtn(b)}</section>`;});
@@ -917,6 +957,7 @@ function render(){
   document.getElementById("view").innerHTML=html;
   if(EDITING) document.querySelectorAll("#view .ed").forEach(el=>{if(!el.closest(".ed-gone")){el.contentEditable="true";el.spellcheck=true;}});
   const cs=document.getElementById("camp-month"); if(cs) cs.addEventListener("change",()=>{CAMP_M=+cs.value;render();});
+  const dmf=document.getElementById("dm-filter"); if(dmf) dmf.addEventListener("change",()=>{const v=dmf.value;document.querySelectorAll("#dm-panel details.jr").forEach(d=>{d.style.display=v==="all"||d.dataset.ch.split("|").includes(v)?"":"none";});});
   const qp=document.getElementById("q-pick"); if(qp) qp.addEventListener("change",()=>{QSEL=+qp.value;render();});
   const t=document.querySelector('.tabs a[aria-current="page"]'); if(t&&t.scrollIntoView) t.scrollIntoView({block:"nearest",inline:"nearest"});
 }
