@@ -119,7 +119,7 @@ for r in HC:
         elif ch == "Email click": emd.add((d_, x.get("type")))
         elif ch in ("Google ad click", "Bing ad click"): gb += 1
     tot = s_ + li_ + len(emd); cp = r in contact
-    if tot >= 5 or (cp and tot):
+    if tot >= 15 or (cp and tot):
         nm = sorted(ORG[r]["names"], key=len)[0]
         MO = [f"{y}-{m:02d}" for y, m in [(2025, 11), (2025, 12)] + [(2026, k) for k in range(1, 11)]]
         mon = {k: {"w": 0, "l": 0, "e": 0, "s": 0} for k in MO}

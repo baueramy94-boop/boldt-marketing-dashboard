@@ -20,7 +20,7 @@ for c in D["defMql"]["companies"]:
 for c in D["defMql"]["companies"]:
     if c.get("hubspotId"): c["lifecycle"] = LC.get(str(c["hubspotId"]), "")
 D["defMql"]["lifecycleStages"] = [["subscriber", "Subscriber"], ["lead", "Lead"], ["marketingqualifiedlead", "Marketing Qualified Lead"], ["salesqualifiedlead", "Sales Qualified Lead"], ["opportunity", "Opportunity"], ["customer", "Customer"], ["evangelist", "Evangelist"], ["other", "Other"]]
-D["defMql"]["hotRule"] = "Hot MQLs: healthcare companies in HubSpot with 5 or more engagements (website sessions, LinkedIn ad clicks and email clicks) or a visit to the contact page, November 2025 to October 2026."
+D["defMql"]["hotRule"] = "Hot MQLs: healthcare companies in HubSpot with 15 or more engagements (website sessions, LinkedIn ad clicks and email clicks) or a visit to the contact page, November 2025 to October 2026."
 S = D["sqlJourneys"]["summary"]; S["outreach"] = T["outreach"]
 S["outreachNote"] = "From HubSpot: the date a Boldt sales owner first emailed or called a contact at the company. Shown for the companies with a recorded first email or call."
 for c in D["sqlJourneys"]["companies"]:

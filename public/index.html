@@ -191,14 +191,14 @@ tr.future td{color:var(--muted)}
 .seg button{border:0;background:var(--surface);color:var(--ink);padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
 .seg button.on{background:var(--navy);color:#fff}
 .btn-sm{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
-.btn-sm:hover{border-color:var(--ink)} .btn-sm.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn-sm:hover{border-color:var(--ink)} .btn-sm.btn-brand{background:var(--gold);border-color:var(--gold);color:#03253A;font-weight:600}.btn-sm.btn-brand:hover{filter:brightness(.95);border-color:var(--gold)} .btn-sm.primary{background:var(--navy);border-color:var(--navy);color:#fff}
 .dm-task{margin-top:12px}
 .dm-task-f{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--soft);font-size:13px}
 .dm-task-f label{display:flex;flex-direction:column;gap:3px} .dm-task-f .wide{grid-column:1/-1}
 .jstrip.strip{display:block;grid-column:1/-1;margin-top:2px}.jstrip .cells i{height:16px}
 .jstrip-ax.strip{display:grid;grid-template-columns:1fr;gap:2px;padding:0 13px}
 .dm-task-f[hidden]{display:none!important}
-.dm-list.dm-lc .jr summary,.dm-lc .dm-head{grid-template-columns:minmax(180px,1.1fr) 1.6fr minmax(150px,auto) minmax(130px,.7fr) minmax(170px,.8fr)}
+.dm-list.dm-lc .jr summary,.dm-lc .dm-head{grid-template-columns:minmax(170px,1.1fr) 1.4fr minmax(150px,auto) minmax(120px,.6fr) minmax(120px,.6fr) minmax(160px,.8fr)}
 .dm-list.hot-list .jr summary,.hot-list .dm-head{grid-template-columns:minmax(190px,1.1fr) 1.8fr minmax(150px,auto) minmax(140px,.7fr)}
 .co-link{color:inherit;text-decoration:none}.co-link:hover b,.co-link:focus b{text-decoration:underline}.co-link b::after{content:" ↗";font-weight:400;font-size:.8em;color:var(--muted)}
 .sync-box{border-color:var(--gold);font-size:13.5px;display:block;margin:10px 0}.sync-box .btn-sm{margin-left:8px}.sync-prev ul{margin:10px 0;padding-left:18px;display:grid;gap:6px}
@@ -209,10 +209,10 @@ tr.future td{color:var(--muted)}
 .cap .cap-hide{display:none}.cap[open] .cap-prev{display:none}.cap[open] .cap-hide{display:inline}.cap{margin:6px 0 8px;font-size:13px;color:var(--ink)}.cap summary{cursor:pointer;color:var(--muted);line-height:1.4}.cap p{margin:6px 0 0;line-height:1.45}
 .gad .body{padding-top:14px}.g-url{font-size:12px;color:var(--muted)}.g-h{color:#1a0dab;font-size:16px;line-height:1.3;margin:4px 0}.g-d{font-size:13px;line-height:1.45;margin-bottom:8px}
 :root[data-theme="dark"] .g-h{color:#8ab4f8}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .g-h{color:#8ab4f8}}
-.tlx{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,1fr);gap:18px;align-items:start;margin-top:8px}
+.tlx{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:start;margin-top:8px}
 .tlx-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:8px}.tlx-q{font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);min-width:200px;flex:1 1 200px;max-width:280px}
 .tlx-grid{border:1px solid var(--line);border-radius:10px;max-height:560px;overflow:auto;background:var(--surface)}
-.tlx-row{display:grid;grid-template-columns:minmax(140px,210px) minmax(0,1fr) 58px;gap:10px;align-items:center;padding:5px 10px;border-bottom:1px solid var(--line);cursor:pointer;font-size:12.5px}
+.tlx-row{display:grid;grid-template-columns:minmax(160px,260px) minmax(0,1fr) 64px;gap:10px;align-items:center;padding:5px 10px;border-bottom:1px solid var(--line);cursor:pointer;font-size:12.5px}
 .tlx-row:last-child{border-bottom:0}.tlx-row:hover{background:var(--soft)}.tlx-row:focus-visible{outline:2px solid var(--c-hc);outline-offset:-2px}
 .tlx-row.on{background:color-mix(in srgb,var(--c-hc) 10%,var(--surface));box-shadow:inset 3px 0 0 var(--c-hc)}
 .tlx-row.q-off,.tlx-row.f-off{display:none}
@@ -226,6 +226,15 @@ tr.future td{color:var(--muted)}
 .tlx-detail{position:sticky;top:120px;max-height:calc(100vh - 140px);overflow:auto;border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--surface)}
 .tlx-dh{display:flex;flex-direction:column;gap:2px;margin-bottom:8px;font-size:15px}.mk-in{display:inline-flex;gap:2px;margin:0 6px}.mk-in b{width:7px;height:7px;border-radius:50%;display:inline-block}
 @media (max-width:900px){.tlx{grid-template-columns:1fr}.tlx-detail{position:static;max-height:none}.tlx-row{grid-template-columns:minmax(110px,150px) minmax(0,1fr) 44px}}
+body.jm-open{overflow:hidden}
+.jmodal{position:fixed;inset:0;z-index:200;background:color-mix(in srgb,var(--ink) 45%,transparent);display:flex;padding:24px}
+.jm-inner{background:var(--bg,var(--surface));color:var(--ink);border-radius:14px;flex:1;overflow:auto;padding:18px 28px 32px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-width:1500px;margin:0 auto}
+.jm-bar{position:sticky;top:-18px;z-index:2;background:inherit;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 0 10px;border-bottom:1px solid var(--line);margin-bottom:14px;flex-wrap:wrap}
+.jm-nav{display:flex;gap:8px}.jm-head .tlx-dh{font-size:22px}.jm-head .tlx-dh b{font-size:24px}
+.jm-chart{margin:18px 0 8px;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}.jm-chart h3{margin:0 0 6px;font-size:15px}
+.jm-body{font-size:15px}.jm-body .jm-list{columns:2 360px;column-gap:28px}.jm-body .jm{break-inside:avoid}.jm-body .jr-tl li{margin-bottom:8px}
+.jm-cols{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:24px}
+@media (max-width:800px){.jmodal{padding:0}.jm-inner{border-radius:0;padding:12px 14px 24px}.jm-cols{grid-template-columns:1fr}.jm-body .jm-list{columns:1}}
 .heat-wrap{max-width:100%;overflow-x:auto}.heat{min-width:640px}.hot-list{max-height:680px;overflow:auto}
 .heat td,.heat th{text-align:center;padding:8px 6px}.heat td.l,.heat th.l{text-align:left}
 .lp-rows .hb b{text-align:right;line-height:1.2}
@@ -614,11 +623,9 @@ function defMqlList(X,C){
     c.email.forEach(e=>r.push({d:e.date,k:"Email click",h:`<b>Email click</b> ${e.type==="1:1 email"?`Clicked a 1:1 email from Boldt${e.name?`: <i>${esc(e.name)}</i>${e.sent?` <span class="note" style="margin:0">(sent ${fdShort(e.sent)})</span>`:""}`:""}`:`Clicked a marketing email${e.name?`: <i>${esc(e.name)}</i>`:""}`}${e.link?`<br><span class="note" style="margin:0">Link: ${PG(e.link)}</span>`:""}`}));
     return r.sort((a,b)=>a.d<b.d?-1:1);};
   const plain=c=>{const L=[];const seenC=new Set();
-    const seenAd=new Set();
-    const adl=x=>{const a=(x.ads||[]).filter(a=>a.post);if(!a.length||seenAd.has(x.campaign))return "";seenAd.add(x.campaign);if(x.exactAd)return `\n    Ad: ${a[0].post}`;return `\n    Ads running in this campaign: ${a.slice(0,4).map(a=>a.post).join(" , ")}`;};
-    c.li.forEach(x=>L.push([x.date,`LinkedIn ad click: ${pl(x.clicks,"click")} on ${x.campaign}${x.ads&&x.ads.length&&x.exactAd?` (ad: ${x.ads[0].title})`:""}${adl(x)}`]));
+    c.li.forEach(x=>L.push([x.date,`LinkedIn ad click: ${pl(x.clicks,"click")} on ${x.campaign}${x.ads&&x.ads.length&&x.exactAd?` (ad: ${x.ads[0].title})`:""}`]));
     if(!c.li.length&&c.liClicksMonth) L.push(["",`LinkedIn ad click: ${pl(c.liClicksMonth,"click")} in ${RM()}`]);
-    c.search.forEach(x=>L.push([x.date,`${x.channel} click: ${x.campaign}${x.keyword?`, searched "${x.keyword}"`:""}${x.landing?`\n    Landed on: ${/^https?:/.test(x.landing)?x.landing:"https://www.boldthealthcarerealestate.com"+(String(x.landing).startsWith("/")?"":"/")+x.landing}`:""}`]));
+    c.search.forEach(x=>L.push([x.date,`${x.channel} click: ${x.campaign}${x.keyword?`, searched "${x.keyword}"`:""}`]));
     c.web.forEach(w=>{const end=new Date(w.start+"T12:00:00");end.setDate(end.getDate()+6);const e=end.toISOString().slice(0,10);
       const pages=[...new Set((c.visits||[]).filter(v=>v.date>=w.start&&v.date<=e).flatMap(v=>v.pages))].slice(0,4).map(p=>String(p).replace(/^https?:\/\//,"").replace("www.boldthealthcarerealestate.com","")||"/");
       L.push([w.start,`Website visit: ${pl(w.sessions,"session")}, week of ${w.week.split(" to ")[0]}${pages.length?`, pages ${pages.join(", ")}`:""}`]);});
@@ -627,16 +634,27 @@ function defMqlList(X,C){
     const imp=c.impressions.slice(0,4).map(i=>`${i.campaign} (${N(i.views)})`).join("; ");
     return `What they engaged with in ${RM()}:\n${L.map(([d,t])=>`- ${d?fdShort(d):RM()}: ${t}`).join("\n")}${imp?`\nLinkedIn campaigns seen (impressions): ${imp}`:""}`;};
   C.forEach(c=>{if(c.hubspotId)DM_NOTES[c.hubspotId]=plain(c);});
+  const byD={}; C.forEach(c=>byD[c.domain]=c);
+  const wk=d=>{const n=+d.slice(8,10);return n<=7?0:n<=14?1:n<=21?2:n<=28?3:4;}, WL=[`${MS3[CM()-1]} 1 to 7`,"8 to 14","15 to 21","22 to 28","29 to 31"];
+  TLX.new={label:`New MQL, ${RM()}`,
+    head:k=>{const c=byD[k];return c?`<div class="tlx-dh">${coName(c.name,c.hubspotId)}<span class="note" style="margin:0">New MQL, ${RM()} · ${esc(c.domain)}${c.lifecycle?` · HubSpot stage: ${esc(LC_LABEL(c.lifecycle))}`:""}${c.lastOutreach?` · last ${esc(c.lastOutreach.type)} ${fdShort(c.lastOutreach.date)}, ${c.lastOutreach.date.slice(0,4)}`:""}</span></div><div class="jr-c">${chips(c)}</div>`:"";},
+    chart:k=>{const c=byD[k];if(!c)return "";const z=()=>[0,0,0,0,0], li=z(), ad=z(), web=z(), em=z();
+      c.li.forEach(x=>{if(x.date&&!x.date.endsWith("-00"))li[wk(x.date)]+=x.clicks;}); c.search.forEach(x=>x.date&&ad[wk(x.date)]++); c.web.forEach(w=>{if(w.start.slice(0,7)===D.defMql.month)web[wk(w.start)]+=w.sessions;}); c.email.forEach(e=>e.date&&em[wk(e.date)]++);
+      return `<h3>Engagement in ${RM()}, week by week</h3>${legend([{name:"LinkedIn ad clicks",color:css("--gold"),box:1},{name:"Google or Bing ad clicks",color:css("--olive"),box:1},{name:"Website sessions",color:css("--mk-web"),box:1},{name:"Email clicks",color:css("--mk-em"),box:1}])}
+        ${chart({labels:WL,bars:[{name:"LinkedIn ad clicks",color:css("--gold"),values:li},{name:"Google or Bing ad clicks",color:css("--olive"),values:ad},{name:"Website sessions",color:css("--mk-web"),values:web},{name:"Email clicks",color:css("--mk-em"),values:em}],stacked:true,fmt:v=>N(v,v%1?1:0),h:240})}
+        <p class="note" style="margin:4px 0 0">A new MQL had no engagement in the 12 months before ${RM()}, so its journey starts this month.</p>`;},
+    body:k=>{const c=byD[k];if(!c)return "";return `<div class="jm-cols"><div><div class="eyebrow">What they engaged with in ${RM()}</div><ul class="jr-tl">${rows(c)}</ul></div>
+      <div><div class="eyebrow">LinkedIn impressions by campaign, May to ${RM()}</div>${c.impressions.length?`<ul class="jr-tl">${c.impressions.map(i=>`<li><b>${esc(i.campaign)}</b> ${pl(i.views,"impression")}<span class="note" style="margin:0"> · last ${fdShort(i.last)}</span></li>`).join("")}</ul>`:`<p class="jr-p note">No LinkedIn impressions recorded</p>`}</div></div>${exBtn(c.domain,c.name)}`;}};
   const rows=c=>events(c).map(x=>`<li><span class="note" style="margin:0">${x.d.endsWith("-00")?RM():fdShort(x.d)}</span> ${x.h}</li>`).join("");
   const lo=c=>c.lastOutreach?`${esc(c.lastOutreach.type)}, ${M()[+c.lastOutreach.date.slice(5,7)-1]} ${+c.lastOutreach.date.slice(8,10)}, ${c.lastOutreach.date.slice(0,4)}`:"None logged";
-  const taskBtn=c=>`<span class="jr-task"><span class="note lo" data-lo="${esc(String(c.hubspotId||""))}" style="margin:0"><span class="dm-lbl">Last 1:1 email or call: </span>${lo(c)}</span>${c.hubspotId?`<button type="button" class="btn-sm" data-task="${esc(c.hubspotId)}">Create follow-up task</button>`:""}</span>`;
+  const taskBtn=c=>`<span class="jr-task">${c.hubspotId?`<button type="button" class="btn-sm btn-brand" data-task="${esc(c.hubspotId)}">Create follow-up task</button>`:""}</span><span class="jr-lo note lo" data-lo="${esc(String(c.hubspotId||""))}" style="margin:0"><span class="dm-lbl">Last 1:1 email or call: </span>${lo(c)}</span>`;
   const opts=[["all",`All ${C.length}`],["LinkedIn ad click",`LinkedIn clicks (${cnt("LinkedIn ad click")})`],["Google ad click",`Google ads (${cnt("Google ad click")})`],["Bing ad click",`Bing ads (${cnt("Bing ad click")})`],["Website visit",`Website (${cnt("Website visit")})`],["Email click",`Email (${cnt("Email click")})`]].filter(([v],i)=>i===0||cnt(v));
   const sorted=C.slice().sort((a,b)=>((b.last||b.first).date+(b.last||b.first).precision.replace("day","z")).localeCompare((a.last||a.first).date+(a.last||a.first).precision.replace("day","z")));
-  const list=`<div class="jr-list dm-list dm-lc" id="dm-list"><div class="dm-head" aria-hidden="true"><span>Company</span><span>How they engaged</span><span>Last 1:1 email or call</span><span>Most recent engagement</span><span>HubSpot lifecycle stage</span></div>${sorted.map(c=>`<details class="jr" id="dm-${esc(c.domain)}" data-ch="${esc(c.channels.join("|"))}"><summary><span class="jr-n">${coName(c.name,c.hubspotId)}<span class="note" style="margin:0">${esc(c.domain)}</span></span><span class="jr-c">${chips(c)}</span>${taskBtn(c)}
+  const list=`<div class="jr-list dm-list dm-lc" id="dm-list"><div class="dm-head" aria-hidden="true"><span>Company</span><span>How they engaged</span><span>Follow-up</span><span>Last 1:1 email or call</span><span>Most recent engagement</span><span>HubSpot lifecycle stage</span></div>${sorted.map(c=>`<details class="jr" id="dm-${esc(c.domain)}" data-ch="${esc(c.channels.join("|"))}"><summary><span class="jr-n">${coName(c.name,c.hubspotId)}<span class="note" style="margin:0">${esc(c.domain)}</span></span><span class="jr-c">${chips(c)}</span>${taskBtn(c)}
       <span class="jr-t"><span class="dm-lbl">Most recent: </span>${c.last?`${esc(c.last.label)}<br>${esc(c.last.channel)}`:"–"}</span>${lcCell(c)}</summary>
       <div class="jr-b"><div><div class="eyebrow">What they engaged with in ${RM()}</div><ul class="jr-tl">${rows(c)}</ul><div class="dm-task-f" hidden></div>${exBtn(c.domain,c.name)}</div>
         <div><div class="eyebrow">LinkedIn impressions by campaign, May to ${RM()}</div>${c.impressions.length?`<ul class="jr-tl">${c.impressions.map(i=>`<li><b>${esc(i.campaign)}</b> ${pl(i.views,"impression")}<span class="note" style="margin:0"> · last ${fdShort(i.last)}</span></li>`).join("")}</ul>`:`<p class="jr-p note">No LinkedIn impressions recorded</p>`}</div></div></details>`).join("")}</div>`;
-  return `<div class="panel" id="dm-panel"><div class="panel-h"><div><h3>New MQL companies, ${RM()}</h3><p class="sub">What each company engaged with, when and how. Most recent first. Open a company for the ads it clicked, the campaigns it saw and a follow-up task button.</p></div>
+  return `<div class="panel" id="dm-panel"><div class="panel-h"><div><h3>New MQL companies, ${RM()}</h3><p class="sub">What each company engaged with, when and how. Most recent first. Select a company to open its full journey.</p></div>
     <div class="dm-ctl"><div class="seg" role="group" aria-label="View"><button type="button" data-dmv="list" class="${DM_VIEW==="list"?"on":""}">List</button><button type="button" data-dmv="cal" class="${DM_VIEW==="cal"?"on":""}">Calendar</button></div>
     <label class="sel">Show <select id="dm-filter">${opts.map(([v,t])=>`<option value="${esc(v)}">${esc(t)}</option>`).join("")}</select></label></div></div>
     <div id="dm-view-list" ${DM_VIEW==="cal"?"hidden":""}>${list}</div><div id="dm-view-cal" ${DM_VIEW==="list"?"hidden":""}>${dmCalendar(C,events)}</div>
@@ -717,19 +735,24 @@ function tlx(id,o){
   const head=`<div class="tlx-row tlx-head" aria-hidden="true"><span class="tlx-n">Company</span><span class="tlx-cells" style="--n:${n}">${o.mo.map((m,i)=>`<span class="${m.endsWith("-01")&&i?"yr":""}">${i%every===0||m.endsWith("-01")?MS3[+m.slice(5,7)-1]+(m.endsWith("-01")||i===0?`<b>${m.slice(2,4)}</b>`:""):""}</span>`).join("")}</span><span class="tlx-tot">${o.totLabel}</span></div>`;
   const rows=o.rows.map(r=>`<div class="tlx-row" role="button" tabindex="0" data-tlx="${id}" data-k="${esc(r.key)}" data-s="${esc((r.name+" "+(r.sub||"")).toLowerCase())}" ${r.attrs||""}><span class="tlx-n"><b>${esc(r.name)}</b><small>${esc(r.sub||"")}</small></span><span class="tlx-cells" style="--n:${n}">${r.cells.map(c=>`<i class="${c.q?"q":""}" style="${c.s||""}" title="${c.t}">${c.mk||""}</i>`).join("")}</span><span class="tlx-tot">${r.total}</span></div>`).join("");
   return `<div class="tlx" id="tlx-${id}"><div class="tlx-left"><div class="tlx-bar"><input type="search" class="tlx-q" data-tlxq="${id}" placeholder="Search companies" aria-label="Search companies">${o.tools||""}</div>${o.key||""}
-    <div class="tlx-grid" id="tlx-grid-${id}">${head}<div class="tlx-body" id="${o.bodyId||"tlx-body-"+id}">${rows}</div></div></div>
-    <aside class="tlx-detail" id="tlx-detail-${id}" aria-live="polite"><p class="note">Select a company to see its journey.</p></aside></div>`;
+    <div class="tlx-grid" id="tlx-grid-${id}">${head}<div class="tlx-body" id="${o.bodyId||"tlx-body-"+id}">${rows}</div></div></div></div>`;
 }
-function tlxSelect(id,k,scroll){const o=TLX[id];if(!o)return;
-  document.querySelectorAll(`#tlx-${id} .tlx-row.on`).forEach(r=>r.classList.remove("on"));
-  const row=document.querySelector(`#tlx-${id} .tlx-row[data-k="${CSS.escape(k)}"]`); if(row) row.classList.add("on");
-  const d=document.getElementById(`tlx-detail-${id}`); d.innerHTML=o.detail(k); exInit();
-  d.querySelectorAll(".co-link").forEach(a=>a.addEventListener("click",e=>e.stopPropagation()));
-  if(scroll&&matchMedia("(max-width:900px)").matches) d.scrollIntoView({behavior:"smooth",block:"start"});}
+function jKeys(id){return id==="new"?[...document.querySelectorAll("#dm-list > details.jr")].filter(d=>d.style.display!=="none").map(d=>d.id.slice(3)):[...document.querySelectorAll(`#tlx-${id} .tlx-body .tlx-row`)].filter(r=>r.offsetParent).map(r=>r.dataset.k);}
+function jOpen(id,k){const o=TLX[id];if(!o)return; jClose(true);
+  const keys=jKeys(id), i=keys.indexOf(k), prev=keys[i-1], next=keys[i+1];
+  const m=document.createElement("div"); m.className="jmodal"; m.setAttribute("role","dialog"); m.setAttribute("aria-modal","true"); m.setAttribute("aria-label","Company journey");
+  m.innerHTML=`<div class="jm-inner"><div class="jm-bar"><span class="note" style="margin:0">${esc(o.label||"")}${i>=0?` · ${i+1} of ${keys.length}`:""}</span><span class="jm-nav"><button type="button" class="btn-sm" data-jgo="${esc(prev||"")}" ${prev?"":"disabled"}>‹ Previous</button><button type="button" class="btn-sm" data-jgo="${esc(next||"")}" ${next?"":"disabled"}>Next ›</button><button type="button" class="btn-sm jm-x" aria-label="Close">Close ✕</button></span></div>
+    <div class="jm-head">${o.head(k)}</div><div class="jm-chart">${o.chart?o.chart(k):""}</div><div class="jm-body">${o.body(k)}</div></div>`;
+  document.body.appendChild(m); document.body.classList.add("jm-open");
+  m.querySelector(".jm-x").addEventListener("click",()=>jClose()); m.addEventListener("click",e=>{if(e.target===m)jClose();});
+  m.querySelectorAll("[data-jgo]").forEach(b=>b.addEventListener("click",()=>b.dataset.jgo&&jOpen(id,b.dataset.jgo)));
+  m.querySelectorAll(".co-link").forEach(a=>a.addEventListener("click",e=>e.stopPropagation()));
+  exInit(); m.querySelector(".jm-x").focus();}
+function jClose(keep){document.querySelectorAll(".jmodal").forEach(x=>x.remove());if(!keep)document.body.classList.remove("jm-open");}
+document.addEventListener("keydown",e=>{const m=document.querySelector(".jmodal");if(!m)return;if(e.key==="Escape")jClose();if(e.key==="ArrowRight"){const b=m.querySelectorAll("[data-jgo]")[1];b&&!b.disabled&&b.click();}if(e.key==="ArrowLeft"){const b=m.querySelectorAll("[data-jgo]")[0];b&&!b.disabled&&b.click();}});
 function tlxInit(){
-  document.querySelectorAll(".tlx-row[data-tlx]").forEach(r=>{const go=()=>tlxSelect(r.dataset.tlx,r.dataset.k,true);r.addEventListener("click",go);r.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}});});
+  document.querySelectorAll(".tlx-row[data-tlx]").forEach(r=>{const go=()=>jOpen(r.dataset.tlx,r.dataset.k);r.addEventListener("click",go);r.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}});});
   document.querySelectorAll("[data-tlxq]").forEach(q=>q.addEventListener("input",()=>{const id=q.dataset.tlxq,v=q.value.trim().toLowerCase();document.querySelectorAll(`#tlx-${id} .tlx-body .tlx-row`).forEach(r=>{r.classList.toggle("q-off",!!v&&!r.dataset.s.includes(v));});}));
-  Object.keys(TLX).forEach(id=>{const f=document.querySelector(`#tlx-${id} .tlx-body .tlx-row`);if(f&&document.getElementById(`tlx-detail-${id}`))tlxSelect(id,f.dataset.k,false);});
 }
 function hotPanel(X){
   const H=X.hot, pl=(n,w)=>`${N(n)} ${w}${n===1?"":"s"}`, cp=H.filter(h=>h.contact).length, nw=H.filter(h=>h.newOct).length;
@@ -747,15 +770,17 @@ function hotPanel(X){
   const rows=H.slice().sort((a,b)=>HOT_SORT==="last"?(b.last.localeCompare(a.last)||b.total-a.total):(b.total-a.total||b.last.localeCompare(a.last))).map(h=>({key:h.domain,name:h.name,sub:h.state||"",total:N(h.total),
     attrs:`data-contact="${h.contact?1:0}" data-new="${h.newOct?1:0}" data-total="${h.total}" data-last="${esc(h.last)}"`,
     cells:h.months.map(x=>({s:shade(x[1]+x[2]+x[3]),t:`${esc(h.name)}, ${ml(x[0])}: ${esc(said(x)||"no engagement")}`,mk:marks(x)}))}));
+  const head=k=>{const h=byK[k];return h?`<div class="tlx-dh">${coName(h.name,h.hubspotId)}<span class="note" style="margin:0">Hot MQL · ${esc(h.domain)}${h.state?` · ${esc(h.state)}`:""} · most recent engagement ${ms(h.last)}</span></div><div class="jr-c">${chips(h)}</div>`:"";};
+  const chartH=k=>{const h=byK[k];if(!h)return "";const S=[["Website sessions",1,"--mk-web"],["LinkedIn ad clicks",2,"--gold"],["Google or Bing ad visits",4,"--olive"],["Email clicks",3,"--mk-em"]];
+    return `<h3>Engagement by month</h3>${legend(S.map(([n,i,c])=>({name:n,color:css(c),box:1})))}${chart({labels:h.months.map(x=>MS3[+x[0].slice(5,7)-1]+(x[0].endsWith("-01")||x===h.months[0]?" "+x[0].slice(2,4):"")),bars:S.map(([n,i,c])=>({name:n,color:css(c),values:h.months.map(x=>i===1?Math.max(0,x[1]-x[4]):x[i])})),stacked:true,fmt:v=>N(v,v%1?1:0),h:280})}<p class="note" style="margin:4px 0 0">Website sessions here leave out the Google and Bing ad visits, which are shown on their own.</p>`;};
   const detail=k=>{const h=byK[k];if(!h)return "";
-    return `<div class="tlx-dh">${coName(h.name,h.hubspotId)}<span class="note" style="margin:0">${esc(h.domain)}${h.state?` · ${esc(h.state)}`:""} · most recent ${ms(h.last)}</span></div><div class="jr-c">${chips(h)}</div>
-      <div class="eyebrow" style="margin-top:12px">Engagement by month, newest first</div><ul class="jm-list">${h.months.slice().reverse().filter(x=>x[1]+x[2]+x[3]).map(x=>`<li class="jm"><div class="jm-h"><b>${ml(x[0])}</b>${marks(x).replace('class="mk"','class="mk mk-in"')}<span class="note" style="margin:0">${said(x)}</span></div></li>`).join("")}</ul>
+    return `<div class="eyebrow" style="margin-top:12px">Engagement by month, newest first</div><ul class="jm-list">${h.months.slice().reverse().filter(x=>x[1]+x[2]+x[3]).map(x=>`<li class="jm"><div class="jm-h"><b>${ml(x[0])}</b>${marks(x).replace('class="mk"','class="mk mk-in"')}<span class="note" style="margin:0">${said(x)}</span></div></li>`).join("")}</ul>
       ${h.contact?`<p class="jr-p">Visited the contact page.</p>`:""}${exBtn(h.domain,h.name)}`;};
   const key=`<div class="strip-key"><span><i style="opacity:.3"></i>Fewer engagements</span><span><i></i>More engagements</span>${MKH.map(([k,t,c])=>`<span><b class="mkd ${c}"></b>${t}</span>`).join("")}</div>`;
   const tools=`<div class="seg" role="group" aria-label="Sort"><button type="button" data-hsort="total" class="${HOT_SORT==="total"?"on":""}">Most engagements</button><button type="button" data-hsort="last" class="${HOT_SORT==="last"?"on":""}">Most recent</button></div>
-    <label class="sel">Show <select id="hot-filter"><option value="all">All ${N(H.length)}</option><option value="contact">Visited the contact page (${cp})</option><option value="new">New MQLs, ${RM()} (${nw})</option><option value="10">10 or more engagements (${H.filter(h=>h.total>=10).length})</option></select></label>`;
-  return `<div class="panel" id="hot-panel"><h3>Hot MQLs</h3><p class="sub">${N(H.length)} companies with 5 or more engagements or a contact page visit in the past 12 months. Each row is November 2025 to ${RM()} ${String(D.year||"2026")}; darker squares mean more engagement. Select a company to see its months.</p>
-    ${tlx("hot",{mo,rows,detail,key,tools,totLabel:"Total",bodyId:"hot-list"})}
+    <label class="sel">Show <select id="hot-filter"><option value="all">All ${N(H.length)}</option><option value="contact">Visited the contact page (${cp})</option><option value="new">New MQLs, ${RM()} (${nw})</option><option value="30">30 or more engagements (${H.filter(h=>h.total>=30).length})</option></select></label>`;
+  return `<div class="panel" id="hot-panel"><h3>Hot MQLs</h3><p class="sub">${N(H.length)} companies with 15 or more engagements or a contact page visit in the past 12 months. Each row is November 2025 to ${RM()} ${String(D.year||"2026")}; darker squares mean more engagement. Select a company to open its full journey.</p>
+    ${tlx("hot",{mo,rows,head,body:detail,chart:chartH,label:"Hot MQL",key,tools,totLabel:"Total",bodyId:"hot-list"})}
     <p class="sec-note">${esc(X.hotRule||"")} Website sessions include visits from ad clicks.</p></div>`;
 }
 function hotSort(){const L=document.getElementById("hot-list");if(!L)return;const ds=[...L.querySelectorAll(":scope > .tlx-row")];
@@ -843,13 +868,18 @@ function sqlSection(mqlSql){
   const byK={}; C.forEach(c=>byK[c.domain||c.company]=c);
   const rows=C.map(c=>({key:c.domain||c.company,name:c.company,sub:`SQL ${fdShort(c.sql)}`,total:fdShort(c.sql),
     cells:c.monthly.map(x=>({q:x.m===c.sql.slice(0,7),s:shade(x.i),t:tip(c,x),mk:marks(x)}))}));
+  const headS=k=>{const c=byK[k];return c?`<div class="tlx-dh">${coName(c.company,c.hubspotId)}<span class="note" style="margin:0">SQL · became sales qualified ${fdShort(c.sql)}, ${c.sql.slice(0,4)}</span></div><div class="jr-c">${chips(c)}</div>
+      <p class="note" style="margin:8px 0 0">${c.firstAd?`Before SQL: ${N(c.before.impr+c.sqlMonth.impr)} LinkedIn impressions over ${c.before.months+(c.sqlMonth.impr?1:0)} months.`:"No LinkedIn impressions recorded."}${c.salesActivities?` ${N(c.salesActivities)} sales activities logged in HubSpot.`:""}</p>`:"";};
+  const chartS=k=>{const c=byK[k];if(!c)return "";const L=c.monthly.map(x=>MS3[+x.m.slice(5,7)-1]+(x.m.endsWith("-01")||x===c.monthly[0]?" "+x.m.slice(2,4):"")), sq=c.monthly.findIndex(x=>x.m===c.sql.slice(0,7));
+    const S=[["LinkedIn ad clicks","c","--gold"],["Google or Bing ad visits","s","--olive"],["Website sessions","w","--mk-web"],["Email clicks","e","--mk-em"],["Calls, meetings, 1:1 emails","t","--ink"]];
+    return `<h3>Touches by month</h3>${legend(S.map(([n,k2,col])=>({name:n,color:css(col),box:1})))}${chart({labels:L,bars:S.map(([n,k2,col])=>({name:n,color:css(col),values:c.monthly.map(x=>x[k2]||0)})),stacked:true,fmt:v=>N(v,v%1?1:0),h:240})}
+      <h3 style="margin-top:14px">LinkedIn impressions by month</h3>${chart({labels:L,bars:[{name:"Impressions",color:css("--c-hc"),values:c.monthly.map(x=>x.i)}],h:180})}
+      ${sq>=0?`<p class="note" style="margin:4px 0 0">Became an SQL in ${L[sq]}.</p>`:""}`;};
   const detail=k=>{const c=byK[k];if(!c)return "";
-    return `<div class="tlx-dh">${coName(c.company,c.hubspotId)}<span class="note" style="margin:0">Became an SQL ${fdShort(c.sql)}, ${c.sql.slice(0,4)}</span></div><div class="jr-c">${chips(c)}</div>
-      <p class="note" style="margin:8px 0 0">${c.firstAd?`Before SQL: ${N(c.before.impr+c.sqlMonth.impr)} LinkedIn impressions over ${c.before.months+(c.sqlMonth.impr?1:0)} months.`:"No LinkedIn impressions recorded."}${c.salesActivities?` ${N(c.salesActivities)} sales activities logged in HubSpot.`:""}</p>
-      <div class="eyebrow" style="margin-top:12px">Journey by month, newest first</div><ul class="jm-list">${jgroup(c.journey||[]).map(m=>m.run?jrun(m.run):jmonth(m)).join("")}</ul>`;};
+    return `<div class="eyebrow" style="margin-top:12px">Journey by month, newest first</div><ul class="jm-list">${jgroup(c.journey||[]).map(m=>m.run?jrun(m.run):jmonth(m)).join("")}</ul>`;};
   const key=`<div class="strip-key"><span><i style="opacity:.3"></i>Fewer impressions</span><span><i></i>More impressions</span>${MK.map(([k,t,c])=>`<span><b class="mkd ${c}"></b>${t}</span>`).join("")}<span><i style="background:var(--soft);outline:2px solid var(--ink);outline-offset:-1px"></i>Became SQL</span></div>`;
-  h+=`<div class="panel"><h3>${J.year} SQL company journeys</h3><p class="sub">Newest SQLs first. Each row runs from ${ml(mo[0])} to ${ml(mo[nm-1])}: darker squares mean more LinkedIn impressions, dots mark the other touches and the outlined square is the month the company became an SQL. Select a company to see its full journey.</p>
-    ${tlx("sql",{mo,rows,detail,key,totLabel:"SQL"})}
+  h+=`<div class="panel"><h3>${J.year} SQL company journeys</h3><p class="sub">Newest SQLs first. Each row runs from ${ml(mo[0])} to ${ml(mo[nm-1])}: darker squares mean more LinkedIn impressions, dots mark the other touches and the outlined square is the month the company became an SQL. Select a company to open its full journey.</p>
+    ${tlx("sql",{mo,rows,head:headS,body:detail,chart:chartS,label:"SQL company",key,totLabel:"SQL"})}
     <p class="sec-note">${esc(S.source)} ${esc(S.window)}</p>${S.domainNote?`<p class="sec-note"><b>Note:</b> ${esc(S.domainNote)}</p>`:""}</div>`;
   return h;
 }
@@ -1327,9 +1357,10 @@ function render(){
   hotSort(); lcInit(); tlxInit(); mqlSyncInit();
   document.querySelectorAll("[data-applat]").forEach(b=>b.addEventListener("click",()=>{AP_PLAT=b.dataset.applat;const y=scrollY;render();scrollTo(0,y);}));
   document.querySelectorAll("[data-aprange]").forEach(b=>b.addEventListener("click",()=>{AP_RANGE=b.dataset.aprange;const y=scrollY;render();scrollTo(0,y);}));
-  const hf=document.getElementById("hot-filter"); if(hf) hf.addEventListener("change",()=>{const v=hf.value;document.querySelectorAll("#hot-list .tlx-row").forEach(d=>{d.classList.toggle("f-off",!(v==="all"||(v==="contact"&&d.dataset.contact==="1")||(v==="new"&&d.dataset.new==="1")||(v==="10"&&+d.dataset.total>=10)));});});
+  const hf=document.getElementById("hot-filter"); if(hf) hf.addEventListener("change",()=>{const v=hf.value;document.querySelectorAll("#hot-list .tlx-row").forEach(d=>{d.classList.toggle("f-off",!(v==="all"||(v==="contact"&&d.dataset.contact==="1")||(v==="new"&&d.dataset.new==="1")||(v==="30"&&+d.dataset.total>=30)));});});
   document.querySelectorAll("#dm-panel [data-task]").forEach(b=>b.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();dmTaskForm(b);}));
   document.querySelectorAll(".co-link").forEach(a=>a.addEventListener("click",e=>e.stopPropagation()));
+  document.querySelectorAll("#dm-list > details.jr > summary").forEach(sm=>sm.addEventListener("click",e=>{if(e.target.closest("a,button,select,.lc"))return;e.preventDefault();jOpen("new",sm.parentElement.id.slice(3));}));
   exInit();
   const ls=document.getElementById("loc-sel"); if(ls) ls.addEventListener("change",()=>{LOC_SEL=ls.value;document.getElementById("loc-body").innerHTML=locBody();});
   const af=document.getElementById("as-filter"); if(af) af.addEventListener("change",()=>{const v=af.value;document.querySelectorAll("#as-list li").forEach(li=>{const ok=v==="all"||(v==="hs"&&li.dataset.hs==="1")||(v==="new"&&li.dataset.hs==="0")||li.dataset.ch.split("|").includes(v);li.style.display=ok?"":"none";});});
