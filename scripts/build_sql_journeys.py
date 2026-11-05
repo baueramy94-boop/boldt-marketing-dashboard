@@ -127,7 +127,7 @@ _cwd = os.getcwd(); os.chdir("/home/claude/dashboard/defmql")
 with contextlib.redirect_stdout(io.StringIO()):
     DM = runpy.run_path("compute.py")
 os.chdir(_cwd)
-EVENTS, ROOT, GCAMP, nk, SENC = DM["events"], DM["root"], DM["GCAMP"], DM["nk"], DM["SENC"]
+EVENTS, ROOT, GCAMP, nk, SENC, TEMPLATE = DM["events"], DM["root"], DM["GCAMP"], DM["nk"], DM["SENC"], DM["TEMPLATE"]
 F3 = json.load(open("/home/claude/dashboard/defmql/factors_v3.json"))
 HSP = {k: v for k, v in json.load(open("hs_sql_props.json")).items() if not k.startswith("_")}
 REPORT_END = "2026-10-31"
@@ -154,7 +154,11 @@ def journey(x):
                 nm = next((e.get("email") for e in f.get("email_clicks", []) if e.get("date") and abs((dt.date.fromisoformat(e["date"]) - dt.date.fromisoformat(d)).days) <= 1 and not SENC.search(e.get("email") or "")), None)
                 items.append((d, "e", "Email click", f"Clicked a marketing email: {nm}" if nm else "Clicked a marketing email", "e", 1))
             else:
-                items.append((d, "e", "Email click", "Clicked a 1:1 email from Boldt", "e", 1))
+                best = None
+                for t in f.get("sales_touches", []):
+                    sj = TEMPLATE(t.get("subject"))
+                    if t.get("type") == "1:1 email" and sj and t.get("date") and t["date"] <= d and (dt.date.fromisoformat(d) - dt.date.fromisoformat(t["date"])).days <= 14 and (not best or t["date"] > best[1]): best = (sj, t["date"])
+                items.append((d, "e", "Email click", f"Clicked a 1:1 email from Boldt: {best[0]} (sent {dl(best[1])})" if best else "Clicked a 1:1 email from Boldt", "e", 1))
     # pages viewed (Factors) attach to the website visits; paid landing pages attach to the ad visit
     pv = {}
     for v in f.get("page_visits", []):
@@ -185,6 +189,8 @@ def journey(x):
             pages = sorted({p for grp in wk for src, pg in grp for p in pg})[:4]
             srcs = sorted({src for grp in wk for src, pg in grp if src})
             if pages: what += f'. Pages: {", ".join(pages)}'
+            elif d < "2026-05-09": what += ". Pages not recorded: Factors page detail starts May 9, 2026"
+            else: what += ". Pages not recorded: Factors counted this visit in its weekly company report, but the visit isn't in the company's Factors timeline, which is where page detail comes from"
             if srcs: what += f' (from {", ".join(srcs)})'
         if kind == "s" and d in pv:
             pages = sorted({p for src, pg in pv[d] for p in pg})[:3]

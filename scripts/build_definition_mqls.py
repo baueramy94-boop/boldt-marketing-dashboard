@@ -26,8 +26,8 @@ ORG = {}
 for cid, c in HS.items():
     r = root(c["domain"])
     if not r or r in OWN: continue
-    o = ORG.setdefault(r, {"names": set(), "ind": set()})
-    o["names"].add(c["name"] or ""); o["ind"].add(c["industry"] or "")
+    o = ORG.setdefault(r, {"names": set(), "ind": set(), "ids": {}})
+    o["names"].add(c["name"] or ""); o["ind"].add(c["industry"] or ""); o["ids"].setdefault(c["name"] or "", cid)
 def is_hc(r):
     o = ORG[r]; nm = " ".join(o["names"])
     if SENIOR.search(nm) and not re.search(r"hospital|health system|medical center", nm, re.I): return False
@@ -171,6 +171,16 @@ for g in ARCH.get("linkedin", []):
 nk = lambda s: re.sub(r"[^a-z0-9]", "", (s or "").lower())
 GCAMP = {nk(c["campaign"]): c["campaign"] for c in ARCH.get("google", [])}
 LIC = {k: v for k, v in json.load(open("li_oct_by_campaign.json")).items() if not k.startswith("_")}
+# 1:1 email templates: subjects Boldt sends from sequences. A subject also counts when it was sent to two or more companies.
+TEMPLATES = {"Choosing the Right Real Estate Partner", "Low-Cost Real Estate Strategy", "Open Book Transparency: A Better Way to Deliver Healthcare Real Estate"}
+def _strip(sj): return re.sub(r"^((re|fw|fwd)\s*:\s*)+", "", (sj or "").strip(), flags=re.I).strip()
+from collections import Counter as _C
+_seen = _C()
+for _d, _f in FA.items():
+    for _s in {_strip(t.get("subject")) for t in _f.get("sales_touches", []) if t.get("subject")}: _seen[_s] += 1
+def TEMPLATE(sj):
+    s_ = _strip(sj)
+    return s_ if s_ and (s_ in TEMPLATES or _seen[s_] >= 2) else None
 MONS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 def dl(d): return f"{MONS[int(d[5:7]) - 1]} {int(d[8:10])}"
 def camp(s):
@@ -242,6 +252,15 @@ for r in new:
         for e in enames:
             if e.get("date") and abs((dt.date.fromisoformat(e["date"]) - dt.date.fromisoformat(d)).days) <= 1: return e.get("email"), e.get("link")
         return None, None
+    # which 1:1 email was clicked: the template email Boldt sent most recently before the click (Factors, last 180 days).
+    # Only known sequence templates are shown; one-off subject lines can carry people's names.
+    def oneone(d):
+        best = None
+        for t in f.get("sales_touches", []):
+            sj = TEMPLATE(t.get("subject"))
+            if t.get("type") == "1:1 email" and sj and t.get("date") and t["date"] <= d and (dt.date.fromisoformat(d) - dt.date.fromisoformat(t["date"])).days <= 14:
+                if not best or t["date"] > best[1]: best = (sj, t["date"])
+        return best or (None, None)
     visits = []
     for v in f.get("page_visits", []):
         if not v.get("date", "").startswith("2026-10"): continue
@@ -262,10 +281,10 @@ for r in new:
     last = {"date": last[0], "label": {"day": dl(last[0]), "week": "Week of " + dl(last[0]), "month": "October"}[last[2]], "channel": last[1], "precision": last[2]}
     chans = sorted({ch for d, ch, x in ev})
     companies.append({
-        "name": sorted(ORG[r]["names"], key=len)[0], "domain": r, "first": {"date": first[0], "label": {"day": dl(first[0]), "week": "Week of " + dl(first[0]), "month": "October"}[first[2]], "channel": first[1], "precision": first[2]},
+        "name": sorted(ORG[r]["names"], key=len)[0], "domain": r, "hubspotId": ORG[r]["ids"].get(sorted(ORG[r]["names"], key=len)[0]), "first": {"date": first[0], "label": {"day": dl(first[0]), "week": "Week of " + dl(first[0]), "month": "October"}[first[2]], "channel": first[1], "precision": first[2]},
         "channels": chans, "web": web, "pages": [p for p in f.get("top_pages", [])[:4] if isinstance(p, str)],
         "liClicksMonth": li_month, "li": li, "search": search,
-        "email": [dict(zip(("date", "label", "type", "name", "link"), (d, dl(d), t) + (ename(d) if t == "Marketing email" else (None, None)))) for d, t in emails],
+        "email": [dict(zip(("date", "label", "type", "name", "link"), (d, dl(d), t) + (ename(d) if t == "Marketing email" else (None, None))), **({"name": oneone(d)[0], "sent": oneone(d)[1]} if t == "1:1 email" else {})) for d, t in emails],
         "visits": visits,
         "last": last,
         "impressions": sorted(imps, key=lambda x: -x["views"])[:6],
