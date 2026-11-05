@@ -63,6 +63,58 @@ for c in S:
 out_s = {"n": len(gaps), "of": len(S), "medianMonths": round(statistics.median(gaps)), "minMonths": round(min(gaps)), "maxMonths": round(max(gaps)),
          "within12": sum(1 for g in gaps if g <= 12), "byEmail": sum(1 for c in S if c.get("firstOutreach", {}).get("type") == "1:1 email"),
          "byCall": sum(1 for c in S if c.get("firstOutreach", {}).get("type") == "call")}
-json.dump({"dow": dow, "loc": loc, "outreach": out_s, "firstOutreach": {str(c["hubspotId"]): c.get("firstOutreach") for c in S}}, open("trends_oct.json", "w"), indent=1)
-print(json.dumps(dow)); print(json.dumps({k: {"top": v["states"][:8], "regions": v["regions"], "unknown": v["unknown"], "n": v["n"]} for k, v in loc.items()})); print(out_s)
+# --- all sources by weekday (Jan to Oct 2026) ---
+SRC = json.load(open("/home/claude/dashboard/trends/dow_sources.json"))
+bing = Counter(dt.date.fromisoformat(x["date"]).weekday() for x in G["BING"] if "2026-01-01" <= x["date"] <= "2026-10-31")
+rows_all = [
+    {"k": "LinkedIn ad clicks", "src": "LinkedIn, healthcare campaigns", "v": SRC["linkedin"]},
+    {"k": "Google ad clicks", "src": "Google Ads, healthcare campaigns", "v": SRC["google"]},
+    {"k": "Bing ad visits", "src": "Factors, from September", "v": [bing[i] for i in range(7)]},
+    {"k": "Website sessions", "src": "GA4, senior living pages excluded", "v": SRC["ga4"]},
+    {"k": "Email clicks", "src": "HubSpot, healthcare companies", "v": [wdc["Email click"][i] for i in range(7)]},
+    {"k": "HubSpot companies on the site", "src": f"Factors, average per day in October", "v": dow["visitsAvg"]},
+]
+for r_ in rows_all:
+    t = sum(r_["v"]) or 1; r_["share"] = [round(x / t * 100, 1) for x in r_["v"]]; r_["total"] = round(sum(r_["v"]), 1)
+avg = [round(sum(r_["share"][i] for r_ in rows_all) / len(rows_all), 1) for i in range(7)]
+dow["all"] = {"rows": rows_all, "avgShare": avg}
+# --- new MQLs by source, month by month ---
+CHS = ["Website visit", "LinkedIn ad click", "Google ad click", "Bing ad click", "Email click"]
+import calendar
+nbs = {ch: [] for ch in CHS}; nmon = []
+for mth in range(1, 11):
+    a_ = f"2026-{mth:02d}-01"; b_ = f"2026-{mth:02d}-{calendar.monthrange(2026, mth)[1]}"
+    pa = dt.date(2025, mth, 1).isoformat(); pb = (dt.date(2026, mth, 1) - dt.timedelta(days=1)).isoformat()
+    nn = [r for r in HC if active(r, a_, b_) and not active(r, pa, pb)]
+    nmon.append(len(nn))
+    for ch in CHS: nbs[ch].append(sum(1 for r in nn if ch in active(r, a_, b_)))
+newBySource = {"months": 10, "total": nmon, "bySource": nbs}
+# --- hot MQLs: 5+ engagements or a contact page visit in the 12 months through October ---
+import glob as _g
+W12 = ("2025-11-01", "2026-10-31")
+contact = set()
+for f in _g.glob("/home/claude/dashboard/accounts/details/*.json"):
+    for nm, dom, ind, ch, url, t_, n_ in json.load(open(f))["rows"]:
+        if "/contact" in (url or ""): contact.add(G["root"](dom))
+for f in ("factors_v3.json", "factors_new.json", "/home/claude/dashboard/sql/factors_sql.json"):
+    for d_, v_ in json.load(open(f)).items():
+        if "/contact" in json.dumps(v_.get("page_visits", []) + v_.get("top_pages", [])).lower(): contact.add(G["root"](d_))
+newset = set(new); hot = []
+for r in HC:
+    s_ = li_ = 0; emd = set(); gb = 0; last = ""
+    for d_, ch, x in events[r]:
+        if not (W12[0] <= d_ <= W12[1]): continue
+        last = max(last, d_)
+        if ch == "Website visit": s_ += x.get("sessions") or 0
+        elif ch == "LinkedIn ad click": li_ += x.get("clicks", 0)
+        elif ch == "Email click": emd.add((d_, x.get("type")))
+        elif ch in ("Google ad click", "Bing ad click"): gb += 1
+    tot = s_ + li_ + len(emd); cp = r in contact
+    if tot >= 5 or (cp and tot):
+        nm = sorted(ORG[r]["names"], key=len)[0]
+        hot.append({"name": nm, "domain": r, "hubspotId": list(ORG[r]["ids"].values())[0], "total": tot, "sessions": s_, "liClicks": li_,
+                    "emailClicks": len(emd), "adVisits": gb, "contact": cp, "last": last, "newOct": r in newset, "state": state_of(r)})
+hot.sort(key=lambda h: (-h["total"], h["name"]))
+json.dump({"newBySource": newBySource, "hot": hot, "dow": dow, "loc": loc, "outreach": out_s, "firstOutreach": {str(c["hubspotId"]): c.get("firstOutreach") for c in S}}, open("trends_oct.json", "w"), indent=1)
+print(json.dumps(dow["all"]["avgShare"]), json.dumps(newBySource), len(hot), sum(1 for h in hot if h["contact"])); print(json.dumps({k: {"top": v["states"][:8], "regions": v["regions"], "unknown": v["unknown"], "n": v["n"]} for k, v in loc.items()})); print(out_s)
 print(sorted(round(g) for g in gaps))
