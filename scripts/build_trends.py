@@ -112,7 +112,19 @@ for r in HC:
     tot = s_ + li_ + len(emd); cp = r in contact
     if tot >= 5 or (cp and tot):
         nm = sorted(ORG[r]["names"], key=len)[0]
-        hot.append({"name": nm, "domain": r, "hubspotId": list(ORG[r]["ids"].values())[0], "total": tot, "sessions": s_, "liClicks": li_,
+        MO = [f"{y}-{m:02d}" for y, m in [(2025, 11), (2025, 12)] + [(2026, k) for k in range(1, 11)]]
+        mon = {k: {"w": 0, "l": 0, "e": 0, "s": 0} for k in MO}
+        for d_, ch, x in events[r]:
+            k = d_[:7]
+            if k not in mon or not (W12[0] <= d_ <= W12[1]): continue
+            if ch == "Website visit": mon[k]["w"] += x.get("sessions") or 0
+            elif ch == "LinkedIn ad click": mon[k]["l"] += x.get("clicks", 0)
+            elif ch == "Email click": mon[k]["e"] += 1
+            elif ch in ("Google ad click", "Bing ad click"): mon[k]["s"] += 1
+        emails = sorted({(d_, x.get("type"), x.get("name")) for d_, ch, x in events[r] if ch == "Email click" and W12[0] <= d_ <= W12[1]})
+        for k in mon: mon[k]["e"] = sum(1 for e_ in emails if e_[0][:7] == k)
+        hot.append({"months": [[k, mon[k]["w"], mon[k]["l"], mon[k]["e"], mon[k]["s"]] for k in MO],
+                    "name": nm, "domain": r, "hubspotId": list(ORG[r]["ids"].values())[0], "total": tot, "sessions": s_, "liClicks": li_,
                     "emailClicks": len(emd), "adVisits": gb, "contact": cp, "last": last, "newOct": r in newset, "state": state_of(r)})
 hot.sort(key=lambda h: (-h["total"], h["name"]))
 json.dump({"newBySource": newBySource, "hot": hot, "dow": dow, "loc": loc, "outreach": out_s, "firstOutreach": {str(c["hubspotId"]): c.get("firstOutreach") for c in S}}, open("trends_oct.json", "w"), indent=1)
