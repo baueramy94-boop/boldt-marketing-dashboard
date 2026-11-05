@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { Config, Context } from "@netlify/functions";
+import { getStore } from "@netlify/blobs";
 
 /*
  * "Ask about this report": answers leadership questions with Claude through Netlify AI Gateway
@@ -101,7 +102,7 @@ Where to look:
 - Ad results: the report's paid, campaigns and creative sections. For the current month, recent weeks or a custom date range, call get_ad_performance.
 - MQLs, SQLs, cost per MQL and ROI: the key figures and the report's leads and roiAnnual sections.
 - Projects, what marketing delivered, what is coming up: get_project_calendar, plus the report's projects and upcoming sections.
-- Website: the report's factorsWeb section. Companies and MQL accounts: the report's accounts section.
+- Website: the report's factorsWeb section; top blog posts by traffic source: blogBySource. Companies and MQL accounts: the report's accounts section. Whether SQL companies saw LinkedIn ads before they qualified: sqlJourneys (summary and one row per SQL company).
 - Quarter comparisons and Google results by ad group: the report's qbr section (quarterly headline, takeaway and recommendations) and paid.googleAdGroups (monthly rows by ad group; rows marked shared count half). Add months up by quarter: Q1 is Jan to Mar.
 - Recommendations: the report's recs section (this month) and qbr.recs and qbr.expansion (quarterly).
 - Earlier months: get_month_report.
@@ -157,8 +158,28 @@ function claudeConfig(): { client: Anthropic; via: string } | null {
   return null;
 }
 
+/* Text edits made on the dashboard (Edit text) are saved per month; apply them so answers match what people see. */
+async function withEdits(month: string, d: any) {
+  try {
+    const e: any = (await getStore({ name: "dashboard-edits", consistency: "strong" }).get(month, { type: "json" })) || {};
+    const dels: string[] = [];
+    for (const [p, v] of Object.entries(e) as [string, any][]) {
+      if (p.endsWith("._del")) { if (v.v === "1") dels.push(p.slice(0, -5)); continue; }
+      const ks = p.split("."); let a = d;
+      for (let i = 0; i < ks.length - 1; i++) { if (a[ks[i]] == null || typeof a[ks[i]] !== "object") a[ks[i]] = /^\d+$/.test(ks[i + 1]) ? [] : {}; a = a[ks[i]]; }
+      a[ks[ks.length - 1]] = v.v;
+    }
+    for (const p of dels.sort().reverse()) {                  // removed items: drop them (highest index first)
+      const ks = p.split("."), last = ks.pop()!; let a = d; for (const k of ks) a = a?.[k];
+      if (Array.isArray(a)) a.splice(+last, 1);
+    }
+  } catch { /* edits unavailable: use the report as published */ }
+  return d;
+}
+
 function strip(d: any) {
   const c = structuredClone(d);
+  (c.mqlJourneys?.companies || []).forEach((a: any) => delete a.label);
   (c.creatives || []).forEach((a: any) => delete a.thumb);
   delete c.asOfLabel;
   for (const k of ["HC", "SH"]) if (c.paid?.google?.[k]) delete c.paid.google[k].conv;   // Google conversions are not part of reporting
@@ -211,7 +232,7 @@ export default async (req: Request, context: Context) => {
   try {
     months = (await site("/data/index.json")).months || [];
     latest = months[0];
-    latestData = strip(await site(`/data/${latest}.json`));
+    latestData = strip(await withEdits(latest, await site(`/data/${latest}.json`)));
   } catch {
     return json({ ok: false, error: "The report data could not be loaded. Refresh the page and try again." }, 502);
   }
@@ -260,7 +281,7 @@ export default async (req: Request, context: Context) => {
       if (name === "get_month_report") {
         const m = String(input.month || "");
         if (!months.includes(m)) return { ok: false, error: `No report for ${m}. Reports: ${months.join(", ")}` };
-        return strip(await site(`/data/${m}.json`));
+        return strip(await withEdits(m, await site(`/data/${m}.json`)));
       }
       if (name === "get_project_calendar") {
         const t: any = await script({ action: "tracker" });
