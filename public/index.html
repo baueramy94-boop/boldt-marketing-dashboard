@@ -423,6 +423,7 @@ R.summary=()=>{
       <div class="bar"><i style="width:${Math.min(100,s.ytd/s.goalsYTD.o*100)}%"></i><u style="left:${s.goalsYTD.c/s.goalsYTD.o*100}%"></u><u style="left:${s.goalsYTD.b/s.goalsYTD.o*100}%"></u></div>
       <div class="bar-labels"><span>${P(pc,0)} of conservative goal (${s.goalsYTD.c})</span><span>${s.goalsYTD.o}</span></div></div>`;
     h+=kpi(`MQLs in ${RM()}${SOFAR()}`,N(s.oct),`Monthly goal ${s.goalMo} (conservative)`);
+    if(D.defMql) h+=kpi(`Definition MQLs, ${RM()}`,`${N(D.defMql.newOct)} new`,`${N(D.defMql.total12)} total engaged in the past 12 months`);
     h+=kpi("Cost per MQL, YTD",$(c.all),`2025: ${$(D.roiAnnual["2025"].cpMql)}. Ad spend per MQL ${$(c.ad)}`);
     h+=kpi("SQLs year to date",N(sqlY),`${P(sqlY/D.leads.sqlGoal,0)} of the ${D.leads.sqlGoal} goal. Same months 2025: ${sql25}`);
   }
@@ -478,6 +479,17 @@ R.paid=()=>{
 
 /* ---------- MQL company journeys (Factors account journeys + HubSpot email) ---------- */
 const fdShort=iso=>{const d=String(iso||"").split("-");return d.length===3?`${M()[+d[1]-1]} ${+d[2]}`:"";};
+function defMqlPanel(){
+  const X=D.defMql, ch=o=>Object.entries(o||{}).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({k,v})), M=X.manual||{};
+  return `<h3 class="sec-h">MQLs by our engagement definition, ${RM()}</h3><p class="sec-sub">${esc(X.definition)} ${esc(X.newRule)}</p>
+  <div class="grid g-kpi">${kpi(`New definition MQLs, ${RM()}`,N(X.newOct),`Engaged in ${RM()} for the first time in 12 months`)}
+    ${kpi("Total definition MQLs",N(X.total12),"Engaged at least once in the 12 months through "+RM()+" 31")}
+    ${kpi(`Engaged in ${RM()}`,N(X.activeOct),"New plus returning companies")}
+    ${kpi(`MQLs entered in HubSpot, ${RM()}`,N(mqlStats().oct),M.orgs?`${M.activeOct} of these ${M.orgs} companies engaged in ${RM()}`:"")}</div>
+  <div class="grid g-2"><div class="panel"><h3>How new ${RM()} MQLs engaged</h3><p class="sub">Companies with each type of engagement. One company can have more than one.</p>${hbars(ch(X.newByChannel),{max:X.newOct})}</div>
+    <div class="panel"><h3>How all definition MQLs engaged</h3><p class="sub">12 months through ${RM()}</p>${hbars(ch(X.totalByChannel),{max:X.total12})}<p class="sec-note">${esc(X.window)}</p></div></div>`;
+}
+
 function sqlSection(){
   const J=D.sqlJourneys, S=J.summary, n=S.n, C=J.companies, mo=C[0].monthly.map(x=>x.m), nm=mo.length;
   const MS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], ml=m=>`${MS[+m.slice(5,7)-1]} ${m.slice(0,4)}`;
@@ -551,6 +563,7 @@ R.leads=()=>{
     <div class="panel"><h3>SQLs by month</h3><p class="sub">2026 vs 2025. Monthly goal 3.</p>
     ${legend([{name:"2026",color:css("--c-hc"),box:1},{name:"2025",color:css("--c-budget"),box:1},{name:"Goal 3",color:css("--gold"),dash:1}])}
     ${chart({labels:lab,bars:[{name:"2026",color:css("--c-hc"),values:L.sql.slice(0,cm)},{name:"2025",color:css("--c-budget"),values:D.sql2025.slice(0,cm)}],refs:[{name:"3",value:3,color:css("--gold")}],half:true})}</div></div>`;
+  if(D.defMql) h+=defMqlPanel();
   h+=D.sqlJourneys?sqlSection():D.mqlJourneys?journeySection():`<div class="panel"><h3>${RM()} MQL accounts</h3><p class="sub">${D.mqlMonth.length} companies entered as MQLs in HubSpot${DONE()?"":" so far"} this month</p><ul class="list-2">
     ${D.mqlMonth.map(m=>`<li><span>${esc(m.name)}</span>${m.engaged?'<span class="chip good">Saw LinkedIn ads</span>':`<span class="note" style="margin:0">${m.date}</span>`}</li>`).join("")}</ul></div>`;
   h+=accountsSection();
@@ -851,7 +864,8 @@ R.exec=()=>{
   let h=`<div class="page-head ex-head"><div><div class="eyebrow">Executive summary</div><h2>${RM()} 2026 marketing report</h2><p>Healthcare. ${E_("exec.prepared")}</p></div><button type="button" class="btn-print" onclick="window.print()">Print or save as PDF</button></div>`;
   h+=`<div class="grid g-kpi">${kpi(`MQLs, ${RM()}`,N(s.oct),`Monthly goal ${s.goalMo}`)}${kpi("MQLs year to date",N(s.ytd),`${P(s.ytd/s.goalsYTD.c,0)} of goal to date`)}
     ${kpi("SQLs year to date",N(sqlY),`${P(sqlY/D.leads.sqlGoal,0)} of the ${D.leads.sqlGoal} annual goal`)}${kpi("Cost per MQL, YTD",$(c.all),`2025: ${$(D.roiAnnual["2025"].cpMql)}`)}
-    ${kpi("Marketing spend, YTD",$k(bt.ytdA),`${P(bt.ytdA/bt.ytdB,0)} of budget to date`)}</div>`;
+    ${kpi("Marketing spend, YTD",$k(bt.ytdA),`${P(bt.ytdA/bt.ytdB,0)} of budget to date`)}
+    ${D.defMql?kpi(`Definition MQLs, ${RM()}`,`${N(D.defMql.newOct)} new`,`${N(D.defMql.total12)} total engaged in the past 12 months`):""}</div>`;
   h+=`<article class="panel ex-doc">`;
   if(E.headline||EDITING) h+=E_("exec.headline","p","ex-lede");
   live("exec.sections",E.sections).forEach(([sec,i])=>{const b=`exec.sections.${i}`;h+=`<section class="${gone(b).trim()}">${E_(b+".title","h3")}${sec.body!=null||EDITING&&!sec.bullets?E_(b+".body","p"):""}${sec.bullets?elist(b+".bullets"):""}${delBtn(b)}</section>`;});
