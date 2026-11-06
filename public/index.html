@@ -408,7 +408,7 @@ body.editing .ed-mod{background:color-mix(in srgb,var(--yellow) 16%,transparent)
 
 <script>
 (function(){
-const PAGES=[["exec","Executive Summary"],["trends","Month Over Month"],["paid","Paid Media"],["creative","Ads & Creative"],["website","Website"],["leads","Leads & Accounts"],["roi","ROI & Variables"],["budget","Budget"],["recs","Recommendations"]];
+const PAGES=[["exec","Executive Summary"],["trends","Month Over Month"],["paid","Paid Media"],["creative","Ads & Creative"],["website","Website"],["leads","Leads"],["roi","ROI & Variables"],["budget","Budget"],["recs","Recommendations"]];
 let D=null; const DIV="HC";
 /* LinkedIn image links expire about a week after each pull; on the live site /api/img serves a saved copy. */
 const LIVE_IMG=/netlify\.app$|boldt/i.test(location.hostname)&&location.protocol==="https:";
@@ -1072,7 +1072,7 @@ function journeySection(){
 R.leads=()=>{
   const s=mqlStats(), cm=CM(), L=D.leads, lab=M().slice(0,cm);
   const sqlY=sum(L.sql.filter(x=>x!=null)), sql25=sum(D.sql2025.slice(0,SQLN()));
-  let h=head("Leads & Accounts",`Healthcare MQLs and SQLs, when and where companies engage, the full journey of SQL companies, and healthcare companies on the site from every source. New MQLs follow our engagement definition.`);
+  let h=head("Leads",`Healthcare MQLs and SQLs, when and where companies engage, the full journey of SQL companies, and healthcare companies on the site from every source. New MQLs follow our engagement definition.`);
   const mqlSql={v:P(sqlY/sum(s.mql.slice(0,SQLN())),1),d:`Year to date. 2025: ${P(D.roiAnnual["2025"].mqlSql,1)}`};
   const XN=D.defMql&&D.defMql.monthlyNew;
   h+=XN?`<div class="grid g-2"><div class="panel"><h3>New MQLs by month</h3><p class="sub">${N(D.defMql.ytdNew)} new this year by our engagement definition. Each company counts once, in the month it became new.${String(D.year||"2026")==="2026"?" The year-over-year comparison starts in 2027, when both years are measured the same way.":""}</p>

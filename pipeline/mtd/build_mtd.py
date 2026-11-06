@@ -1,4 +1,4 @@
-"""Month-to-date New MQL companies, in the same shape as defMql.companies, for the toggle on Leads & Accounts.
+"""Month-to-date New MQL companies, in the same shape as defMql.companies, for the toggle on Leads.
 usage: python3 pipeline/mtd/build_mtd.py 2026-11 2026-11-08            -> public/data/mtd.json
        python3 pipeline/mtd/build_mtd.py 2026-11 2026-11-30 --finalize -> also folds the month into state/history.json
 Same rules as scripts/build_definition_mqls.py: a healthcare company in HubSpot (by root domain; senior living and Boldt's
