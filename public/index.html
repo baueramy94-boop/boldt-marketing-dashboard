@@ -241,7 +241,9 @@ tr.future td{color:var(--muted)}
 .mtl-f i{display:block;width:40px;height:16px;border-radius:3px;font-size:10px;font-style:normal;text-align:center;line-height:16px;background:var(--soft);font-variant-numeric:tabular-nums}
 .mtl-d{margin-top:12px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--bg,var(--surface))}
 .mtl-dh{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:8px;font-size:16px}
-.mtl-items{list-style:none;padding:0;margin:0;display:grid;gap:7px;font-size:14.5px}.mtl-items li{display:flex;gap:8px;align-items:baseline}
+.mtl-items{list-style:none;padding:0;margin:0;display:grid;gap:7px;font-size:14.5px}.mtl-items li{display:flex;gap:8px;align-items:baseline}.mtl-items li>div{min-width:0;flex:1}
+.mtl-camp{margin-top:8px;padding:8px 10px;border-left:3px solid var(--gold);background:var(--surface);border-radius:0 8px 8px 0}
+.mtl-ads{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}.mtl-ad{margin:0;width:112px;font-size:11.5px;line-height:1.3}.mtl-ad .dm-ads{display:block;margin:0}.mtl-ad .dm-ads img,.mtl-ad .dm-ads .ph{width:112px;height:112px;object-fit:cover;border-radius:6px;border:1px solid var(--line);display:block;background:var(--soft)}.mtl-ad .dm-ads img:hover{transform:none;box-shadow:none}.mtl-ad figcaption{margin-top:4px;color:var(--muted)}.mtl-ad figcaption a{color:inherit}
 .mtl-d .jr-tl{margin:0}.mtl-d .jm-h>b:first-child{display:none}.mtl-d .jm-h{border:0;padding:0}.jm-body:empty{display:none}
 @media (max-width:800px){.mtl-bar{height:140px}.mtl-cols{grid-template-columns:repeat(var(--n),44px)}}
 body.jm-open{overflow:hidden}
@@ -657,7 +659,7 @@ function defMqlList(X,C){
   TLX.new={label:`New MQL, ${RM()}`,
     head:k=>{const c=byD[k];return c?`<div class="tlx-dh">${coName(c.name,c.hubspotId)}<span class="note" style="margin:0">New MQL, ${RM()} · ${esc(c.domain)}${c.lifecycle?` · HubSpot stage: ${esc(LC_LABEL(c.lifecycle))}`:""}${c.lastOutreach?` · last ${esc(c.lastOutreach.type)} ${fdShort(c.lastOutreach.date)}, ${c.lastOutreach.date.slice(0,4)}`:""}</span></div><div class="jr-c">${chips(c)}</div>`:"";},
     chart:k=>{const c=byD[k];if(!c)return "";const ym=D.defMql.month, tl=(c.tl&&c.tl.length?c.tl:[[ym,0,0,0,0,[]]]);
-      const cols=tl.map(x=>({m:x[0],segs:engSegs(x),sum:engSaid(x),items:x[0]===ym?`<ul class="jr-tl">${rows(c)}</ul>`:tlItems(x[5])}));
+      const cols=tl.map(x=>({m:x[0],segs:engSegs(x),sum:engSaid(x),items:x[0]===ym?`<ul class="jr-tl">${rows(c)}</ul>`:tlItems(x[5],liFor(c,x[0]))}));
       return `<h3>Engagement by month since ${mlong(tl[0][0])}</h3>${mtl(cols,{sel:cols.length-1})}
         <p class="note" style="margin:6px 0 0">${tl.length>1?`New MQLs had no engagement in the 12 months before ${RM()}, so the earlier months are older history.`:`${esc(c.name)} first engaged in ${RM()}.`} Select a month to see what they engaged with.</p>`;},
     body:k=>{const c=byD[k];if(!c)return "";return `<div class="eyebrow">LinkedIn impressions by campaign, May to ${RM()}</div>${c.impressions.length?`<ul class="jr-tl">${c.impressions.map(i=>`<li><b>${esc(i.campaign)}</b> ${pl(i.views,"impression")}<span class="note" style="margin:0"> · last ${fdShort(i.last)}</span></li>`).join("")}</ul>`:`<p class="jr-p note">No LinkedIn impressions recorded</p>`}${exBtn(c.domain,c.name)}`;}};
@@ -755,7 +757,20 @@ const engVals=x=>[Math.max(0,x[1]-x[4]),x[2],x[4],x[3]];
 const engSegs=x=>engVals(x).map((v,i)=>[v,ENG[i][1],ENG[i][0]]);
 const engSaid=x=>engVals(x).map((v,i)=>v?plw(v,ENG[i][2]):"").filter(Boolean).join(", ");
 const TLK={web:"mk-web",li:"mk-li",ad:"mk-ad",em:"mk-em"};
-const tlItems=it=>it&&it.length?`<ul class="mtl-items">${it.map(([t,x])=>`<li><b class="mkd ${TLK[t]||""}"></b>${esc(x)}</li>`).join("")}</ul>`:"";
+const campShort=c=>String(c||"").trim().replace(/^Awareness \| Healthcare \| /,"").replace(/ \| 2026$/,"");
+const adFig=id=>{const a=(D.defMql.adLib||{})[id];if(!a)return "";const src=LIVE_IMG?`/api/img?id=${id}`:a.th;
+  return `<figure class="mtl-ad"><span class="dm-ads"><img src="${esc(src)}" data-fb="${LIVE_IMG?esc(a.th):""}" data-ph="Ad" alt="${esc(a.t)}" title="${esc(a.t)}" data-zoom="1" loading="lazy" referrerpolicy="no-referrer" onerror="imgFail(this)"></span><figcaption>${a.p?`<a href="${esc(a.p)}" target="_blank" rel="noopener">${esc(a.t||"View the ad")}</a>`:esc(a.t)}</figcaption></figure>`;};
+// LinkedIn clicks for one month: which campaigns and which ads (liAds from scripts li_campaigns.py)
+function liBlock(m,la){const mn=M()[+m.slice(5,7)-1];
+  const camp=c=>{const ads=c.ads.filter(id=>(D.defMql.adLib||{})[id]), k=ads.length+(c.more||0);
+    const say=c.exact?"Ad clicked":!ads.length?"":!c.monthKnown?`Ads in this campaign (${k})`:k===1?"Ad with clicks this month":`One of the ${k} ads with clicks in this campaign in ${mn}`;
+    return `<div class="mtl-camp"><div><b>${esc(campShort(c.c))}</b> <span class="note" style="margin:0">· ${plw(c.n,"click")}</span></div>${say?`<div class="note" style="margin:2px 0 0">${say}${c.more?`. Showing the ${ads.length} with the most clicks`:""}${ads.length?". Click an ad to enlarge it.":""}</div><div class="mtl-ads">${ads.map(adFig).join("")}</div>`:""}</div>`;};
+  const run=(D.defMql.liCampaignsByMonth||{})[m]||[];
+  return `<li class="mtl-li"><b class="mkd mk-li"></b><div><b>${plw(la.total,"LinkedIn ad click")}</b>${la.camps.map(camp).join("")}
+    ${la.rest?`<p class="note" style="margin:6px 0 0">${la.camps.length?`LinkedIn didn't assign ${plw(la.rest,"click")} to a campaign.`:`LinkedIn didn't say which campaign.`}${!la.camps.length&&run.length?` Healthcare campaigns running in ${mn}: ${run.map(c=>esc(campShort(c))).join(" · ")}.`:""}</p>`:""}</div></li>`;}
+const tlItems=(it,la)=>{if(!it||!it.length)return "";const m=la&&la.m;let done=false;
+  return `<ul class="mtl-items">${it.map(([t,x])=>{if(t==="li"&&la){if(done)return "";done=true;return liBlock(m,la);}return `<li><b class="mkd ${TLK[t]||""}"></b>${esc(x)}</li>`;}).join("")}</ul>`;};
+const liFor=(o,m)=>{const v=o&&o.liAds&&o.liAds[m];return v?{...v,m}:null;};
 const mixBar=v=>{const t=sum(v.map(x=>x[0]));return t?`<span class="mix" aria-hidden="true">${v.filter(x=>x[0]).map(x=>`<i style="flex:${x[0]};background:var(${x[1]})"></i>`).join("")}</span>`:"";};
 let MTL=[];
 // Clickable month-by-month columns for the journey pop-up. cols: [{m, segs:[[value, color var, name]], sum, items, foot, mark}]
@@ -828,8 +843,8 @@ function hotPanel(X){
         ms(h.last)]};});
   const head=k=>{const h=byK[k];return h?`<div class="tlx-dh">${coName(h.name,h.hubspotId)}<span class="note" style="margin:0">Hot MQL · ${esc(h.domain)}${h.state?` · ${esc(h.state)}`:""} · most recent engagement ${ms(h.last)}</span></div><div class="jr-c">${chips(h)}</div>`:"";};
   const chartH=k=>{const h=byK[k];if(!h)return "";const tl=h.tl&&h.tl.length?h.tl:h.months.map(x=>[x[0],x[1],x[2],x[3],x[4],[]]);
-    const cols=tl.map(x=>({m:x[0],segs:engSegs(x),sum:engSaid(x),items:tlItems(x[5])}));
-    return `<h3>Engagement by month since ${esc(mlong(tl[0][0]))}</h3>${mtl(cols)}<p class="note" style="margin:6px 0 0">Select a month to see what they engaged with. Website sessions here leave out the Google and Bing ad visits, which are shown on their own.</p>`;};
+    const cols=tl.map(x=>({m:x[0],segs:engSegs(x),sum:engSaid(x),items:tlItems(x[5],liFor(h,x[0]))}));
+    return `<h3>Engagement by month since ${esc(mlong(tl[0][0]))}</h3>${mtl(cols)}<p class="note" style="margin:6px 0 0">Select a month to see what they engaged with. Website sessions here leave out the Google and Bing ad visits, which are shown on their own. ${esc(D.defMql.liAdsNote||"")}</p>`;};
   const detail=k=>{const h=byK[k];if(!h)return "";return `${h.contact?`<p class="jr-p">Visited the contact page.</p>`:""}${exBtn(h.domain,h.name)}`;};
   const key=`<div class="strip-key">${[["Website","--mk-web"],["LinkedIn ad clicks","--gold"],["Google or Bing ad visits","--olive"],["Email clicks","--mk-em"]].map(([n,c])=>`<span><b class="mkd" style="background:var(${c})"></b>${n}</span>`).join("")}</div>`;
   const tools=`<div class="seg" role="group" aria-label="Sort"><button type="button" data-hsort="total" class="${HOT_SORT==="total"?"on":""}">Most engagements</button><button type="button" data-hsort="last" class="${HOT_SORT==="last"?"on":""}">Most recent</button></div>
