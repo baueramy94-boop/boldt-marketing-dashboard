@@ -852,6 +852,8 @@ function hotPanel(X){
 }
 function hotSort(){const L=document.getElementById("hot-list");if(!L)return;const ds=[...L.querySelectorAll(":scope > .tlx-row")];
   ds.sort((a,b)=>HOT_SORT==="last"?(b.dataset.last.localeCompare(a.dataset.last)||(+b.dataset.total-+a.dataset.total)):(+b.dataset.total-+a.dataset.total||b.dataset.last.localeCompare(a.dataset.last)));ds.forEach(d=>L.appendChild(d));}
+// Follow-up tasks are assigned to Chris White by default (HubSpot owner id). The form can still change it.
+const TASK_OWNER=["128093036","Chris White"];
 const plus14=d=>{const t=new Date(d+"T12:00:00Z");t.setUTCDate(t.getUTCDate()+14);return t.toISOString().slice(0,10);};
 const fmtDay=d=>new Date(d+"T12:00:00Z").toLocaleDateString("en-US",{month:"short",day:"numeric",timeZone:"UTC"});
 function dmTaskForm(btn){
@@ -863,7 +865,7 @@ function dmTaskForm(btn){
   fetch("/api/hs-task").then(r=>r.json()).then(o=>{
     if(!o.ready){box.innerHTML=`<p class="note" style="margin:0">Task creation in HubSpot isn't turned on for this dashboard yet.</p>`;return;}
     box.innerHTML=`<label>Task <input type="text" maxlength="200" value="${esc(`Follow up with ${name}`)}" data-f="subject"></label>
-      <label>Assign to <select data-f="ownerId"><option value="">Unassigned</option>${(o.owners||[]).map(w=>`<option value="${esc(w.id)}">${esc(w.name)}</option>`).join("")}</select></label>
+      <label>Assign to <select data-f="ownerId"><option value="">Unassigned</option>${(o.owners||[]).some(w=>w.id===TASK_OWNER[0])?"":`<option value="${TASK_OWNER[0]}">${TASK_OWNER[1]}</option>`}${(o.owners||[]).map(w=>`<option value="${esc(w.id)}">${esc(w.name)}</option>`).join("")}</select></label>
       <label>Due <input type="date" value="${ds}" data-f="due"></label>
       <label>Priority <select data-f="priority"><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="LOW">Low</option></select></label>
       <label class="wide dm-2nd"><input type="checkbox" data-2nd checked> Also create a second follow-up task two weeks later</label>
@@ -872,6 +874,7 @@ function dmTaskForm(btn){
       <label class="wide">Notes <textarea rows="8" maxlength="1800" data-f="notes">${esc((btn.dataset.intro==="hot"?`${name} is a hot MQL.\n\n${HOT_NOTES[cid]||""}${DM_NOTES[cid]?`\n\n${DM_NOTES[cid]}`:""}`:`${DM_NOTES[cid]||`Most recent engagement: ${last}.`}`).slice(0,1800))}</textarea></label>
       <div class="wide"><button type="button" class="btn-sm primary" data-send="1">Create task</button> <button type="button" class="btn-sm" data-cancel="1">Cancel</button> <span class="note dm-ts" style="margin:0"></span></div>`;
     box.querySelector("[data-cancel]").onclick=()=>{box.hidden=true;box.innerHTML="";};
+    box.querySelector('[data-f="ownerId"]').value=TASK_OWNER[0];
     const c2=box.querySelector("[data-2nd]"), d1=box.querySelector('[data-f="due"]'), d2=box.querySelector('[data-s="due"]');
     c2.onchange=()=>box.querySelectorAll(".dm-2nd-f").forEach(x=>x.hidden=!c2.checked);
     d1.onchange=()=>{if(d1.value)d2.value=plus14(d1.value);};
