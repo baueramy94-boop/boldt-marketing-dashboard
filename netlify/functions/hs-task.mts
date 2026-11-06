@@ -7,6 +7,26 @@ import type { Config, Context } from "@netlify/functions";
 // Needs HUBSPOT_TOKEN (a HubSpot private app access token with permission to read owners and write tasks) set in Netlify's
 // environment variables. The edge gate has already checked the site password.
 
+// HubSpot shows the task body as HTML. Plain lines become paragraphs; lines starting "- " become bullets,
+// and in a bullet like "- Nov 5: Google Ads click: Healthcare Development" the channel ("Google Ads click") is bold.
+const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const BUL = /^\s*[-•*]\s+/;
+const CH = /^([^:]{1,20}):\s+([^:]{2,40}):\s*(.*)$/;
+function toHtml(text: string): string {
+  const out: string[] = []; let ul: string[] = [];
+  const flush = () => { if (ul.length) out.push(`<ul>${ul.join("")}</ul>`); ul = []; };
+  for (const raw of text.replace(/\r/g, "").split("\n")) {
+    const line = raw.trim();
+    if (!line) { flush(); continue; }
+    if (BUL.test(raw)) {
+      const t = line.replace(BUL, ""), m = t.match(CH);
+      ul.push(`<li>${m ? `${esc(m[1])}: <strong>${esc(m[2])}</strong>: ${esc(m[3])}` : esc(t)}</li>`);
+    } else { flush(); out.push(`<p>${esc(line)}</p>`); }
+  }
+  flush();
+  return out.join("");
+}
+
 const json = (o: unknown, status = 200) =>
   new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
 
@@ -42,7 +62,9 @@ export default async (req: Request, context: Context) => {
   if (!ID.test(companyId) || (ownerId && !ID.test(ownerId)) || !DAY.test(due)) return json({ ok: false, error: "bad request" }, 400);
   const user = decodeURIComponent(context.cookies.get("bmd_user") || "") || "the marketing dashboard";
   const subject = String(b.subject || "Follow up").slice(0, 200);
-  const notes = String(b.notes || "").slice(0, 2000) + `\n\nCreated from the Boldt marketing dashboard by ${user}.`;
+  const notesText = String(b.notes || "").slice(0, 2000);
+  const footer = `\n\nCreated from the Boldt marketing dashboard by ${user}.`;
+  const notes = toHtml(notesText + footer);
   const priority = ["LOW", "MEDIUM", "HIGH"].includes(String(b.priority)) ? String(b.priority) : "MEDIUM";
   const props = (subj: string, day: string, body: string): Record<string, string> => {
     const o: Record<string, string> = {
@@ -82,9 +104,9 @@ export default async (req: Request, context: Context) => {
   }
   if (!s2) return json({ ok: true, id, url });
   const subject2 = String(s2.subject || `Second follow-up: ${subject}`).slice(0, 200);
-  const notes2 = `Second follow-up. The first task was due ${due}.\n\n` + notes;
+  const notes2 = toHtml(`Second follow-up. The first task was due ${due}.\n\n` + notesText + footer);
   try {
-    const id2 = await create(props(subject2, due2, notes2.slice(0, 2400)));
+    const id2 = await create(props(subject2, due2, notes2));
     return json({ ok: true, id, id2, url });
   } catch (e: any) {
     return json({ ok: true, id, url, secondError: e?.message || "HubSpot unavailable" });

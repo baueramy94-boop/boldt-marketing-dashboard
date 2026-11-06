@@ -652,10 +652,10 @@ function defMqlList(X,C){
     c.web.forEach(w=>{const end=new Date(w.start+"T12:00:00");end.setDate(end.getDate()+6);const e=end.toISOString().slice(0,10);
       const pages=[...new Set((c.visits||[]).filter(v=>v.date>=w.start&&v.date<=e).flatMap(v=>v.pages))].slice(0,4).map(p=>String(p).replace(/^https?:\/\//,"").replace("www.boldthealthcarerealestate.com","")||"/");
       L.push([w.start,`Website visit: ${pl(w.sessions,"session")}, week of ${w.week.split(" to ")[0]}${pages.length?`, pages ${pages.join(", ")}`:""}`]);});
-    c.email.forEach(e=>L.push([e.date,e.type==="1:1 email"?`Clicked a 1:1 email from Boldt${e.name?`: ${e.name}`:""}`:`Clicked a marketing email${e.name?`: ${e.name}`:""}`]));
+    c.email.forEach(e=>L.push([e.date,e.type==="1:1 email"?`Email click: 1:1 email from Boldt${e.name?`, ${e.name}`:""}`:`Email click: marketing email${e.name?`, ${e.name}`:""}`]));
     L.sort((a,b)=>a[0]<b[0]?-1:1);
-    const imp=c.impressions.slice(0,4).map(i=>`${i.campaign} (${N(i.views)})`).join("; ");
-    return `What they engaged with in ${DML.name}:\n${L.map(([d,t])=>`- ${d?fdShort(d):DML.name}: ${t}`).join("\n")}${imp?`\nLinkedIn campaigns seen (impressions): ${imp}`:""}`;};
+    // Each "- date: Channel: detail" line becomes a bullet in HubSpot with the channel in bold (hs-task.mts).
+    return `What they engaged with in ${DML.name}:\n${L.map(([d,t])=>`- ${d?fdShort(d):DML.name}: ${t}`).join("\n")}`;};
   C.forEach(c=>{if(c.hubspotId)DM_NOTES[c.hubspotId]=plain(c);});
   const byD={}; C.forEach(c=>byD[c.domain]=c);
   const wk=d=>{const n=+d.slice(8,10);return n<=7?0:n<=14?1:n<=21?2:n<=28?3:4;}, WL=[`${MS3[DML.mo-1]} 1 to 7`,"8 to 14","15 to 21","22 to 28","29 to 31"];
@@ -887,7 +887,7 @@ function dmTaskForm(btn){
       <label class="wide dm-2nd"><input type="checkbox" data-2nd checked> Also create a second follow-up task two weeks later</label>
       <label class="dm-2nd-f">Second task <input type="text" maxlength="200" value="${esc(`Second follow-up with ${name}`)}" data-s="subject"></label>
       <label class="dm-2nd-f">Second task due <input type="date" value="${plus14(ds)}" data-s="due"></label>
-      <label class="wide">Notes <textarea rows="8" maxlength="1800" data-f="notes">${esc((btn.dataset.intro==="hot"?`${name} is a hot MQL.\n\n${HOT_NOTES[cid]||""}${DM_NOTES[cid]?`\n\n${DM_NOTES[cid]}`:""}`:`${name} became a new MQL by our engagement definition in ${DML.name||RM()}${DML.label&&DML.label!==DML.name?" (month to date)":""}.\n\n${DM_NOTES[cid]||`Most recent engagement: ${last}.`}`).slice(0,1800))}</textarea></label>
+      <label class="wide">Notes <textarea rows="8" maxlength="1800" data-f="notes">${esc((btn.dataset.intro==="hot"?`${name} is a hot MQL.\n\n${HOT_NOTES[cid]||""}${DM_NOTES[cid]?`\n\n${DM_NOTES[cid]}`:""}`:`${DM_NOTES[cid]||`Most recent engagement: ${last}.`}`).slice(0,1800))}</textarea></label>
       <div class="wide"><button type="button" class="btn-sm primary" data-send="1">Create task</button> <button type="button" class="btn-sm" data-cancel="1">Cancel</button> <span class="note dm-ts" style="margin:0"></span></div>`;
     box.querySelector("[data-cancel]").onclick=()=>{box.hidden=true;box.innerHTML="";};
     const c2=box.querySelector("[data-2nd]"), d1=box.querySelector('[data-f="due"]'), d2=box.querySelector('[data-s="due"]');
