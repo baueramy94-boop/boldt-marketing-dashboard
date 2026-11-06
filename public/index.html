@@ -616,6 +616,67 @@ function defMqlPanel(){
   if(DM_SRC==="mtd"&&MTDATA&&MTDATA.month>X.month){const Y=dmMtdX();h+=defMqlList(Y,Y.companies);}
   else if(C.length) h+=defMqlList(X,C);
   if(X.hot) h+=hotPanel(X);
+  h+=orPanel();
+  return h;
+}
+/* ---------- Engagement after 1:1 outreach (calls and 1:1 emails from HubSpot, live; engagement from data/engage-<month>.json) ---------- */
+let OR_O=null, OR_E=null, OR_ERR="", OR_M="";
+const OR_SEN=/senior|retirement|assisted living|memory care|brookdale|erickson|sunrise|life ?plan|\bliving\b|nursing home|skilled nursing/i;
+const OR_HCI=new Set(["HOSPITAL_HEALTH_CARE","MEDICAL_PRACTICE","HEALTH_WELLNESS_AND_FITNESS","MENTAL_HEALTH_CARE","MEDICAL_DEVICES","PHARMACEUTICALS"]);
+const OR_HCN=/health|hospital|medical|medicine|clinic|children'?s|physician|surg|rehab|behavioral|care\b|healthcare|cancer|orthop|pediatric|baptist|mercy|methodist|adventist/i;
+const orRoot=d=>{d=String(d||"").toLowerCase().trim().replace(/^https?:\/\//,"").split("/")[0].replace(/^www\./,"");const p=d.split(".");return p.length>=2?p.slice(-2).join("."):d;};
+const orHC=c=>{const n=c.n||"";if(OR_SEN.test(n)&&!/hospital|health system|medical center/i.test(n))return false;return OR_HCI.has(c.i)||OR_HCN.test(n);};
+const orDay=s=>Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10))/864e5;
+const orIso=n=>new Date(n*864e5).toISOString().slice(0,10);
+const OR_CH={w:"Website visit",l:"LinkedIn ad visit",g:"Google or Bing ad visit",e:"Email"};
+function orPanel(){return `<div class="panel" id="or-panel">${orBody()}</div>`;}
+function orLoad(){const m=D.defMql.month; if(OR_M===m&&(OR_O||OR_ERR))return; OR_M=m; OR_O=null; OR_ERR="";
+  Promise.all([fetch(`/api/hs-outreach?month=${m}`).then(r=>r.json()),getJSON(`data/engage-${m}.json`).catch(()=>null)]).then(([o,e])=>{
+    if(!e)OR_ERR=`Available from October 2026 on.`; else if(!o.ready)OR_ERR="This turns on when HubSpot is connected."; else if(!o.ok)OR_ERR=o.error||"Couldn't read 1:1 outreach from HubSpot."; else {OR_O=o;OR_E=e;}
+  }).catch(()=>{OR_ERR="Couldn't load the outreach data. Refresh to try again.";}).then(()=>{const el=document.getElementById("or-panel");if(el)el.innerHTML=orBody();});}
+function orCalc(){
+  const O=OR_O, E=OR_E, end=orDay(E.through), mo=O.month, first=orDay(mo+"-01"), last=end-7;
+  const orgs={};
+  O.items.forEach(x=>x.co.forEach(id=>{const c=O.companies[id];if(!c||!orHC(c))return;const r=orRoot(c.d);if(!r||r==="boldt.com"||r==="theboldtcompany.com")return;
+    const g=orgs[r]||(orgs[r]={r,name:c.n,id,touch:{}});if(c.n&&c.n.length<g.name.length)g.name=c.n;g.touch[x.t+"|"+x.d]={t:x.t,d:x.d};}));
+  const L=Object.values(orgs).map(g=>{
+    const T=Object.values(g.touch).sort((a,b)=>a.d<b.d?-1:1), ev=(E.eng[g.r]||[]).map(e=>({a:orDay(e[0]),b:orDay(e[1]),c:e[2]}));
+    const after=d=>ev.filter(e=>e.b>=d&&e.a<=d+7);
+    const done=T.filter(t=>orDay(t.d)<=last);
+    let best=null; const chs=new Set();
+    done.forEach(t=>{const d=orDay(t.d);after(d).forEach(e=>{chs.add(e.c);const k=Math.max(0,e.a-d);const pr=e.a===e.b?0:1;if(!best||k<best.k||(k===best.k&&(pr<best.pr||(pr===best.pr&&e.a<best.a))))best={k,pr,a:e.a,b:e.b,c:e.c,td:t.d,tt:t.t};});});
+    const late=T.filter(t=>orDay(t.d)>last), lateHit=late.some(t=>after(orDay(t.d)).length);
+    // quiet stretches: 8 days (start day + 7) with no outreach from 7 days before through the end of the stretch
+    let qn=0,qh=0; const td=T.map(t=>orDay(t.d));
+    for(let s=first;s<=last;s++){if(td.some(d=>d>=s-7&&d<=s+7))continue;qn++;if(ev.some(e=>e.b>=s&&e.a<=s+7))qh++;}
+    return {...g,T,calls:T.filter(t=>t.t==="call").length,emails:T.filter(t=>t.t==="email").length,measured:done.length>0,hit:!!best,best,chs:[...chs],lateHit,qn,qh,
+      touchHits:done.map(t=>({t:t.t,h:after(orDay(t.d)).length>0}))};});
+  return L;
+}
+function orBody(){
+  const m=D.defMql.month, mn=MONTHS_LONG[+m.slice(5,7)-1];
+  const head=`<h3>Engagement after 1:1 outreach, ${mn}</h3><p class="sub">Healthcare companies Boldt called or emailed 1:1 in ${mn} (logged in HubSpot), and whether the company visited the website, came in from an ad or clicked an email from the day of the outreach through 7 days after.</p>`;
+  if(OR_ERR)return head+`<p class="note">${esc(OR_ERR)}</p>`;
+  if(!OR_O)return head+`<p class="note">Loading 1:1 outreach from HubSpot…</p>`;
+  const L=orCalc(), Ms=L.filter(x=>x.measured), H=Ms.filter(x=>x.hit), lastD=orIso(orDay(OR_E.through)-7);
+  const tc=sum(L.map(x=>x.calls)), te=sum(L.map(x=>x.emails));
+  const days=H.map(x=>x.best.k).sort((a,b)=>a-b), med=days.length?days[Math.floor((days.length-1)/2)]:null;
+  const qn=sum(Ms.map(x=>x.qn)), qh=sum(Ms.map(x=>x.qh));
+  const th=t=>{const a=Ms.flatMap(x=>x.touchHits.filter(y=>y.t===t));return a.length?`${P(a.filter(y=>y.h).length/a.length,0)} of ${plw(a.length,t==="call"?"call":"1:1 email")}`:"none";};
+  let h=head+`<div class="grid g-kpi">${kpi("Contacted 1:1",N(L.length),`${plw(tc,"call")} and ${plw(te,"1:1 email")} on healthcare companies`)}
+    ${kpi("Engaged within 7 days",Ms.length?`${N(H.length)} <small>(${P(H.length/Ms.length,0)})</small>`:"–",`Of ${N(Ms.length)} companies contacted ${fdShort(m+"-01")} to ${fdShort(lastD)}`)}
+    ${kpi("Typical time to engage",med==null?"–":med===0?"Same day":plw(med,"day"),"Median days from outreach to the first engagement")}
+    ${kpi("Without recent outreach",qn>=30?P(qh/qn,0):"–",qn>=30?"How often the same companies engaged in an 8-day stretch with no 1:1 outreach":"Not enough stretches without outreach to compare")}</div>`;
+  const chc=Object.keys(OR_CH).map(k=>[OR_CH[k],H.filter(x=>x.chs.includes(k)).length]).filter(x=>x[1]);
+  h+=`<p class="note" style="margin:10px 0 0"><b>Followed by engagement:</b> ${th("call")}, ${th("email")}.${chc.length?` <b>How they engaged:</b> ${chc.map(([k,v])=>`${k} ${N(v)}`).join(" · ")}.`:""}</p>`;
+  const row=x=>`<tr><td class="l wrap-cell">${coName(x.name,x.id)}</td><td class="l wrap-sm">${[x.calls?plw(x.calls,"call"):"",x.emails?plw(x.emails,"email"):""].filter(Boolean).join(", ")}<br><span class="note" style="margin:0">Last ${fdShort(x.T[x.T.length-1].d)}</span></td>
+    <td class="l wrap-sm">${x.hit?`<b>${esc(OR_CH[x.best.c])}</b><br><span class="note" style="margin:0">${x.best.a===x.best.b?fdShort(orIso(x.best.a)):`${fdShort(orIso(x.best.a))} to ${fdShort(orIso(x.best.b))}`}, after the ${fdShort(x.best.td)} ${x.best.tt==="call"?"call":"email"}</span>`:!x.measured?`<span class="note" style="margin:0">Contacted after ${fdShort(lastD)}, 7 days not over${x.lateHit?". Engaged since":""}</span>`:"No"}</td></tr>`;
+  const tbl=a=>`<div class="tbl-wrap"><table><thead><tr><th class="l">Company</th><th class="l">1:1 outreach in ${mn}</th><th class="l">First engagement within 7 days</th></tr></thead><tbody>${a.map(row).join("")}</tbody></table></div>`;
+  const byLast=(a,b)=>a.T[a.T.length-1].d<b.T[b.T.length-1].d?1:-1;
+  if(H.length)h+=`<h4 style="margin:16px 0 6px">Engaged within 7 days (${N(H.length)})</h4>${tbl(H.sort(byLast))}`;
+  const rest=L.filter(x=>!x.hit).sort(byLast);
+  if(rest.length)h+=`<details class="or-more" style="margin-top:12px"><summary>Other companies contacted 1:1 (${N(rest.length)})</summary>${tbl(rest)}</details>`;
+  h+=`<p class="sec-note">Calls and 1:1 emails come from HubSpot and are counted by company, not by contact; inbound calls are left out. Outreach after ${fdShort(lastD)} isn't in the percentages yet because its 7 days run past ${fdShort(OR_E.through)}. Website sessions are dated in two-day blocks, so a visit the day before outreach can occasionally count. LinkedIn ad clicks count when they led to a website visit. This shows engagement that followed outreach, not proof the outreach caused it; the "Without recent outreach" figure is the comparison.</p>`;
   return h;
 }
 let DM_NOTES={}, DM_SRC="final", MTDATA=null, DML={m:"",name:"",mo:1,label:""};
@@ -1448,7 +1509,7 @@ function render(){
   const dmf=document.getElementById("dm-filter"); if(dmf) dmf.addEventListener("change",()=>{const v=dmf.value;document.querySelectorAll("#dm-panel details.jr").forEach(d=>{d.style.display=v==="all"||d.dataset.ch.split("|").includes(v)?"":"none";});});
   document.querySelectorAll("[data-hsort]").forEach(b=>b.addEventListener("click",()=>{HOT_SORT=b.dataset.hsort;document.querySelectorAll("[data-hsort]").forEach(x=>x.classList.toggle("on",x===b));hotSort();}));
   document.querySelectorAll("[data-dmsrc]").forEach(b=>b.addEventListener("click",()=>{if(DM_SRC===b.dataset.dmsrc)return;DM_SRC=b.dataset.dmsrc;const y=scrollY;render();scrollTo(0,y);}));
-  hotSort(); lcInit(); tlxInit(); mqlSyncInit();
+  hotSort(); lcInit(); tlxInit(); mqlSyncInit(); orLoad();
   document.querySelectorAll("[data-applat]").forEach(b=>b.addEventListener("click",()=>{AP_PLAT=b.dataset.applat;const y=scrollY;render();scrollTo(0,y);}));
   document.querySelectorAll("[data-aprange]").forEach(b=>b.addEventListener("click",()=>{AP_RANGE=b.dataset.aprange;const y=scrollY;render();scrollTo(0,y);}));
   const hf=document.getElementById("hot-filter"); if(hf) hf.addEventListener("change",()=>{const v=hf.value;document.querySelectorAll("#hot-list .tlx-row").forEach(d=>{d.classList.toggle("f-off",!(v==="all"||(v==="contact"&&d.dataset.contact==="1")||(v==="new"&&d.dataset.new==="1")||(v==="30"&&+d.dataset.total>=30)));});});

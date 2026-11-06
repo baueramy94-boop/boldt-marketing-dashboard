@@ -182,3 +182,8 @@ Run these in Python and fix anything that fails:
   - budget lines over 110% of budget
   - anything in the tracker marked "Confirm status"
 - Final message for Amy, 6 lines max: the month's MQLs, SQLs and spend vs budget, the data file name, and the top data health items.
+
+### Engagement after 1:1 outreach (Leads & Accounts)
+- Panel after Hot MQLs. Calls and 1:1 emails are read live from HubSpot by `netlify/functions/hs-outreach.mts` (HUBSPOT_TOKEN; the key can read calls, emails and tasks, checked with `/api/hs-access` on Nov 6, 2026). It returns dates, call or email, and company name, domain and industry only. No contacts, subjects or bodies.
+- Engagement comes from `public/data/engage-<month>.json`, built by `scripts/outreach_engage.py <month>` from the month's Factors "Account Details + Website Metrics" 2-day pulls (accounts/details), the Google and Bing Factors pulls (defmql/paid) and HubSpot email clicks (defmql/email_clicks.json). Healthcare only, senior living left out. Run it each month after those pulls; without the file the panel says it isn't available for that month.
+- Rules: healthcare companies (same industry and name test as compute.py), counted by root domain. A company engaged when a website session, ad visit or email click falls from the outreach day through 7 days after. Outreach in the last 7 days of the month is listed but kept out of the percentages. "Without recent outreach" = share of 8-day stretches in the month, for the same companies, with no 1:1 outreach from 7 days before through the end of the stretch, that had engagement (shown when there are 30 or more stretches).
