@@ -1,7 +1,8 @@
 import type { Config, Context } from "@netlify/functions";
 
 // Read and update a HubSpot company's lifecycle stage from the dashboard.
-// GET  /api/hs-company?ids=1,2,3   -> { ok, ready, stages: { id: stage }, outreach: { id: { date, type } } }   (needs companies read)
+// GET  /api/hs-company?ids=1,2,3   -> { ok, ready, stages: { id: stage }, outreach: { id: { date, type } },
+//                                      tasks: { id: { open, next } } | null, tasksNote? }   (needs companies read; tasks also needs tasks read)
 // POST /api/hs-company             -> body { companyId, lifecyclestage } -> { ok, stage }  (needs companies write)
 // Uses the same HUBSPOT_TOKEN as hs-task. The edge gate has already checked the site password.
 
@@ -32,7 +33,8 @@ export default async (req: Request, context: Context) => {
         stages[String(x.id)] = p.lifecyclestage || "";
         outreach[String(x.id)] = e || c ? { date: e >= c ? e : c, type: e >= c ? "1:1 email" : "Call" } : null;
       });
-      return json({ ok: true, ready: true, stages, outreach });
+      const t = await openTasks(ids, auth);
+      return json({ ok: true, ready: true, stages, outreach, ...t });
     } catch {
       return json({ ok: true, ready: true, stages: {} });
     }
@@ -69,5 +71,35 @@ export default async (req: Request, context: Context) => {
     return json({ ok: false, error: "HubSpot unavailable" }, 502);
   }
 };
+
+// Open (not completed) HubSpot tasks on each company: how many, and the earliest due date.
+async function openTasks(ids: string[], auth: Record<string, string>): Promise<{ tasks: Record<string, any> | null; tasksNote?: string }> {
+  try {
+    const a = await fetch(`${API}/crm/v4/associations/companies/tasks/batch/read`, { method: "POST", headers: auth, body: JSON.stringify({ inputs: ids.map((id) => ({ id })) }) });
+    if (!a.ok && a.status !== 207) return { tasks: null, tasksNote: `associations ${a.status}: ${String(((await a.json().catch(() => ({}))) as any).message || "").slice(0, 200)}` };
+    const ad: any = await a.json();
+    const byTask: Record<string, string[]> = {};
+    (ad.results || []).forEach((r: any) => (r.to || []).forEach((t: any) => { (byTask[String(t.toObjectId)] ||= []).push(String(r.from?.id)); }));
+    const tids = Object.keys(byTask).slice(0, 2000), tasks: Record<string, any> = {};
+    ids.forEach((id) => (tasks[id] = { open: 0, next: "" }));
+    const chunks: string[][] = []; for (let i = 0; i < tids.length; i += 100) chunks.push(tids.slice(i, i + 100));
+    const res = await Promise.all(chunks.map((c) => fetch(`${API}/crm/v3/objects/tasks/batch/read`, {
+      method: "POST", headers: auth, body: JSON.stringify({ properties: ["hs_task_status", "hs_timestamp"], inputs: c.map((id) => ({ id })) }),
+    })));
+    for (const r of res) {
+      if (!r.ok && r.status !== 207) return { tasks: null, tasksNote: `tasks ${r.status}: ${String(((await r.json().catch(() => ({}))) as any).message || "").slice(0, 200)}` };
+      const d: any = await r.json();
+      (d.results || []).forEach((t: any) => {
+        const p = t.properties || {};
+        if (String(p.hs_task_status || "").toUpperCase() === "COMPLETED") return;
+        const due = String(p.hs_timestamp || "").slice(0, 10);
+        (byTask[String(t.id)] || []).forEach((cid) => { const o = tasks[cid]; if (!o) return; o.open++; if (due && (!o.next || due < o.next)) o.next = due; });
+      });
+    }
+    return { tasks };
+  } catch (e: any) {
+    return { tasks: null, tasksNote: String(e?.message || "unavailable").slice(0, 200) };
+  }
+}
 
 export const config: Config = { path: "/api/hs-company", method: ["GET", "POST"] };

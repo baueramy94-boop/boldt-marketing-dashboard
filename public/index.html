@@ -191,7 +191,7 @@ tr.future td{color:var(--muted)}
 .seg button{border:0;background:var(--surface);color:var(--ink);padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
 .seg button.on{background:var(--navy);color:#fff}
 .btn-sm{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
-.btn-sm:hover{border-color:var(--ink)} .btn-sm.btn-brand{background:var(--gold);border-color:var(--gold);color:#03253A;font-weight:600}.btn-sm.btn-brand:hover{filter:brightness(.95);border-color:var(--gold)} .btn-sm.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn-sm:hover{border-color:var(--ink)} .btn-sm.btn-brand{background:var(--gold);border-color:var(--gold);color:#03253A;font-weight:600}.btn-sm.btn-brand:hover{filter:brightness(.95);border-color:var(--gold)} .btn-sm.primary{background:var(--navy);border-color:var(--navy);color:#fff} .btn-sm.btn-open{background:var(--olive);border-color:var(--olive);color:#fff}.btn-sm.btn-open:hover{filter:brightness(.95);border-color:var(--olive)} .jr-task .tk-st{font-size:12px;margin:0}
 .dm-task{margin-top:12px}
 .dm-task-f{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--soft);font-size:13px}
 .dm-task-f label{display:flex;flex-direction:column;gap:3px} .dm-task-f .wide{grid-column:1/-1}
@@ -681,7 +681,7 @@ function defMqlList(X,C){
     <label class="sel">Show <select id="dm-filter">${opts.map(([v,t])=>`<option value="${esc(v)}">${esc(t)}</option>`).join("")}</select></label></div></div>
     <div id="dm-view-list" ${DM_VIEW==="cal"?"hidden":""}>${list}</div><div id="dm-view-cal" ${DM_VIEW==="list"?"hidden":""}>${dmCalendar(C,events)}</div>
     ${!X.through&&(X.excluded||[]).length?`${mqlSyncBox()}<div class="ex-list"><div class="eyebrow">Removed from the MQL counts (${X.excluded.length})</div><ul>${X.excluded.map(e=>`<li><b>${esc(e.name||e.domain)}</b> <span class="note" style="margin:0">${esc(e.domain)} · removed by ${esc(e.by||"")}${e.at?` on ${fdShort(e.at.slice(0,10))}`:""}</span> <button type="button" class="btn-sm" data-exback="${esc(e.domain)}">Put back</button></li>`).join("")}</ul></div>`:""}
-    <p class="sec-note">${esc(X.listNote||"")}</p>${X.domainNote?`<p class="sec-note"><b>Note:</b> ${esc(X.domainNote)}</p>`:""}</div>`;
+    <p class="sec-note">${esc(X.listNote||"")} A green follow-up button means the company already has an open task in HubSpot.</p>${X.domainNote?`<p class="sec-note"><b>Note:</b> ${esc(X.domainNote)}</p>`:""}</div>`;
 }
 function dmSrcSeg(){if(!MTDATA||MTDATA.month===D.defMql.month||MTDATA.month<D.defMql.month)return "";
   const fm=MONTHS_LONG[+D.defMql.month.slice(5,7)-1], mm=MONTHS_LONG[+MTDATA.month.slice(5,7)-1], n=(MTDATA.companies||[]).filter(c=>!EXCL[c.domain]).length;
@@ -735,6 +735,13 @@ let HOT_NOTES={}, HOT_SORT="total";
 const LC_LABEL=v=>{const o=(D.defMql.lifecycleStages||[]).find(x=>x[0]===v);return o?o[1]:"Not set";};
 function lcCell(c){if(!c.hubspotId)return `<span class="jr-lc"></span>`;
   return `<span class="jr-lc lc"><span class="dm-lbl">Lifecycle stage: </span><select class="lc-sel" data-lc="${esc(c.hubspotId)}" aria-label="HubSpot lifecycle stage for ${esc(c.name)}" disabled>${c.lifecycle?"":`<option value="">Not set</option>`}${(D.defMql.lifecycleStages||[]).map(([v,l])=>`<option value="${v}" ${v===c.lifecycle?"selected":""}>${esc(l)}</option>`).join("")}</select><span class="note lc-st" style="margin:0"></span></span>`;}
+// Open HubSpot tasks: the follow-up button turns green and says how many are open and when the next one is due.
+const TK={};
+function tkMark(id,t){if(!t)return;TK[id]=t;document.querySelectorAll(`button[data-task="${id}"]`).forEach(b=>{const w=b.parentElement;let n=w.querySelector(".tk-st");
+  if(!t.open){b.classList.remove("btn-open");b.classList.add("btn-brand");if(n)n.remove();return;}
+  b.classList.remove("btn-brand");b.classList.add("btn-open");b.title="This company already has an open task in HubSpot";
+  if(!n){n=document.createElement("small");n.className="note tk-st";w.appendChild(n);}
+  n.innerHTML=`<span class="dm-lbl">Tasks: </span>${plw(t.open,"open task")}${t.next?`, next due ${esc(fmtDay(t.next))}`:""}`;});}
 function lcInit(){
   const sels=[...document.querySelectorAll(".lc-sel")]; if(!sels.length)return;
   document.querySelectorAll(".lc").forEach(x=>x.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();},true));
@@ -745,6 +752,7 @@ function lcInit(){
       if(!o.ready){st.textContent="Editing turns on when HubSpot is connected.";return;}
       const v=o.stages&&o.stages[sel.dataset.lc]; if(v!=null&&v!==sel.value){if(!v&&!sel.querySelector('option[value=""]'))sel.insertAdjacentHTML("afterbegin",'<option value="">Not set</option>');sel.value=v;}
       sel.dataset.was=sel.value; sel.disabled=false;
+      if(o.tasks)tkMark(sel.dataset.lc,o.tasks[sel.dataset.lc]);
       const lo=o.outreach&&o.outreach[sel.dataset.lc], el=document.querySelector(`.lo[data-lo="${sel.dataset.lc}"]`);
       if(lo!==undefined&&el){el.innerHTML=`<span class="dm-lbl">Last 1:1 email or call: </span>${lo?`${esc(lo.type)}, ${M()[+lo.date.slice(5,7)-1]} ${+lo.date.slice(8,10)}, ${lo.date.slice(0,4)}`:"None logged"}`;}
       sel.onchange=()=>{const v=sel.value; if(!v){sel.value=sel.dataset.was;return;}
@@ -891,7 +899,8 @@ function dmTaskForm(btn){
       const st=box.querySelector(".dm-ts"); ev.target.disabled=true; st.textContent="Creating…";
       fetch("/api/hs-task",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(b)}).then(r=>r.json()).then(x=>{
         if(x.ok){const msg=x.id2?`Both tasks created in HubSpot, due ${esc(fmtDay(b.due))} and ${esc(fmtDay(b.second.due))}.`:b.second?`The first task was created in HubSpot, but the second one wasn't (${esc(x.secondError||"HubSpot error")}). Add it in HubSpot or create it here again.`:"Task created in HubSpot.";
-          box.innerHTML=`<p class="note" style="margin:0">${msg} <a href="${esc(x.url)}" target="_blank" rel="noopener">Open the company in HubSpot</a></p>`;}
+          box.innerHTML=`<p class="note" style="margin:0">${msg} <a href="${esc(x.url)}" target="_blank" rel="noopener">Open the company in HubSpot</a></p>`;
+          const t={...(TK[cid]||{open:0,next:""})}; t.open+=x.id2?2:1; if(!t.next||b.due<t.next)t.next=b.due; tkMark(cid,t);}
         else{st.textContent=`Couldn't create the task: ${x.error||"try again"}`;ev.target.disabled=false;}}).catch(()=>{st.textContent="Couldn't reach HubSpot. Try again.";ev.target.disabled=false;});};
   }).catch(()=>{box.innerHTML=`<p class="note" style="margin:0">Couldn't reach the dashboard server. Try again.</p>`;});
 }
