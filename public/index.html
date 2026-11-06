@@ -618,7 +618,7 @@ function defMqlPanel(){
   if(X.hot) h+=hotPanel(X);
   return h;
 }
-let DM_VIEW="list", DM_NOTES={}, DM_SRC="final", MTDATA=null, DML={m:"",name:"",mo:1,label:""};
+let DM_NOTES={}, DM_SRC="final", MTDATA=null, DML={m:"",name:"",mo:1,label:""};
 function defMqlList(X,C){
   { const m=X.month||D.defMql.month, mo=+m.slice(5,7); DML={m,mo,name:MONTHS_LONG[mo-1],label:X.through?`${MONTHS_LONG[mo-1]} so far`:MONTHS_LONG[mo-1]}; }
   const pl=(n,w)=>`${N(n)} ${w}${n===1?"":"s"}`;
@@ -677,9 +677,9 @@ function defMqlList(X,C){
       <div class="jr-b"><div><div class="eyebrow">What they engaged with in ${DML.name}</div><ul class="jr-tl">${rows(c)}</ul><div class="dm-task-f" hidden></div>${exBtn(c.domain,c.name)}</div>
         <div><div class="eyebrow">LinkedIn impressions by campaign, May to ${DML.name}</div>${c.impressions.length?`<ul class="jr-tl">${c.impressions.map(i=>`<li><b>${esc(i.campaign)}</b> ${pl(i.views,"impression")}<span class="note" style="margin:0"> · last ${fdShort(i.last)}</span></li>`).join("")}</ul>`:`<p class="jr-p note">No LinkedIn impressions recorded</p>`}</div></div></details>`).join("")}</div>`;
   return `<div class="panel" id="dm-panel"><div class="panel-h"><div><h3>New MQL companies, ${DML.label}</h3><p class="sub">${X.through?`${N(C.length)} so far, through ${fdShort(X.through)}. Refreshed Monday mornings. `:""}What each company engaged with, when and how. Most recent first. Select a company to open its full journey.</p>${dmSrcSeg()}</div>
-    <div class="dm-ctl"><div class="seg" role="group" aria-label="View"><button type="button" data-dmv="list" class="${DM_VIEW==="list"?"on":""}">List</button><button type="button" data-dmv="cal" class="${DM_VIEW==="cal"?"on":""}">Calendar</button></div>
+    <div class="dm-ctl">
     <label class="sel">Show <select id="dm-filter">${opts.map(([v,t])=>`<option value="${esc(v)}">${esc(t)}</option>`).join("")}</select></label></div></div>
-    <div id="dm-view-list" ${DM_VIEW==="cal"?"hidden":""}>${list}</div><div id="dm-view-cal" ${DM_VIEW==="list"?"hidden":""}>${dmCalendar(C,events)}</div>
+    <div id="dm-view-list">${list}</div>
     ${!X.through&&(X.excluded||[]).length?`${mqlSyncBox()}<div class="ex-list"><div class="eyebrow">Removed from the MQL counts (${X.excluded.length})</div><ul>${X.excluded.map(e=>`<li><b>${esc(e.name||e.domain)}</b> <span class="note" style="margin:0">${esc(e.domain)} · removed by ${esc(e.by||"")}${e.at?` on ${fdShort(e.at.slice(0,10))}`:""}</span> <button type="button" class="btn-sm" data-exback="${esc(e.domain)}">Put back</button></li>`).join("")}</ul></div>`:""}
     <p class="sec-note">${esc(X.listNote||"")} A green follow-up button means the company already has an open task in HubSpot.</p>${X.domainNote?`<p class="sec-note"><b>Note:</b> ${esc(X.domainNote)}</p>`:""}</div>`;
 }
@@ -687,24 +687,6 @@ function dmSrcSeg(){if(!MTDATA||MTDATA.month===D.defMql.month||MTDATA.month<D.de
   const fm=MONTHS_LONG[+D.defMql.month.slice(5,7)-1], mm=MONTHS_LONG[+MTDATA.month.slice(5,7)-1], n=(MTDATA.companies||[]).filter(c=>!EXCL[c.domain]).length;
   return `<div class="seg dm-src" role="group" aria-label="Month"><button type="button" data-dmsrc="final" class="${DM_SRC==="final"?"on":""}">${fm} (final)</button><button type="button" data-dmsrc="mtd" class="${DM_SRC==="mtd"?"on":""}">${mm} so far (${N(n)})</button></div>`;}
 function dmMtdX(){const X=JSON.parse(JSON.stringify(MTDATA));X.companies=(X.companies||[]).filter(c=>!EXCL[c.domain]);X.excluded=[];return X;}
-function dmCalendar(C,events){
-  const YM=DML.m, y=+YM.slice(0,4), mo=+YM.slice(5,7), days=new Date(y,mo,0).getDate(), start=new Date(y,mo-1,1).getDay();
-  const MK={"LinkedIn ad click":"mk-li","Google ad click":"mk-ad","Bing ad click":"mk-ad","Website visit":"mk-web","Email click":"mk-em"};
-  const byDay={}, byWeek={}, undated=[];
-  C.forEach(c=>{const seen=new Set();events(c).forEach(x=>{
-    if(x.d.endsWith("-00")){undated.push({c,k:x.k});return;}
-    const key=(x.wk?"w":"d")+x.d+c.domain+x.k; if(seen.has(key))return; seen.add(key);
-    (x.wk?byWeek:byDay)[x.d]=((x.wk?byWeek:byDay)[x.d]||[]).concat([{c,k:x.k}]);});});
-  const item=e=>`<button type="button" class="cal-i" data-ch="${esc(e.c.channels.join("|"))}" data-go="${esc(e.c.domain)}" title="${esc(e.c.name)}: ${esc(e.k)}"><b class="mkd ${MK[e.k]||""}"></b>${esc(e.c.name)}</button>`;
-  let h=`<div class="cal-key">${[["mk-li","LinkedIn ad click"],["mk-ad","Google or Bing ad click"],["mk-web","Website visit"],["mk-em","Email click"]].map(([c,t])=>`<span><b class="mkd ${c}"></b>${t}</span>`).join("")}<span class="note" style="margin:0">Click a company to open its details.</span></div>
-  <div class="cal"><div class="cal-h">${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=>`<span>${d}</span>`).join("")}</div><div class="cal-g">`;
-  for(let i=0;i<start;i++) h+=`<div class="cal-d off"></div>`;
-  for(let d=1;d<=days;d++){const k=`${YM}-${String(d).padStart(2,"0")}`, ev=byDay[k]||[], wk=byWeek[k]||[];
-    h+=`<div class="cal-d"><span class="cal-n">${d}</span>${ev.map(item).join("")}${wk.length?`<div class="cal-wk"><span class="note" style="margin:0">Website visits that week (day not reported):</span>${wk.map(item).join("")}</div>`:""}</div>`;}
-  h+=`</div></div>`;
-  if(undated.length) h+=`<p class="sec-note">LinkedIn clicks in ${DML.name} with no date reported: ${undated.map(e=>item(e)).join(" ")}</p>`;
-  return h;
-}
 const HS_PORTAL="4587932";
 const coName=(n,id)=>id?`<a class="co-link" href="https://app.hubspot.com/contacts/${HS_PORTAL}/record/0-2/${esc(String(id))}" target="_blank" rel="noopener" title="Open ${esc(n)} in HubSpot"><b>${esc(n)}</b></a>`:`<b>${esc(n)}</b>`;
 let EXCL={}, EXCL_OK=false;
@@ -1460,12 +1442,7 @@ function render(){
   document.getElementById("view").innerHTML=html;
   if(EDITING) document.querySelectorAll("#view .ed").forEach(el=>{if(!el.closest(".ed-gone")){el.contentEditable="true";el.spellcheck=true;}});
   const cs=document.getElementById("camp-month"); if(cs) cs.addEventListener("change",()=>{CAMP_M=+cs.value;render();});
-  const dmf=document.getElementById("dm-filter"); if(dmf) dmf.addEventListener("change",()=>{const v=dmf.value;document.querySelectorAll("#dm-panel details.jr, #dm-panel .cal-i").forEach(d=>{d.style.display=v==="all"||d.dataset.ch.split("|").includes(v)?"":"none";});});
-  document.querySelectorAll("[data-dmv]").forEach(b=>b.addEventListener("click",()=>{DM_VIEW=b.dataset.dmv;document.querySelectorAll("[data-dmv]").forEach(x=>x.classList.toggle("on",x===b));
-    document.getElementById("dm-view-list").hidden=DM_VIEW!=="list";document.getElementById("dm-view-cal").hidden=DM_VIEW!=="cal";}));
-  document.querySelectorAll("#dm-panel .cal-i").forEach(b=>b.addEventListener("click",()=>{const t=document.getElementById("dm-"+b.dataset.go);if(!t)return;
-    DM_VIEW="list";document.querySelectorAll("[data-dmv]").forEach(x=>x.classList.toggle("on",x.dataset.dmv==="list"));document.getElementById("dm-view-list").hidden=false;document.getElementById("dm-view-cal").hidden=true;
-    t.style.display="";t.open=true;t.scrollIntoView({behavior:"smooth",block:"start"});}));
+  const dmf=document.getElementById("dm-filter"); if(dmf) dmf.addEventListener("change",()=>{const v=dmf.value;document.querySelectorAll("#dm-panel details.jr").forEach(d=>{d.style.display=v==="all"||d.dataset.ch.split("|").includes(v)?"":"none";});});
   document.querySelectorAll("[data-hsort]").forEach(b=>b.addEventListener("click",()=>{HOT_SORT=b.dataset.hsort;document.querySelectorAll("[data-hsort]").forEach(x=>x.classList.toggle("on",x===b));hotSort();}));
   document.querySelectorAll("[data-dmsrc]").forEach(b=>b.addEventListener("click",()=>{if(DM_SRC===b.dataset.dmsrc)return;DM_SRC=b.dataset.dmsrc;const y=scrollY;render();scrollTo(0,y);}));
   hotSort(); lcInit(); tlxInit(); mqlSyncInit();
