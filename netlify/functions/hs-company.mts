@@ -34,6 +34,7 @@ export default async (req: Request, context: Context) => {
         outreach[String(x.id)] = e || c ? { date: e >= c ? e : c, type: e >= c ? "1:1 email" : "Call" } : null;
       });
       const t = await openTasks(ids, auth);
+      if (t.tasksNote) console.log(`open tasks check failed: ${t.tasksNote}`);
       return json({ ok: true, ready: true, stages, outreach, ...t });
     } catch {
       return json({ ok: true, ready: true, stages: {} });
