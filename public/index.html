@@ -198,6 +198,7 @@ tr.future td{color:var(--muted)}
 .jstrip.strip{display:block;grid-column:1/-1;margin-top:2px}.jstrip .cells i{height:16px}
 .jstrip-ax.strip{display:grid;grid-template-columns:1fr;gap:2px;padding:0 13px}
 .dm-task-f[hidden]{display:none!important}
+.dm-task-f .dm-2nd{flex-direction:row;align-items:center;gap:8px;font-weight:600} .dm-task-f .dm-2nd input{width:auto;margin:0} .dm-task-f .dm-2nd-f[hidden]{display:none}
 .dm-list.dm-lc .jr summary,.dm-lc .dm-head{grid-template-columns:minmax(170px,1.1fr) 1.4fr minmax(120px,.6fr) minmax(120px,.6fr) minmax(160px,.8fr) minmax(150px,auto)}
 .dm-list.hot-list .jr summary,.hot-list .dm-head{grid-template-columns:minmax(190px,1.1fr) 1.8fr minmax(150px,auto) minmax(140px,.7fr)}
 .co-link{color:inherit;text-decoration:none}.co-link:hover b,.co-link:focus b{text-decoration:underline}.co-link b::after{content:" ↗";font-weight:400;font-size:.8em;color:var(--muted)}
@@ -861,6 +862,8 @@ function hotPanel(X){
 }
 function hotSort(){const L=document.getElementById("hot-list");if(!L)return;const ds=[...L.querySelectorAll(":scope > .tlx-row")];
   ds.sort((a,b)=>HOT_SORT==="last"?(b.dataset.last.localeCompare(a.dataset.last)||(+b.dataset.total-+a.dataset.total)):(+b.dataset.total-+a.dataset.total||b.dataset.last.localeCompare(a.dataset.last)));ds.forEach(d=>L.appendChild(d));}
+const plus14=d=>{const t=new Date(d+"T12:00:00Z");t.setUTCDate(t.getUTCDate()+14);return t.toISOString().slice(0,10);};
+const fmtDay=d=>new Date(d+"T12:00:00Z").toLocaleDateString("en-US",{month:"short",day:"numeric",timeZone:"UTC"});
 function dmTaskForm(btn){
   const cid=btn.dataset.task, card=btn.closest("details"), box=card.querySelector(".dm-task-f"), name=card.querySelector(".jr-n b").textContent;
   card.open=true; setTimeout(()=>box.scrollIntoView({block:"nearest",behavior:"smooth"}),50);
@@ -873,13 +876,22 @@ function dmTaskForm(btn){
       <label>Assign to <select data-f="ownerId"><option value="">Unassigned</option>${(o.owners||[]).map(w=>`<option value="${esc(w.id)}">${esc(w.name)}</option>`).join("")}</select></label>
       <label>Due <input type="date" value="${ds}" data-f="due"></label>
       <label>Priority <select data-f="priority"><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="LOW">Low</option></select></label>
+      <label class="wide dm-2nd"><input type="checkbox" data-2nd checked> Also create a second follow-up task two weeks later</label>
+      <label class="dm-2nd-f">Second task <input type="text" maxlength="200" value="${esc(`Second follow-up with ${name}`)}" data-s="subject"></label>
+      <label class="dm-2nd-f">Second task due <input type="date" value="${plus14(ds)}" data-s="due"></label>
       <label class="wide">Notes <textarea rows="8" maxlength="1800" data-f="notes">${esc((btn.dataset.intro==="hot"?`${name} is a hot MQL.\n\n${HOT_NOTES[cid]||""}${DM_NOTES[cid]?`\n\n${DM_NOTES[cid]}`:""}`:`${name} became a new MQL by our engagement definition in ${DML.name||RM()}${DML.label&&DML.label!==DML.name?" (month to date)":""}.\n\n${DM_NOTES[cid]||`Most recent engagement: ${last}.`}`).slice(0,1800))}</textarea></label>
       <div class="wide"><button type="button" class="btn-sm primary" data-send="1">Create task</button> <button type="button" class="btn-sm" data-cancel="1">Cancel</button> <span class="note dm-ts" style="margin:0"></span></div>`;
     box.querySelector("[data-cancel]").onclick=()=>{box.hidden=true;box.innerHTML="";};
+    const c2=box.querySelector("[data-2nd]"), d1=box.querySelector('[data-f="due"]'), d2=box.querySelector('[data-s="due"]');
+    c2.onchange=()=>box.querySelectorAll(".dm-2nd-f").forEach(x=>x.hidden=!c2.checked);
+    d1.onchange=()=>{if(d1.value)d2.value=plus14(d1.value);};
     box.querySelector("[data-send]").onclick=ev=>{const b={companyId:cid};box.querySelectorAll("[data-f]").forEach(f=>b[f.dataset.f]=f.value);
+      if(c2.checked){b.second={};box.querySelectorAll("[data-s]").forEach(f=>b.second[f.dataset.s]=f.value);
+        if(!b.second.due||b.second.due<=b.due){box.querySelector(".dm-ts").textContent="The second task needs a due date after the first.";return;}}
       const st=box.querySelector(".dm-ts"); ev.target.disabled=true; st.textContent="Creating…";
       fetch("/api/hs-task",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(b)}).then(r=>r.json()).then(x=>{
-        if(x.ok){box.innerHTML=`<p class="note" style="margin:0">Task created in HubSpot. <a href="${esc(x.url)}" target="_blank" rel="noopener">Open the company in HubSpot</a></p>`;}
+        if(x.ok){const msg=x.id2?`Both tasks created in HubSpot, due ${esc(fmtDay(b.due))} and ${esc(fmtDay(b.second.due))}.`:b.second?`The first task was created in HubSpot, but the second one wasn't (${esc(x.secondError||"HubSpot error")}). Add it in HubSpot or create it here again.`:"Task created in HubSpot.";
+          box.innerHTML=`<p class="note" style="margin:0">${msg} <a href="${esc(x.url)}" target="_blank" rel="noopener">Open the company in HubSpot</a></p>`;}
         else{st.textContent=`Couldn't create the task: ${x.error||"try again"}`;ev.target.disabled=false;}}).catch(()=>{st.textContent="Couldn't reach HubSpot. Try again.";ev.target.disabled=false;});};
   }).catch(()=>{box.innerHTML=`<p class="note" style="margin:0">Couldn't reach the dashboard server. Try again.</p>`;});
 }

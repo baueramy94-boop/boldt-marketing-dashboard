@@ -2,7 +2,8 @@ import type { Config, Context } from "@netlify/functions";
 
 // Create a follow-up task in HubSpot for a company on the dashboard.
 // GET  /api/hs-task        -> { ok, ready, owners: [{ id, name }] }
-// POST /api/hs-task        -> body { companyId, subject, notes, due: "YYYY-MM-DD", ownerId?, priority? } -> { ok, id, url }
+// POST /api/hs-task        -> body { companyId, subject, notes, due: "YYYY-MM-DD", ownerId?, priority?, second?: { subject, due } }
+//                             -> { ok, id, id2?, url, secondError? }  (second creates another task, by default due two weeks later)
 // Needs HUBSPOT_TOKEN (a HubSpot private app access token with permission to read owners and write tasks) set in Netlify's
 // environment variables. The edge gate has already checked the site password.
 
@@ -43,29 +44,50 @@ export default async (req: Request, context: Context) => {
   const subject = String(b.subject || "Follow up").slice(0, 200);
   const notes = String(b.notes || "").slice(0, 2000) + `\n\nCreated from the Boldt marketing dashboard by ${user}.`;
   const priority = ["LOW", "MEDIUM", "HIGH"].includes(String(b.priority)) ? String(b.priority) : "MEDIUM";
-  const properties: Record<string, string> = {
-    hs_timestamp: new Date(`${due}T15:00:00Z`).toISOString(),
-    hs_task_subject: subject,
-    hs_task_body: notes,
-    hs_task_status: "NOT_STARTED",
-    hs_task_priority: priority,
-    hs_task_type: "TODO",
+  const props = (subj: string, day: string, body: string): Record<string, string> => {
+    const o: Record<string, string> = {
+      hs_timestamp: new Date(`${day}T15:00:00Z`).toISOString(),
+      hs_task_subject: subj,
+      hs_task_body: body,
+      hs_task_status: "NOT_STARTED",
+      hs_task_priority: priority,
+      hs_task_type: "TODO",
+    };
+    if (ownerId) o.hubspot_owner_id = ownerId;
+    return o;
   };
-  if (ownerId) properties.hubspot_owner_id = ownerId;
-  try {
+  const create = async (p: Record<string, string>) => {
     const r = await fetch(`${API}/crm/v3/objects/tasks`, {
       method: "POST",
       headers: auth,
       body: JSON.stringify({
-        properties,
+        properties: p,
         associations: [{ to: { id: companyId }, types: [{ associationCategory: "HUBSPOT_DEFINED", associationTypeId: 192 }] }],
       }),
     });
     const d: any = await r.json().catch(() => ({}));
-    if (!r.ok) return json({ ok: false, error: d.message ? String(d.message).slice(0, 200) : `HubSpot error ${r.status}` }, 502);
-    return json({ ok: true, id: d.id, url: `https://app.hubspot.com/contacts/${portal}/record/0-2/${companyId}` });
-  } catch {
-    return json({ ok: false, error: "HubSpot unavailable" }, 502);
+    if (!r.ok) throw new Error(d.message ? String(d.message).slice(0, 200) : `HubSpot error ${r.status}`);
+    return String(d.id);
+  };
+  // Optional second follow-up task, by default two weeks after the first.
+  const s2 = b.second && typeof b.second === "object" ? b.second : null;
+  const due2 = s2 ? String(s2.due || "") : "";
+  if (s2 && (!DAY.test(due2) || due2 <= due)) return json({ ok: false, error: "the second task must be due after the first" }, 400);
+  const url = `https://app.hubspot.com/contacts/${portal}/record/0-2/${companyId}`;
+  let id: string;
+  try {
+    id = await create(props(subject, due, notes));
+  } catch (e: any) {
+    return json({ ok: false, error: e?.message || "HubSpot unavailable" }, 502);
+  }
+  if (!s2) return json({ ok: true, id, url });
+  const subject2 = String(s2.subject || `Second follow-up: ${subject}`).slice(0, 200);
+  const notes2 = `Second follow-up. The first task was due ${due}.\n\n` + notes;
+  try {
+    const id2 = await create(props(subject2, due2, notes2.slice(0, 2400)));
+    return json({ ok: true, id, id2, url });
+  } catch (e: any) {
+    return json({ ok: true, id, url, secondError: e?.message || "HubSpot unavailable" });
   }
 };
 
