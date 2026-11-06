@@ -198,7 +198,7 @@ tr.future td{color:var(--muted)}
 .jstrip.strip{display:block;grid-column:1/-1;margin-top:2px}.jstrip .cells i{height:16px}
 .jstrip-ax.strip{display:grid;grid-template-columns:1fr;gap:2px;padding:0 13px}
 .dm-task-f[hidden]{display:none!important}
-.dm-list.dm-lc .jr summary,.dm-lc .dm-head{grid-template-columns:minmax(170px,1.1fr) 1.4fr minmax(150px,auto) minmax(120px,.6fr) minmax(120px,.6fr) minmax(160px,.8fr)}
+.dm-list.dm-lc .jr summary,.dm-lc .dm-head{grid-template-columns:minmax(170px,1.1fr) 1.4fr minmax(120px,.6fr) minmax(120px,.6fr) minmax(160px,.8fr) minmax(150px,auto)}
 .dm-list.hot-list .jr summary,.hot-list .dm-head{grid-template-columns:minmax(190px,1.1fr) 1.8fr minmax(150px,auto) minmax(140px,.7fr)}
 .co-link{color:inherit;text-decoration:none}.co-link:hover b,.co-link:focus b{text-decoration:underline}.co-link b::after{content:" ↗";font-weight:400;font-size:.8em;color:var(--muted)}
 .sync-box{border-color:var(--gold);font-size:13.5px;display:block;margin:10px 0}.sync-box .btn-sm{margin-left:8px}.sync-prev ul{margin:10px 0;padding-left:18px;display:grid;gap:6px}
@@ -211,8 +211,8 @@ tr.future td{color:var(--muted)}
 :root[data-theme="dark"] .g-h{color:#8ab4f8}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .g-h{color:#8ab4f8}}
 .tlx{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:start;margin-top:8px}
 .tlx-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:8px}.tlx-q{font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);min-width:200px;flex:1 1 200px;max-width:280px}
-.tlx-grid{border:1px solid var(--line);border-radius:10px;max-height:560px;overflow:auto;background:var(--surface)}
-.tlx-row{display:grid;grid-template-columns:minmax(160px,260px) minmax(0,1fr) 64px;gap:10px;align-items:center;padding:5px 10px;border-bottom:1px solid var(--line);cursor:pointer;font-size:12.5px}
+.tlx-grid{border:1px solid var(--line);border-radius:10px;max-height:640px;overflow:auto;background:var(--surface)}
+.tlx-row{display:grid;grid-template-columns:var(--g,1fr);gap:14px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;font-size:12.5px}
 .tlx-row:last-child{border-bottom:0}.tlx-row:hover{background:var(--soft)}.tlx-row:focus-visible{outline:2px solid var(--c-hc);outline-offset:-2px}
 .tlx-row.on{background:color-mix(in srgb,var(--c-hc) 10%,var(--surface));box-shadow:inset 3px 0 0 var(--c-hc)}
 .tlx-row.q-off,.tlx-row.f-off{display:none}
@@ -225,7 +225,25 @@ tr.future td{color:var(--muted)}
 .tlx-tot{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
 .tlx-detail{position:sticky;top:120px;max-height:calc(100vh - 140px);overflow:auto;border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--surface)}
 .tlx-dh{display:flex;flex-direction:column;gap:2px;margin-bottom:8px;font-size:15px}.mk-in{display:inline-flex;gap:2px;margin:0 6px}.mk-in b{width:7px;height:7px;border-radius:50%;display:inline-block}
-@media (max-width:900px){.tlx{grid-template-columns:1fr}.tlx-detail{position:static;max-height:none}.tlx-row{grid-template-columns:minmax(110px,150px) minmax(0,1fr) 44px}}
+.tlx-c{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;font-size:13px}.tlx-c small{color:var(--muted);font-size:11.5px}.tlx-c .chip{font-size:11px;padding:1px 7px}
+.tlx-big{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.mix{display:flex;height:8px;width:100%;max-width:240px;border-radius:4px;overflow:hidden;background:var(--soft);margin:3px 0 1px}.mix i{display:block;min-width:3px}
+.tlx-c .tlx-mix{line-height:1.35}
+@media (max-width:760px){.tlx-row{grid-template-columns:1fr;gap:4px}.tlx-head{display:none}.tlx-c{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:4px 6px}.tlx-c .mix{flex-basis:100%;max-width:none}}
+.mtl{margin-top:4px}.mtl-scroll{overflow-x:auto;padding:2px 2px 6px}
+.mtl-cols{display:grid;grid-template-columns:repeat(var(--n),minmax(48px,1fr));gap:6px;align-items:end;min-width:min-content}
+.mtl-c{appearance:none;font:inherit;color:inherit;background:none;border:1px solid transparent;border-radius:8px;padding:6px 2px 5px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;min-width:0}
+.mtl-c:hover{background:var(--soft)}.mtl-c.on{background:color-mix(in srgb,var(--c-hc) 10%,var(--surface));border-color:var(--c-hc)}.mtl-c:focus-visible{outline:2px solid var(--c-hc);outline-offset:1px}
+.mtl-v{font-size:12px;font-weight:600;min-height:16px;font-variant-numeric:tabular-nums}
+.mtl-bar{height:190px;width:70%;max-width:42px;display:flex;flex-direction:column-reverse;border-bottom:2px solid var(--line)}.mtl-bar i{display:block;width:100%}.mtl-bar i:last-child{border-radius:3px 3px 0 0}
+.mtl-c.z .mtl-bar{border-bottom-style:dashed}.mtl-c.q .mtl-bar{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--ink);border-radius:3px}
+.mtl-l{font-size:11.5px;color:var(--muted);display:flex;flex-direction:column;align-items:center;line-height:1.2}.mtl-l b{font-weight:600;font-size:10.5px}
+.mtl-f i{display:block;width:40px;height:16px;border-radius:3px;font-size:10px;font-style:normal;text-align:center;line-height:16px;background:var(--soft);font-variant-numeric:tabular-nums}
+.mtl-d{margin-top:12px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--bg,var(--surface))}
+.mtl-dh{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:8px;font-size:16px}
+.mtl-items{list-style:none;padding:0;margin:0;display:grid;gap:7px;font-size:14.5px}.mtl-items li{display:flex;gap:8px;align-items:baseline}
+.mtl-d .jr-tl{margin:0}.mtl-d .jm-h>b:first-child{display:none}.mtl-d .jm-h{border:0;padding:0}.jm-body:empty{display:none}
+@media (max-width:800px){.mtl-bar{height:140px}.mtl-cols{grid-template-columns:repeat(var(--n),44px)}}
 body.jm-open{overflow:hidden}
 .jmodal{position:fixed;inset:0;z-index:200;background:color-mix(in srgb,var(--ink) 45%,transparent);display:flex;padding:24px}
 .jm-inner{background:var(--bg,var(--surface));color:var(--ink);border-radius:14px;flex:1;overflow:auto;padding:18px 28px 32px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-width:1500px;margin:0 auto}
@@ -638,20 +656,19 @@ function defMqlList(X,C){
   const wk=d=>{const n=+d.slice(8,10);return n<=7?0:n<=14?1:n<=21?2:n<=28?3:4;}, WL=[`${MS3[CM()-1]} 1 to 7`,"8 to 14","15 to 21","22 to 28","29 to 31"];
   TLX.new={label:`New MQL, ${RM()}`,
     head:k=>{const c=byD[k];return c?`<div class="tlx-dh">${coName(c.name,c.hubspotId)}<span class="note" style="margin:0">New MQL, ${RM()} · ${esc(c.domain)}${c.lifecycle?` · HubSpot stage: ${esc(LC_LABEL(c.lifecycle))}`:""}${c.lastOutreach?` · last ${esc(c.lastOutreach.type)} ${fdShort(c.lastOutreach.date)}, ${c.lastOutreach.date.slice(0,4)}`:""}</span></div><div class="jr-c">${chips(c)}</div>`:"";},
-    chart:k=>{const c=byD[k];if(!c)return "";const z=()=>[0,0,0,0,0], li=z(), ad=z(), web=z(), em=z();
-      c.li.forEach(x=>{if(x.date&&!x.date.endsWith("-00"))li[wk(x.date)]+=x.clicks;}); c.search.forEach(x=>x.date&&ad[wk(x.date)]++); c.web.forEach(w=>{if(w.start.slice(0,7)===D.defMql.month)web[wk(w.start)]+=w.sessions;}); c.email.forEach(e=>e.date&&em[wk(e.date)]++);
-      return `<h3>Engagement in ${RM()}, week by week</h3>${legend([{name:"LinkedIn ad clicks",color:css("--gold"),box:1},{name:"Google or Bing ad clicks",color:css("--olive"),box:1},{name:"Website sessions",color:css("--mk-web"),box:1},{name:"Email clicks",color:css("--mk-em"),box:1}])}
-        ${chart({labels:WL,bars:[{name:"LinkedIn ad clicks",color:css("--gold"),values:li},{name:"Google or Bing ad clicks",color:css("--olive"),values:ad},{name:"Website sessions",color:css("--mk-web"),values:web},{name:"Email clicks",color:css("--mk-em"),values:em}],stacked:true,fmt:v=>N(v,v%1?1:0),h:240})}
-        <p class="note" style="margin:4px 0 0">A new MQL had no engagement in the 12 months before ${RM()}, so its journey starts this month.</p>`;},
-    body:k=>{const c=byD[k];if(!c)return "";return `<div class="jm-cols"><div><div class="eyebrow">What they engaged with in ${RM()}</div><ul class="jr-tl">${rows(c)}</ul></div>
-      <div><div class="eyebrow">LinkedIn impressions by campaign, May to ${RM()}</div>${c.impressions.length?`<ul class="jr-tl">${c.impressions.map(i=>`<li><b>${esc(i.campaign)}</b> ${pl(i.views,"impression")}<span class="note" style="margin:0"> · last ${fdShort(i.last)}</span></li>`).join("")}</ul>`:`<p class="jr-p note">No LinkedIn impressions recorded</p>`}</div></div>${exBtn(c.domain,c.name)}`;}};
+    chart:k=>{const c=byD[k];if(!c)return "";const ym=D.defMql.month, tl=(c.tl&&c.tl.length?c.tl:[[ym,0,0,0,0,[]]]);
+      const cols=tl.map(x=>({m:x[0],segs:engSegs(x),sum:engSaid(x),items:x[0]===ym?`<ul class="jr-tl">${rows(c)}</ul>`:tlItems(x[5])}));
+      return `<h3>Engagement by month since ${mlong(tl[0][0])}</h3>${mtl(cols,{sel:cols.length-1})}
+        <p class="note" style="margin:6px 0 0">${tl.length>1?`New MQLs had no engagement in the 12 months before ${RM()}, so the earlier months are older history.`:`${esc(c.name)} first engaged in ${RM()}.`} Select a month to see what they engaged with.</p>`;},
+    body:k=>{const c=byD[k];if(!c)return "";return `<div class="eyebrow">LinkedIn impressions by campaign, May to ${RM()}</div>${c.impressions.length?`<ul class="jr-tl">${c.impressions.map(i=>`<li><b>${esc(i.campaign)}</b> ${pl(i.views,"impression")}<span class="note" style="margin:0"> · last ${fdShort(i.last)}</span></li>`).join("")}</ul>`:`<p class="jr-p note">No LinkedIn impressions recorded</p>`}${exBtn(c.domain,c.name)}`;}};
   const rows=c=>events(c).map(x=>`<li><span class="note" style="margin:0">${x.d.endsWith("-00")?RM():fdShort(x.d)}</span> ${x.h}</li>`).join("");
   const lo=c=>c.lastOutreach?`${esc(c.lastOutreach.type)}, ${M()[+c.lastOutreach.date.slice(5,7)-1]} ${+c.lastOutreach.date.slice(8,10)}, ${c.lastOutreach.date.slice(0,4)}`:"None logged";
-  const taskBtn=c=>`<span class="jr-task">${c.hubspotId?`<button type="button" class="btn-sm btn-brand" data-task="${esc(c.hubspotId)}">Create follow-up task</button>`:""}</span><span class="jr-lo note lo" data-lo="${esc(String(c.hubspotId||""))}" style="margin:0"><span class="dm-lbl">Last 1:1 email or call: </span>${lo(c)}</span>`;
+  const taskBtn=c=>`<span class="jr-task">${c.hubspotId?`<button type="button" class="btn-sm btn-brand" data-task="${esc(c.hubspotId)}">Create follow-up task</button>`:""}</span>`;
+  const loCell=c=>`<span class="jr-lo note lo" data-lo="${esc(String(c.hubspotId||""))}" style="margin:0"><span class="dm-lbl">Last 1:1 email or call: </span>${lo(c)}</span>`;
   const opts=[["all",`All ${C.length}`],["LinkedIn ad click",`LinkedIn clicks (${cnt("LinkedIn ad click")})`],["Google ad click",`Google ads (${cnt("Google ad click")})`],["Bing ad click",`Bing ads (${cnt("Bing ad click")})`],["Website visit",`Website (${cnt("Website visit")})`],["Email click",`Email (${cnt("Email click")})`]].filter(([v],i)=>i===0||cnt(v));
   const sorted=C.slice().sort((a,b)=>((b.last||b.first).date+(b.last||b.first).precision.replace("day","z")).localeCompare((a.last||a.first).date+(a.last||a.first).precision.replace("day","z")));
-  const list=`<div class="jr-list dm-list dm-lc" id="dm-list"><div class="dm-head" aria-hidden="true"><span>Company</span><span>How they engaged</span><span>Follow-up</span><span>Last 1:1 email or call</span><span>Most recent engagement</span><span>HubSpot lifecycle stage</span></div>${sorted.map(c=>`<details class="jr" id="dm-${esc(c.domain)}" data-ch="${esc(c.channels.join("|"))}"><summary><span class="jr-n">${coName(c.name,c.hubspotId)}<span class="note" style="margin:0">${esc(c.domain)}</span></span><span class="jr-c">${chips(c)}</span>${taskBtn(c)}
-      <span class="jr-t"><span class="dm-lbl">Most recent: </span>${c.last?`${esc(c.last.label)}<br>${esc(c.last.channel)}`:"–"}</span>${lcCell(c)}</summary>
+  const list=`<div class="jr-list dm-list dm-lc" id="dm-list"><div class="dm-head" aria-hidden="true"><span>Company</span><span>How they engaged</span><span>Last 1:1 email or call</span><span>Most recent engagement</span><span>HubSpot lifecycle stage</span><span>Follow-up</span></div>${sorted.map(c=>`<details class="jr" id="dm-${esc(c.domain)}" data-ch="${esc(c.channels.join("|"))}"><summary><span class="jr-n">${coName(c.name,c.hubspotId)}<span class="note" style="margin:0">${esc(c.domain)}</span></span><span class="jr-c">${chips(c)}</span>${loCell(c)}
+      <span class="jr-t"><span class="dm-lbl">Most recent: </span>${c.last?`${esc(c.last.label)}<br>${esc(c.last.channel)}`:"–"}</span>${lcCell(c)}${taskBtn(c)}</summary>
       <div class="jr-b"><div><div class="eyebrow">What they engaged with in ${RM()}</div><ul class="jr-tl">${rows(c)}</ul><div class="dm-task-f" hidden></div>${exBtn(c.domain,c.name)}</div>
         <div><div class="eyebrow">LinkedIn impressions by campaign, May to ${RM()}</div>${c.impressions.length?`<ul class="jr-tl">${c.impressions.map(i=>`<li><b>${esc(i.campaign)}</b> ${pl(i.views,"impression")}<span class="note" style="margin:0"> · last ${fdShort(i.last)}</span></li>`).join("")}</ul>`:`<p class="jr-p note">No LinkedIn impressions recorded</p>`}</div></div></details>`).join("")}</div>`;
   return `<div class="panel" id="dm-panel"><div class="panel-h"><div><h3>New MQL companies, ${RM()}</h3><p class="sub">What each company engaged with, when and how. Most recent first. Select a company to open its full journey.</p></div>
@@ -730,10 +747,42 @@ function lcInit(){
 }
 const TLX={};
 const MS3=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const mlong=m=>`${M()[+m.slice(5,7)-1]} ${m.slice(0,4)}`;
+const plw=(n,w)=>`${N(n)} ${w}${n===1?"":"s"}`;
+const ENG=[["Website sessions","--mk-web","website session"],["LinkedIn ad clicks","--gold","LinkedIn ad click"],["Google or Bing ad visits","--olive","Google or Bing ad visit"],["Email clicks","--mk-em","email click"]];
+// tl tuple: [month, website sessions, LinkedIn clicks, email clicks, Google/Bing ad visits, items]. Website sessions include ad visits, so they are shown net of them.
+const engVals=x=>[Math.max(0,x[1]-x[4]),x[2],x[4],x[3]];
+const engSegs=x=>engVals(x).map((v,i)=>[v,ENG[i][1],ENG[i][0]]);
+const engSaid=x=>engVals(x).map((v,i)=>v?plw(v,ENG[i][2]):"").filter(Boolean).join(", ");
+const TLK={web:"mk-web",li:"mk-li",ad:"mk-ad",em:"mk-em"};
+const tlItems=it=>it&&it.length?`<ul class="mtl-items">${it.map(([t,x])=>`<li><b class="mkd ${TLK[t]||""}"></b>${esc(x)}</li>`).join("")}</ul>`:"";
+const mixBar=v=>{const t=sum(v.map(x=>x[0]));return t?`<span class="mix" aria-hidden="true">${v.filter(x=>x[0]).map(x=>`<i style="flex:${x[0]};background:var(${x[1]})"></i>`).join("")}</span>`:"";};
+let MTL=[];
+// Clickable month-by-month columns for the journey pop-up. cols: [{m, segs:[[value, color var, name]], sum, items, foot, mark}]
+function mtl(cols,o={}){MTL=cols;
+  const tot=c=>sum(c.segs.map(x=>x[0])), mx=Math.max(1,...cols.map(tot));
+  const names=[...new Set(cols.flatMap(c=>c.segs.filter(x=>x[0]).map(x=>x[2]+"|"+x[1])))].map(x=>x.split("|"));
+  const order=(o.legend||ENG.map(e=>[e[0],e[1]])).filter(([n])=>names.some(x=>x[0]===n));
+  let sel=o.sel!=null?o.sel:cols.length-1; if(!tot(cols[sel])&&!cols[sel].items){for(let i=cols.length-1;i>=0;i--)if(tot(cols[i])||cols[i].items){sel=i;break;}}
+  const col=(c,i)=>{const t=tot(c), lbl=MS3[+c.m.slice(5,7)-1], yr=i===0||c.m.endsWith("-01");
+    return `<button type="button" class="mtl-c${i===sel?" on":""}${c.mark?" q":""}${t?"":" z"}" data-mtl="${i}" aria-pressed="${i===sel}" aria-label="${esc(mlong(c.m))}: ${esc(c.sum||"no tracked engagement")}">
+      <span class="mtl-v">${t?N(t):""}</span><span class="mtl-bar">${c.segs.filter(x=>x[0]).map(x=>`<i style="height:${(x[0]/mx*100).toFixed(1)}%;background:var(${x[1]})"></i>`).join("")}</span>
+      <span class="mtl-l">${lbl}${yr?`<b>${c.m.slice(0,4)}</b>`:""}</span>${c.foot!=null?`<span class="mtl-f">${c.foot}</span>`:""}</button>`;};
+  return `<div class="mtl">${order.length?legend(order.map(([n,c])=>({name:n,color:css(c),box:1}))):""}${o.extraKey||""}
+    <div class="mtl-scroll"><div class="mtl-cols" style="--n:${cols.length}">${cols.map(col).join("")}</div></div>
+    <div class="mtl-d" aria-live="polite">${mtlDetail(sel)}</div></div>`;}
+function mtlDetail(i){const c=MTL[i];if(!c)return "";
+  return `<div class="mtl-dh"><b>${esc(mlong(c.m))}</b><span class="note" style="margin:0">${c.sum?esc(c.sum):"No tracked engagement this month"}</span></div>${c.items||""}`;}
+function mtlBind(m){const cs=[...m.querySelectorAll("[data-mtl]")];if(!cs.length)return;
+  const pick=b=>{cs.forEach(x=>{x.classList.toggle("on",x===b);x.setAttribute("aria-pressed",x===b);});m.querySelector(".mtl-d").innerHTML=mtlDetail(+b.dataset.mtl);m.querySelectorAll(".mtl-d .co-link").forEach(a=>a.addEventListener("click",e=>e.stopPropagation()));};
+  cs.forEach(b=>b.addEventListener("click",()=>pick(b)));
+  m.querySelectorAll(".mtl-cols").forEach(g=>g.addEventListener("keydown",e=>{const b=e.target.closest("[data-mtl]");if(!b||(e.key!=="ArrowRight"&&e.key!=="ArrowLeft"))return;e.preventDefault();e.stopPropagation();const n=cs[+b.dataset.mtl+(e.key==="ArrowRight"?1:-1)];if(n){n.focus();pick(n);}}));
+  const sc=m.querySelector(".mtl-scroll"), on=m.querySelector(".mtl-c.on"); if(sc&&on) sc.scrollLeft=Math.max(0,on.offsetLeft-sc.clientWidth+on.offsetWidth+40);}
+// Summary list on the page; each row opens the full-screen journey. o.cols: [[label, grid width]], row.cells: [html]
 function tlx(id,o){
-  TLX[id]=o; const n=o.mo.length, every=n>12?3:1;
-  const head=`<div class="tlx-row tlx-head" aria-hidden="true"><span class="tlx-n">Company</span><span class="tlx-cells" style="--n:${n}">${o.mo.map((m,i)=>`<span class="${m.endsWith("-01")&&i?"yr":""}">${i%every===0||m.endsWith("-01")?MS3[+m.slice(5,7)-1]+(m.endsWith("-01")||i===0?`<b>${m.slice(2,4)}</b>`:""):""}</span>`).join("")}</span><span class="tlx-tot">${o.totLabel}</span></div>`;
-  const rows=o.rows.map(r=>`<div class="tlx-row" role="button" tabindex="0" data-tlx="${id}" data-k="${esc(r.key)}" data-s="${esc((r.name+" "+(r.sub||"")).toLowerCase())}" ${r.attrs||""}><span class="tlx-n"><b>${esc(r.name)}</b><small>${esc(r.sub||"")}</small></span><span class="tlx-cells" style="--n:${n}">${r.cells.map(c=>`<i class="${c.q?"q":""}" style="${c.s||""}" title="${c.t}">${c.mk||""}</i>`).join("")}</span><span class="tlx-tot">${r.total}</span></div>`).join("");
+  TLX[id]=o; const g=`--g:${o.cols.map(c=>c[1]).join(" ")}`;
+  const head=`<div class="tlx-row tlx-head" style="${g}" aria-hidden="true">${o.cols.map(c=>`<span>${c[0]}</span>`).join("")}</div>`;
+  const rows=o.rows.map(r=>`<div class="tlx-row" style="${g}" role="button" tabindex="0" data-tlx="${id}" data-k="${esc(r.key)}" data-s="${esc((r.name+" "+(r.sub||"")).toLowerCase())}" ${r.attrs||""}>${r.cells.map((x,i)=>`<span class="tlx-c">${i?`<span class="dm-lbl">${o.cols[i][0]}: </span>`:""}${x}</span>`).join("")}</div>`).join("");
   return `<div class="tlx" id="tlx-${id}"><div class="tlx-left"><div class="tlx-bar"><input type="search" class="tlx-q" data-tlxq="${id}" placeholder="Search companies" aria-label="Search companies">${o.tools||""}</div>${o.key||""}
     <div class="tlx-grid" id="tlx-grid-${id}">${head}<div class="tlx-body" id="${o.bodyId||"tlx-body-"+id}">${rows}</div></div></div></div>`;
 }
@@ -747,9 +796,9 @@ function jOpen(id,k){const o=TLX[id];if(!o)return; jClose(true);
   m.querySelector(".jm-x").addEventListener("click",()=>jClose()); m.addEventListener("click",e=>{if(e.target===m)jClose();});
   m.querySelectorAll("[data-jgo]").forEach(b=>b.addEventListener("click",()=>b.dataset.jgo&&jOpen(id,b.dataset.jgo)));
   m.querySelectorAll(".co-link").forEach(a=>a.addEventListener("click",e=>e.stopPropagation()));
-  exInit(); m.querySelector(".jm-x").focus();}
+  mtlBind(m); exInit(); m.querySelector(".jm-x").focus();}
 function jClose(keep){document.querySelectorAll(".jmodal").forEach(x=>x.remove());if(!keep)document.body.classList.remove("jm-open");}
-document.addEventListener("keydown",e=>{const m=document.querySelector(".jmodal");if(!m)return;if(e.key==="Escape")jClose();if(e.key==="ArrowRight"){const b=m.querySelectorAll("[data-jgo]")[1];b&&!b.disabled&&b.click();}if(e.key==="ArrowLeft"){const b=m.querySelectorAll("[data-jgo]")[0];b&&!b.disabled&&b.click();}});
+document.addEventListener("keydown",e=>{const m=document.querySelector(".jmodal");if(!m||e.defaultPrevented)return;if(e.key==="Escape")jClose();if(e.key==="ArrowRight"){const b=m.querySelectorAll("[data-jgo]")[1];b&&!b.disabled&&b.click();}if(e.key==="ArrowLeft"){const b=m.querySelectorAll("[data-jgo]")[0];b&&!b.disabled&&b.click();}});
 function tlxInit(){
   document.querySelectorAll(".tlx-row[data-tlx]").forEach(r=>{const go=()=>jOpen(r.dataset.tlx,r.dataset.k);r.addEventListener("click",go);r.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}});});
   document.querySelectorAll("[data-tlxq]").forEach(q=>q.addEventListener("input",()=>{const id=q.dataset.tlxq,v=q.value.trim().toLowerCase();document.querySelectorAll(`#tlx-${id} .tlx-body .tlx-row`).forEach(r=>{r.classList.toggle("q-off",!!v&&!r.dataset.s.includes(v));});}));
@@ -767,21 +816,27 @@ function hotPanel(X){
   const chips=h=>[`<span class="chip good">${pl(h.total,"engagement")}</span>`,h.contact?`<span class="chip warn">Contact page visit</span>`:"",h.newOct?`<span class="chip">New MQL, ${RM()}</span>`:"",
     h.sessions?`<span class="chip">Website: ${pl(h.sessions,"session")}</span>`:"",h.liClicks?`<span class="chip">LinkedIn: ${pl(h.liClicks,"click")}</span>`:"",h.adVisits?`<span class="chip">Google or Bing: ${pl(h.adVisits,"visit")}</span>`:"",h.emailClicks?`<span class="chip">Email: ${pl(h.emailClicks,"click")}</span>`:""].join("");
   const byK={}; H.forEach(h=>byK[h.domain]=h);
-  const rows=H.slice().sort((a,b)=>HOT_SORT==="last"?(b.last.localeCompare(a.last)||b.total-a.total):(b.total-a.total||b.last.localeCompare(a.last))).map(h=>({key:h.domain,name:h.name,sub:h.state||"",total:N(h.total),
-    attrs:`data-contact="${h.contact?1:0}" data-new="${h.newOct?1:0}" data-total="${h.total}" data-last="${esc(h.last)}"`,
-    cells:h.months.map(x=>({s:shade(x[1]+x[2]+x[3]),t:`${esc(h.name)}, ${ml(x[0])}: ${esc(said(x)||"no engagement")}`,mk:marks(x)}))}));
+  const tot4=h=>[[Math.max(0,h.sessions-h.adVisits),"--mk-web","Website"],[h.liClicks,"--gold","LinkedIn"],[h.adVisits,"--olive","Google or Bing"],[h.emailClicks,"--mk-em","Email"]];
+  const rows=H.slice().sort((a,b)=>HOT_SORT==="last"?(b.last.localeCompare(a.last)||b.total-a.total):(b.total-a.total||b.last.localeCompare(a.last))).map(h=>{
+    const act=h.months.filter(x=>x[1]+x[2]+x[3]).length, first=h.tl&&h.tl[0]?h.tl[0][0]:null, mix=tot4(h);
+    return {key:h.domain,name:h.name,sub:h.state||"",
+      attrs:`data-contact="${h.contact?1:0}" data-new="${h.newOct?1:0}" data-total="${h.total}" data-last="${esc(h.last)}"`,
+      cells:[`<span class="tlx-n"><b>${esc(h.name)}</b><small>${esc([h.state,h.domain].filter(Boolean).join(" · "))}</small></span>`,
+        `<span class="tlx-big">${N(h.total)}</span>${h.contact?`<span class="chip warn">Contact page</span>`:""}${h.newOct?`<span class="chip">New MQL</span>`:""}`,
+        `${mixBar(mix)}<small class="tlx-mix">${mix.filter(x=>x[0]).map(x=>`${x[2]} ${N(x[0])}`).join(" · ")}</small>`,
+        `${act} of 12 months${first?`<small>Since ${esc(mlong(first))}</small>`:""}`,
+        ms(h.last)]};});
   const head=k=>{const h=byK[k];return h?`<div class="tlx-dh">${coName(h.name,h.hubspotId)}<span class="note" style="margin:0">Hot MQL · ${esc(h.domain)}${h.state?` · ${esc(h.state)}`:""} · most recent engagement ${ms(h.last)}</span></div><div class="jr-c">${chips(h)}</div>`:"";};
-  const chartH=k=>{const h=byK[k];if(!h)return "";const S=[["Website sessions",1,"--mk-web"],["LinkedIn ad clicks",2,"--gold"],["Google or Bing ad visits",4,"--olive"],["Email clicks",3,"--mk-em"]];
-    return `<h3>Engagement by month</h3>${legend(S.map(([n,i,c])=>({name:n,color:css(c),box:1})))}${chart({labels:h.months.map(x=>MS3[+x[0].slice(5,7)-1]+(x[0].endsWith("-01")||x===h.months[0]?" "+x[0].slice(2,4):"")),bars:S.map(([n,i,c])=>({name:n,color:css(c),values:h.months.map(x=>i===1?Math.max(0,x[1]-x[4]):x[i])})),stacked:true,fmt:v=>N(v,v%1?1:0),h:280})}<p class="note" style="margin:4px 0 0">Website sessions here leave out the Google and Bing ad visits, which are shown on their own.</p>`;};
-  const detail=k=>{const h=byK[k];if(!h)return "";
-    return `<div class="eyebrow" style="margin-top:12px">Engagement by month, newest first</div><ul class="jm-list">${h.months.slice().reverse().filter(x=>x[1]+x[2]+x[3]).map(x=>`<li class="jm"><div class="jm-h"><b>${ml(x[0])}</b>${marks(x).replace('class="mk"','class="mk mk-in"')}<span class="note" style="margin:0">${said(x)}</span></div></li>`).join("")}</ul>
-      ${h.contact?`<p class="jr-p">Visited the contact page.</p>`:""}${exBtn(h.domain,h.name)}`;};
-  const key=`<div class="strip-key"><span><i style="opacity:.3"></i>Fewer engagements</span><span><i></i>More engagements</span>${MKH.map(([k,t,c])=>`<span><b class="mkd ${c}"></b>${t}</span>`).join("")}</div>`;
+  const chartH=k=>{const h=byK[k];if(!h)return "";const tl=h.tl&&h.tl.length?h.tl:h.months.map(x=>[x[0],x[1],x[2],x[3],x[4],[]]);
+    const cols=tl.map(x=>({m:x[0],segs:engSegs(x),sum:engSaid(x),items:tlItems(x[5])}));
+    return `<h3>Engagement by month since ${esc(mlong(tl[0][0]))}</h3>${mtl(cols)}<p class="note" style="margin:6px 0 0">Select a month to see what they engaged with. Website sessions here leave out the Google and Bing ad visits, which are shown on their own.</p>`;};
+  const detail=k=>{const h=byK[k];if(!h)return "";return `${h.contact?`<p class="jr-p">Visited the contact page.</p>`:""}${exBtn(h.domain,h.name)}`;};
+  const key=`<div class="strip-key">${[["Website","--mk-web"],["LinkedIn ad clicks","--gold"],["Google or Bing ad visits","--olive"],["Email clicks","--mk-em"]].map(([n,c])=>`<span><b class="mkd" style="background:var(${c})"></b>${n}</span>`).join("")}</div>`;
   const tools=`<div class="seg" role="group" aria-label="Sort"><button type="button" data-hsort="total" class="${HOT_SORT==="total"?"on":""}">Most engagements</button><button type="button" data-hsort="last" class="${HOT_SORT==="last"?"on":""}">Most recent</button></div>
     <label class="sel">Show <select id="hot-filter"><option value="all">All ${N(H.length)}</option><option value="contact">Visited the contact page (${cp})</option><option value="new">New MQLs, ${RM()} (${nw})</option><option value="30">30 or more engagements (${H.filter(h=>h.total>=30).length})</option></select></label>`;
-  return `<div class="panel" id="hot-panel"><h3>Hot MQLs</h3><p class="sub">${N(H.length)} companies with 15 or more engagements or a contact page visit in the past 12 months. Each row is November 2025 to ${RM()} ${String(D.year||"2026")}; darker squares mean more engagement. Select a company to open its full journey.</p>
-    ${tlx("hot",{mo,rows,head,body:detail,chart:chartH,label:"Hot MQL",key,tools,totLabel:"Total",bodyId:"hot-list"})}
-    <p class="sec-note">${esc(X.hotRule||"")} Website sessions include visits from ad clicks.</p></div>`;
+  return `<div class="panel" id="hot-panel"><h3>Hot MQLs</h3><p class="sub">${N(H.length)} companies with 15 or more engagements or a contact page visit in the past 12 months. Each row sums up how the company engaged. Select a company to see its month by month timeline.</p>
+    ${tlx("hot",{rows,head,body:detail,chart:chartH,label:"Hot MQL",key,tools,bodyId:"hot-list",cols:[["Company","minmax(180px,1.3fr)"],["Engagements","minmax(110px,.6fr)"],["How they engaged","minmax(200px,1.4fr)"],["Active months","minmax(120px,.7fr)"],["Most recent","minmax(110px,.6fr)"]]})}
+    <p class="sec-note">${esc(X.hotRule||"")} Active months counts the past 12 months. Website sessions include visits from ad clicks.</p></div>`;
 }
 function hotSort(){const L=document.getElementById("hot-list");if(!L)return;const ds=[...L.querySelectorAll(":scope > .tlx-row")];
   ds.sort((a,b)=>HOT_SORT==="last"?(b.dataset.last.localeCompare(a.dataset.last)||(+b.dataset.total-+a.dataset.total)):(+b.dataset.total-+a.dataset.total||b.dataset.last.localeCompare(a.dataset.last)));ds.forEach(d=>L.appendChild(d));}
@@ -866,20 +921,36 @@ function sqlSection(mqlSql){
   const jrun=r=>{const i=r.reduce((s,m)=>s+m.li.i,0),c=r.reduce((s,m)=>s+m.li.c,0),a=r[r.length-1].m,b=r[0].m;
     return `<li class="jm jm-run"><div class="jm-h"><b>${a===b?ml(a):`${ml(a)} to ${ml(b)}`}</b><span class="note" style="margin:0">LinkedIn: ${N(i)} impressions${c?`, ${c} click${c>1?"s":""}`:""}${r.length>1?` over ${r.length} months`:""}. No other tracked touches.</span></div></li>`;};
   const byK={}; C.forEach(c=>byK[c.domain||c.company]=c);
-  const rows=C.map(c=>({key:c.domain||c.company,name:c.company,sub:`SQL ${fdShort(c.sql)}`,total:fdShort(c.sql),
-    cells:c.monthly.map(x=>({q:x.m===c.sql.slice(0,7),s:shade(x.i),t:tip(c,x),mk:marks(x)}))}));
+  const SQS=[["LinkedIn ad clicks","c","--gold"],["Google or Bing ad visits","s","--olive"],["Website sessions","w","--mk-web"],["Email clicks","e","--mk-em"],["Calls, meetings, 1:1 emails","t","--ink"]];
+  const KIND={c:"LinkedIn clicks",s:"Google or Bing",w:"Website",e:"Email",t:"Calls or 1:1 emails"};
+  const firstIdx=c=>{const i=c.monthly.findIndex(x=>x.i||x.c||x.s||x.w||x.e||x.t);return i<0?0:i;};
+  const rows=C.map(c=>{const f=c.monthly[firstIdx(c)], items=(c.journey||[]).flatMap(m=>m.items), pre=items.filter(i=>i.beforeSql&&i.kind!=="q");
+    const cnt={};pre.forEach(i=>cnt[i.kind]=(cnt[i.kind]||0)+1); const liC=c.before.clicks+c.sqlMonth.clicks; if(liC)cnt.c=liC;
+    const mix=["c","s","w","e","t"].map(k=>[cnt[k]||0,SQS.find(x=>x[1]===k)[2],KIND[k]]);
+    const lastI=items.filter(i=>i.kind!=="q").sort((a,b)=>b.date.localeCompare(a.date))[0];
+    const firstCh=c.firstAd&&c.firstAd.month===f.m?"LinkedIn ad view":(items.filter(i=>i.date.slice(0,7)===f.m&&i.kind!=="q").sort((a,b)=>a.date.localeCompare(b.date))[0]||{}).channel||(f.i?"LinkedIn ad view":"");
+    return {key:c.domain||c.company,name:c.company,sub:`SQL ${fdShort(c.sql)}`,
+      cells:[`<span class="tlx-n"><b>${esc(c.company)}</b><small>${esc(c.domain||"")}</small></span>`,
+        `${fdShort(c.sql)}, ${c.sql.slice(0,4)}`,
+        `${esc(mlong(f.m))}${firstCh?`<small>${esc(firstCh)}</small>`:""}`,
+        `${c.leadMonths!=null?`${c.leadMonths} months of ads`:`<span class="note" style="margin:0">No LinkedIn ads seen</span>`}${mixBar(mix)}<small class="tlx-mix">${mix.filter(x=>x[0]).map(x=>x[2]===KIND.t?x[2]:`${x[2]} ${N(x[0])}`).join(" · ")||"No other tracked touches"}</small>`,
+        lastI?`${fdShort(lastI.date)}, ${lastI.date.slice(0,4)}<small>${esc(lastI.channel)}</small>`:"–"]};});
   const headS=k=>{const c=byK[k];return c?`<div class="tlx-dh">${coName(c.company,c.hubspotId)}<span class="note" style="margin:0">SQL · became sales qualified ${fdShort(c.sql)}, ${c.sql.slice(0,4)}</span></div><div class="jr-c">${chips(c)}</div>
       <p class="note" style="margin:8px 0 0">${c.firstAd?`Before SQL: ${N(c.before.impr+c.sqlMonth.impr)} LinkedIn impressions over ${c.before.months+(c.sqlMonth.impr?1:0)} months.`:"No LinkedIn impressions recorded."}${c.salesActivities?` ${N(c.salesActivities)} sales activities logged in HubSpot.`:""}</p>`:"";};
-  const chartS=k=>{const c=byK[k];if(!c)return "";const L=c.monthly.map(x=>MS3[+x.m.slice(5,7)-1]+(x.m.endsWith("-01")||x===c.monthly[0]?" "+x.m.slice(2,4):"")), sq=c.monthly.findIndex(x=>x.m===c.sql.slice(0,7));
-    const S=[["LinkedIn ad clicks","c","--gold"],["Google or Bing ad visits","s","--olive"],["Website sessions","w","--mk-web"],["Email clicks","e","--mk-em"],["Calls, meetings, 1:1 emails","t","--ink"]];
-    return `<h3>Touches by month</h3>${legend(S.map(([n,k2,col])=>({name:n,color:css(col),box:1})))}${chart({labels:L,bars:S.map(([n,k2,col])=>({name:n,color:css(col),values:c.monthly.map(x=>x[k2]||0)})),stacked:true,fmt:v=>N(v,v%1?1:0),h:240})}
-      <h3 style="margin-top:14px">LinkedIn impressions by month</h3>${chart({labels:L,bars:[{name:"Impressions",color:css("--c-hc"),values:c.monthly.map(x=>x.i)}],h:180})}
-      ${sq>=0?`<p class="note" style="margin:4px 0 0">Became an SQL in ${L[sq]}.</p>`:""}`;};
-  const detail=k=>{const c=byK[k];if(!c)return "";
-    return `<div class="eyebrow" style="margin-top:12px">Journey by month, newest first</div><ul class="jm-list">${jgroup(c.journey||[]).map(m=>m.run?jrun(m.run):jmonth(m)).join("")}</ul>`;};
-  const key=`<div class="strip-key"><span><i style="opacity:.3"></i>Fewer impressions</span><span><i></i>More impressions</span>${MK.map(([k,t,c])=>`<span><b class="mkd ${c}"></b>${t}</span>`).join("")}<span><i style="background:var(--soft);outline:2px solid var(--ink);outline-offset:-1px"></i>Became SQL</span></div>`;
-  h+=`<div class="panel"><h3>${J.year} SQL company journeys</h3><p class="sub">Newest SQLs first. Each row runs from ${ml(mo[0])} to ${ml(mo[nm-1])}: darker squares mean more LinkedIn impressions, dots mark the other touches and the outlined square is the month the company became an SQL. Select a company to open its full journey.</p>
-    ${tlx("sql",{mo,rows,head:headS,body:detail,chart:chartS,label:"SQL company",key,totLabel:"SQL"})}
+  const imx=Math.max(1,...C.flatMap(c=>c.monthly.map(x=>x.i)));
+  const chartS=k=>{const c=byK[k];if(!c)return "";const ms_=c.monthly.slice(firstIdx(c)), jm={};(c.journey||[]).forEach(m=>jm[m.m]=m);
+    const SAY={c:"LinkedIn ad click",s:"Google or Bing ad visit",w:"website session",e:"email click"};
+    const said=x=>SQS.map(([n,k2])=>!x[k2]?"":k2==="t"?`${N(x.t)} ${x.t===1?"call, meeting or 1:1 email":"calls, meetings or 1:1 emails"}`:plw(x[k2],SAY[k2])).filter(Boolean).concat(x.i?[`${N(x.i)} LinkedIn impressions`]:[]).join(", ");
+    const cols=ms_.map(x=>{const j=jm[x.m];return {m:x.m,mark:x.m===c.sql.slice(0,7),segs:SQS.map(([n,k2,col])=>[x[k2]||0,col,n]),sum:said(x)+(x.m===c.sql.slice(0,7)?". Became an SQL":""),
+      foot:x.i?`<i style="${(p=>`background:color-mix(in srgb,var(--c-hc) ${p}%,var(--soft));${p>55?"color:#fff;":""}`)(Math.round(15+85*Math.log1p(x.i)/Math.log1p(imx)))}">${x.i>=1000?N(x.i/1000,1)+"k":N(x.i)}</i>`:"<i></i>",
+      items:j&&j.items.length?`<ul class="jm-list">${jmonth(j)}</ul>`:x.i?`<p class="note" style="margin:0">LinkedIn ads only this month. No other tracked touches.</p>`:""};});
+    const sqi=cols.findIndex(x=>x.mark);
+    return `<h3>Touches by month since ${esc(mlong(ms_[0].m))}</h3>${mtl(cols,{sel:sqi>=0?sqi:cols.length-1,legend:SQS.map(x=>[x[0],x[2]]),extraKey:`<div class="strip-key"><span><i></i>Row under the bars: LinkedIn impressions that month</span><span><i style="background:var(--soft);outline:2px solid var(--ink);outline-offset:-1px"></i>Became SQL</span></div>`})}
+      <p class="note" style="margin:6px 0 0">Select a month to see each touch. Website, Google and Bing tracking starts March 16, 2026.</p>`;};
+  const detail=k=>"";
+  const key="";
+  h+=`<div class="panel"><h3>${J.year} SQL company journeys</h3><p class="sub">Newest SQLs first. Each row sums up the company's tracked touches before it became an SQL. Select a company to see its month by month timeline.</p>
+    ${tlx("sql",{rows,head:headS,body:detail,chart:chartS,label:"SQL company",key,cols:[["Company","minmax(180px,1.3fr)"],["Became SQL","minmax(100px,.6fr)"],["First tracked touch","minmax(130px,.8fr)"],["Before SQL","minmax(200px,1.5fr)"],["Most recent touch","minmax(120px,.7fr)"]]})}
     <p class="sec-note">${esc(S.source)} ${esc(S.window)}</p>${S.domainNote?`<p class="sec-note"><b>Note:</b> ${esc(S.domainNote)}</p>`:""}</div>`;
   return h;
 }

@@ -14,6 +14,8 @@ D["defMql"]["lists"] = T["lists"]
 LC = json.load(open("hs_lifecycle.json"))
 LO = json.load(open("hs_last_outreach.json"))
 for c in D["defMql"]["companies"]:
+    c["tl"] = T["newTl"].get(c["domain"], [])
+for c in D["defMql"]["companies"]:
     o = LO.get(str(c.get("hubspotId")), {})
     e, k = o.get("email", ""), o.get("call", "")
     c["lastOutreach"] = ({"date": max(e, k), "type": "1:1 email" if e >= k else "Call"} if (e or k) else None)

@@ -136,6 +136,35 @@ for r in HC:
                     "name": nm, "domain": r, "hubspotId": list(ORG[r]["ids"].values())[0], "total": tot, "sessions": s_, "liClicks": li_,
                     "emailClicks": len(emd), "adVisits": gb, "contact": cp, "last": last, "newOct": r in newset, "state": state_of(r)})
 hot.sort(key=lambda h: (-h["total"], h["name"]))
-json.dump({"lists": lists, "newBySource": newBySource, "hot": hot, "dow": dow, "loc": loc, "outreach": out_s, "firstOutreach": {str(c["hubspotId"]): c.get("firstOutreach") for c in S}}, open("trends_oct.json", "w"), indent=1)
+# full timeline since the first tracked engagement, month by month, with what was engaged with
+MSN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+def fdm(d): return f"{MSN[int(d[5:7])-1]} {int(d[8:10])}"
+def nice(c): return (c or "").replace("+", " ").replace("-", " ").replace("Healthcare Development Tier", "Healthcare Development Tier ").replace("  ", " ").strip()
+def timeline(r, end="2026-10"):
+    ev = [e for e in events[r] if e[0][:7] <= end]
+    if not ev: return []
+    first = min(e[0][:7] for e in ev); y, m = int(first[:4]), int(first[5:7]); out = []
+    while f"{y}-{m:02d}" <= end:
+        k = f"{y}-{m:02d}"; w = l = e_ = s_ = 0; items = []; emails = set()
+        for d, ch, x in sorted(ev, key=lambda e: (e[0], e[1])):
+            if d[:7] != k: continue
+            if ch == "Website visit":
+                w += x.get("sessions") or 0; items.append([d, "web", f"Week of {fdm(d)}: {x.get('sessions')} website session{'s' if (x.get('sessions') or 0) != 1 else ''}"])
+            elif ch == "LinkedIn ad click":
+                l += x.get("clicks", 0); items.append([d, "li", f"{MSN[int(d[5:7])-1]}: {x.get('clicks')} LinkedIn ad click{'s' if x.get('clicks') != 1 else ''}"])
+            elif ch in ("Google ad click", "Bing ad click"):
+                s_ += 1; items.append([d, "ad", f"{fdm(d)}: {ch.split()[0]} ad click, {nice(x.get('campaign'))}" + (f', searched "{x["keyword"]}"' if x.get("keyword") else "")])
+            elif ch == "Email click":
+                key = (d, x.get("type"), x.get("name"))
+                if key in emails: continue
+                emails.add(key); e_ += 1
+                items.append([d, "em", f"{fdm(d)}: clicked a {'1:1 email from Boldt' if x.get('type') == '1:1 email' else 'marketing email'}" + (f": {x['name']}" if x.get("name") else "")])
+        out.append([k, w, l, e_, s_, [[t, txt] for _, t, txt in items]])
+        m += 1
+        if m == 13: y, m = y + 1, 1
+    return out
+for h in hot: h["tl"] = timeline(h["domain"])
+newTl = {r: timeline(r) for r in new}
+json.dump({"newTl": newTl, "lists": lists, "newBySource": newBySource, "hot": hot, "dow": dow, "loc": loc, "outreach": out_s, "firstOutreach": {str(c["hubspotId"]): c.get("firstOutreach") for c in S}}, open("trends_oct.json", "w"), indent=1)
 print(json.dumps(dow["all"]["avgShare"]), json.dumps(newBySource), len(hot), sum(1 for h in hot if h["contact"])); print(json.dumps({k: {"top": v["states"][:8], "regions": v["regions"], "unknown": v["unknown"], "n": v["n"]} for k, v in loc.items()})); print(out_s)
 print(sorted(round(g) for g in gaps))
