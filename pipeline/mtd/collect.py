@@ -24,10 +24,11 @@ for x in load("google.json", []): google[json.dumps(x, sort_keys=True)] = x
 for x in load("bing.json", []): bing[json.dumps(x, sort_keys=True)] = x
 
 def texts():
-    for f in glob.glob("/root/.claude/projects/*/*/tool-results/*.txt") + glob.glob("/root/.claude/projects/*/tool-results/*.txt"):
+    roots = {os.path.expanduser("~/.claude/projects"), "/root/.claude/projects", os.path.join(os.environ.get("CLAUDE_CONFIG_DIR", "/nonexistent"), "projects")}
+    for f in [f for r in roots for f in glob.glob(r + "/*/*/tool-results/*.txt") + glob.glob(r + "/*/tool-results/*.txt")]:
         try: yield open(f).read()
         except Exception: pass
-    for j in glob.glob("/root/.claude/projects/*/*.jsonl"):
+    for j in [j for r in roots for j in glob.glob(r + "/*/*.jsonl")]:
         for line in open(j):
             if '"tool_result"' not in line: continue
             try: o = json.loads(line)
