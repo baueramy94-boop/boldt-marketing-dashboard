@@ -194,8 +194,8 @@ Run these in Python and fix anything that fails:
 - The current month so far comes from `mtd.json` `cur` (written by `build_mtd.py` for domains in the last monthly report: [website sessions, LinkedIn clicks, email clicks, Google or Bing ad visits]). It appears after the Monday refresh; the detail comes with the monthly report.
 
 ### Project calendar (tracker.html) Now view
-- Each project shows once. Waiting on others with a due date (past due or in the next 90 days) stays in its date column with the gold pill; the waiting lane holds on-hold projects and waiting ones with no date in that range. "No due date" lists open projects without a date.
+- Each project shows once. "Waiting on others" and "On hold" always go in the waiting lane (due date on the card, waiting first, soonest first); the date columns hold the other open work. "No due date" lists open projects without a date that aren't waiting or on hold. Changed Nov 9, 2026 at Amy's request.
 - Ads archive: no headline over the image (a "No image preview" box only shows when the image fails); cards grow on hover on desktop and the image opens full size on click.
 
 ### New MQLs by source
-- Grouped bar chart (`gbars`), bars grow in on load; hover or keyboard focus on a month highlights it and shows its numbers and the New MQL total.
+- One stacked bar per month (`sbars`): height is the month's new MQLs, split by each source's share of the source counts (a company with several sources is split across them). Bars grow in on load; hover or keyboard focus on a month highlights it and shows the actual source counts and the total.

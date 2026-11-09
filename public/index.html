@@ -164,6 +164,15 @@ tr.future td{color:var(--muted)}
 .gb-tip em{display:block;font-style:normal;opacity:.75;margin-top:4px;max-width:200px}
 .gb-m:hover .gb-tip,.gb-m:focus .gb-tip{opacity:1;transform:translateX(0)}
 @media (prefers-reduced-motion:reduce){.gb-bars i{animation:none;transition:none}}
+.sb .gb-bars i{display:none}
+.sb-col{width:min(46px,62%);display:flex;flex-direction:column-reverse;border-radius:5px 5px 0 0;overflow:hidden;transform-origin:bottom;animation:gbGrow .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--k)*45ms);transition:transform .2s,opacity .2s,filter .2s}
+.sb-col b{display:block;transition:filter .2s}
+.sb-col b+b{box-shadow:0 1px 0 rgba(255,255,255,.7)}
+.sb-v{position:absolute;left:0;right:0;text-align:center;font-size:11.5px;font-weight:700;color:var(--ink);padding-bottom:3px}
+.gb-cols:hover .gb-m:not(:hover) .sb-col,.gb-cols:focus-within .gb-m:not(:focus) .sb-col{opacity:.35}
+.gb-m:hover .sb-col,.gb-m:focus .sb-col{transform:scaleY(1.03);filter:saturate(1.15)}
+@media (prefers-reduced-motion:reduce){.sb-col{animation:none;transition:none}}
+
 @media (max-width:700px){.gb-bars{gap:1px;padding:0 1px}.gb-cols{gap:2px}.gb-l{font-size:10.5px}}
 
 .hb{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(60px,1fr) auto;gap:10px;align-items:center;font-size:13px}
@@ -497,6 +506,17 @@ function gbars({labels,series,h=240,totals=null,totalLabel="Total",note=""}){
   return `<div class="gb" style="--h:${h}px"><div class="gb-grid">${grid}</div><div class="gb-cols" style="--n:${labels.length}">${labels.map((lb,i)=>`<div class="gb-m${i>=labels.length/2?" gb-r":""}" tabindex="0" aria-label="${esc(lb)}: ${series.map(s=>`${s.name} ${s.values[i]||0}`).join(", ")}">
     <div class="gb-tip"><b>${esc(lb)}${totals?` · ${totalLabel} ${N(totals[i])}`:""}</b>${series.map(s=>`<span><span><i style="background:${s.color}"></i>${esc(s.name)}</span>${N(s.values[i]||0)}</span>`).join("")}${note?`<em>${esc(note)}</em>`:""}</div>
     <div class="gb-bars">${series.map(s=>`<i style="height:${((s.values[i]||0)/mx*100).toFixed(2)}%;background:${s.color};--k:${i}"></i>`).join("")}</div><div class="gb-l">${esc(lb)}</div></div>`).join("")}</div></div>`;}
+// One stacked bar per month: height is the month's total, split by each source's share of that month's source counts.
+// The tooltip shows the real counts (a company can count under more than one source, so they can add up to more than the total).
+function sbars({labels,series,totals,h=240,totalLabel="Total",note=""}){
+  const mx=niceMax(Math.max(1,...totals)*1.12), nt=ticks(mx);
+  const grid=Array.from({length:nt+1},(_,k)=>`<span style="bottom:${(k/nt*100).toFixed(2)}%"><b>${N(mx*k/nt)}</b></span>`).join("");
+  return `<div class="gb sb" style="--h:${h}px"><div class="gb-grid">${grid}</div><div class="gb-cols" style="--n:${labels.length}">${labels.map((lb,i)=>{
+    const t=totals[i]||0, sc=sum(series.map(s=>s.values[i]||0)), hp=t/mx*100;
+    const segs=series.map(s=>[s,(s.values[i]||0)]).filter(x=>x[1]).map(([s,v])=>`<b style="flex:${v};background:${s.color}" title="${esc(s.name)}: ${N(v)}"></b>`).join("");
+    return `<div class="gb-m${i>=labels.length/2?" gb-r":""}" tabindex="0" aria-label="${esc(lb)}: ${totalLabel} ${N(t)}; ${series.map(s=>`${s.name} ${s.values[i]||0}`).join(", ")}">
+    <div class="gb-tip"><b>${esc(lb)} · ${totalLabel} ${N(t)}</b>${series.map(s=>`<span><span><i style="background:${s.color}"></i>${esc(s.name)}</span>${N(s.values[i]||0)}</span>`).join("")}${note&&sc>t?`<em>${esc(note)}</em>`:""}</div>
+    <div class="gb-bars" style="position:relative">${t?`<div class="sb-col" style="height:${hp.toFixed(2)}%;--k:${i}">${segs}</div><span class="sb-v" style="bottom:${hp.toFixed(2)}%">${N(t)}</span>`:""}</div><div class="gb-l">${esc(lb)}</div></div>`;}).join("")}</div></div>`;}
 const legend=items=>`<div class="legend">${items.map(i=>`<span><i class="${i.box?'box':''} ${i.dash?'dash':''}" style="background:${i.color}"></i>${i.name}</span>`).join("")}</div>`;
 
 /* ---------- report month ---------- */
@@ -641,9 +661,9 @@ function defMqlPanel(){
     ${X.engagedYtd!=null?kpi(`Total Engaged Companies, ${YR}`,N(X.engagedYtd),`Engaged at least once, January to ${RM()}`):""}</div>`;
   const NB=X.newBySource;
   if(NB){const SC=[["Website visit","--mk-web"],["LinkedIn ad click","--c-hc"],["Google ad click","--c-ga"],["Email click","--mk-em"],["Bing ad click","--c-sl"]].filter(([k])=>sum(NB.bySource[k]||[]));
-    h+=`<div class="panel"><h3>New MQLs by source, month by month</h3><p class="sub">New MQLs each month by how they engaged that month. One company can count under more than one source. Hover over a month to see its numbers.</p>
+    h+=`<div class="panel"><h3>New MQLs by source, month by month</h3><p class="sub">New MQLs each month. Each bar is the month's total, divided by how those companies engaged. A company that engaged through more than one source is split across them. Hover over a month to see the counts.</p>
     ${legend(SC.map(([k,c])=>({name:k,color:css(c),box:1})))}
-    ${gbars({labels:M().slice(0,NB.months),series:SC.map(([k,c])=>({name:k,color:css(c),values:NB.bySource[k]})),h:240,totals:NB.total,totalLabel:"New MQLs",note:"A company can count under more than one source."})}
+    ${sbars({labels:M().slice(0,NB.months),series:SC.map(([k,c])=>({name:k,color:css(c),values:NB.bySource[k]})),h:260,totals:NB.total,totalLabel:"New MQLs",note:"A company that engaged through more than one source counts under each, so these add up to more than the total."})}
     ${X.ytdNote?`<p class="sec-note">${esc(X.ytdNote)}</p>`:""}</div>`;}
   if(DM_SRC==="mtd"&&MTDATA&&MTDATA.month>X.month){const Y=dmMtdX();h+=defMqlList(Y,Y.companies);}
   else if(C.length) h+=defMqlList(X,C);

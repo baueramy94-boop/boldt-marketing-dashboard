@@ -711,17 +711,16 @@ function passesNoKpi(it){ const k = F.kpi; F.kpi = ""; const r = passes(it, true
 // ---------- Now view ----------
 function renderNow(){
   const vis = state.items.filter(it => passes(it));
-  // A card shows in one place. Waiting items with a due date (past due or in the next 90 days) stay in their date column
-  // with the "Waiting on others" pill; the waiting lane holds on-hold items and waiting items with no date in that range.
+  // A card shows in one place. "Waiting on others" and "On hold" always go to the waiting lane, with their due date on the card;
+  // the date columns hold the work Boldt is doing now.
   const WAIT = it => it.status === "Waiting on others", HOLD = it => it.status === "On hold";
-  const over = vis.filter(it => isOverdue(it) || (WAIT(it) && (daysOut(it) ?? 0) < 0)).sort(sortByDue);
-  const inN = (a,b) => it => { const n = daysOut(it); return n !== null && n >= a && n <= b && it.status !== "Complete" && !HOLD(it); };
+  const over = vis.filter(it => isOverdue(it) && !WAIT(it) && !HOLD(it)).sort(sortByDue);
+  const inN = (a,b) => it => { const n = daysOut(it); return n !== null && n >= a && n <= b && it.status !== "Complete" && !WAIT(it) && !HOLD(it); };
   const byPri = (a,b) => sortByDue(a,b) || (PRI_ORDER[a.priority] ?? 3) - (PRI_ORDER[b.priority] ?? 3);
   const week = vis.filter(inN(0, DAYS_LEFT_IN_WEEK)).sort(byPri);
   const next30 = vis.filter(inN(DAYS_LEFT_IN_WEEK + 1, 30)).sort(byPri);
   const later = vis.filter(inN(31,90)).sort(byPri);
-  const shown = new Set([...over, ...week, ...next30, ...later]);
-  const waiting = vis.filter(it => (WAIT(it) || HOLD(it)) && !shown.has(it)).sort(byPri);
+  const waiting = vis.filter(it => WAIT(it) || HOLD(it)).sort((a,b) => (WAIT(b) - WAIT(a)) || byPri(a,b));
   const nodate = vis.filter(it => it.status !== "Complete" && !WAIT(it) && !HOLD(it) && daysOut(it) === null).sort((a,b) => (PRI_ORDER[a.priority] ?? 3) - (PRI_ORDER[b.priority] ?? 3) || a.title.localeCompare(b.title));
   const grp = list => withGroups(list, cardHTML, (arr, o) => o.slice(0,3).join(", ")+(o.length>3?" +"+(o.length-3):""));
   const lane = (title, list, cls, hint, wide) => `<div class="lane ${cls||""}"><h3>${title}<span class="badge">${list.length}</span></h3>${hint?`<div class="hint">${hint}</div>`:""}${list.length ? (wide ? `<div class="cardgrid">${grp(list)}</div>` : grp(list)) : '<div class="empty">Nothing here.</div>'}</div>`;
@@ -730,7 +729,7 @@ function renderNow(){
   $("#v-now").innerHTML =
     `<div class="lanes four">${lane("Overdue", over, "overdue", "Past due and not marked complete.")}${lane("Due this week", week, "", wk)}${lane("Next 30 days", next30, "", "Includes this month's recurring work.")}${lane("Coming up: 31 to 90 days", later, "")}</div>
      <div class="lanes second one">${lane("No due date", nodate, "", "Open projects without a due date. Add one in the project to move it into a column above.", true)}</div>
-     <div class="lanes second one">${lane("Waiting on others / on hold", waiting, "", "On hold, or waiting with no due date in the next 90 days. Waiting projects with a due date stay in their date column above.", true)}</div>
+     <div class="lanes second one">${lane("Waiting on others / on hold", waiting, "", "Every project waiting on someone else or on hold, with its due date on the card. Waiting projects come first, soonest due date first.", true)}</div>
      ${F.done ? `<div class="lanes second one">${lane("Completed", done, "", "", true)}</div>` : ""}`;
 }
 
