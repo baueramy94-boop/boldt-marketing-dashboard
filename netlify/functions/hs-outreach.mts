@@ -2,6 +2,7 @@ import type { Config } from "@netlify/functions";
 
 // 1:1 outreach for the "Engagement after 1:1 outreach" panel: calls and emails Boldt logged in HubSpot in a month,
 // and the companies they are on. Returns no contacts, subjects or email bodies.
+// Also ?company=<id>: that company's full call, email and reply history (see companyHistory).
 // GET /api/hs-outreach?month=2026-10 -> { ok, ready, month, items: [{ t: "call" | "email", d: "YYYY-MM-DD", co: [companyId] }],
 //                                         companies: { id: { n, d, i } }, truncated? }
 // Calls: every logged call except inbound and canceled. Emails: emails sent by Boldt (hs_email_direction = EMAIL).
@@ -19,6 +20,8 @@ const dayCT = (iso: string) => new Intl.DateTimeFormat("en-CA", { timeZone: "Ame
 export default async (req: Request) => {
   const token = Netlify.env.get("HUBSPOT_TOKEN");
   if (!token) return json({ ok: true, ready: false });
+  const company = new URL(req.url).searchParams.get("company") || "";
+  if (company) return companyHistory(company, { authorization: `Bearer ${token}`, "content-type": "application/json" });
   const month = new URL(req.url).searchParams.get("month") || "";
   if (!MONTH.test(month)) return json({ ok: false, error: "bad month" }, 400);
   const auth = { authorization: `Bearer ${token}`, "content-type": "application/json" };
@@ -86,5 +89,51 @@ export default async (req: Request) => {
     return json({ ok: false, ready: true, error: "Couldn't read 1:1 outreach from HubSpot." }, 502);
   }
 };
+
+// One company's full 1:1 history for its journey pop-up: every call, email Boldt sent and reply, by Central date.
+// GET /api/hs-outreach?company=123 -> { ok, items: [{ t: "call" | "email" | "reply", d }] }   (no contacts, subjects or bodies)
+async function companyHistory(id: string, auth: Record<string, string>) {
+  if (!/^\d{1,20}$/.test(id)) return json({ ok: false, error: "bad company" }, 400);
+  try {
+    const ids = async (obj: string) => {
+      const out: string[] = []; let after = "";
+      for (let p = 0; p < 10; p++) {
+        const r = await fetch(`${API}/crm/v4/objects/companies/${id}/associations/${obj}?limit=500${after ? `&after=${after}` : ""}`, { headers: auth });
+        if (!r.ok) throw new Error(`${obj} associations ${r.status}`);
+        const d: any = await r.json();
+        (d.results || []).forEach((x: any) => out.push(String(x.toObjectId)));
+        after = d.paging?.next?.after || ""; if (!after) break;
+      }
+      return out;
+    };
+    const read = async (obj: string, list: string[], props: string[]) => {
+      const out: any[] = [];
+      for (let i = 0; i < list.length; i += 100) {
+        const r = await fetch(`${API}/crm/v3/objects/${obj}/batch/read`, { method: "POST", headers: auth, body: JSON.stringify({ properties: props, inputs: list.slice(i, i + 100).map((x) => ({ id: x })) }) });
+        if (!r.ok && r.status !== 207) throw new Error(`${obj} ${r.status}`);
+        out.push(...(((await r.json()) as any).results || []));
+      }
+      return out;
+    };
+    const [ci, ei] = await Promise.all([ids("calls"), ids("emails")]);
+    const [calls, emails] = await Promise.all([
+      read("calls", ci.slice(0, 2000), ["hs_timestamp", "hs_call_direction", "hs_call_status"]),
+      read("emails", ei.slice(0, 2000), ["hs_timestamp", "hs_email_direction"]),
+    ]);
+    const items: any[] = [];
+    calls.forEach((c) => { const p = c.properties || {};
+      if (!p.hs_timestamp || String(p.hs_call_direction || "").toUpperCase() === "INBOUND" || String(p.hs_call_status || "").toUpperCase() === "CANCELED") return;
+      items.push({ t: "call", d: dayCT(p.hs_timestamp) }); });
+    emails.forEach((e) => { const p = e.properties || {}; if (!p.hs_timestamp) return;
+      const dir = String(p.hs_email_direction || "").toUpperCase();
+      if (dir === "EMAIL") items.push({ t: "email", d: dayCT(p.hs_timestamp) });
+      else if (dir === "INCOMING_EMAIL") items.push({ t: "reply", d: dayCT(p.hs_timestamp) }); });
+    items.sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : 0));
+    return json({ ok: true, items });
+  } catch (e: any) {
+    console.log(`hs-outreach company failed: ${e?.message || e}`);
+    return json({ ok: false, error: "Couldn't read calls and emails from HubSpot." }, 502);
+  }
+}
 
 export const config: Config = { path: "/api/hs-outreach", method: ["GET"] };

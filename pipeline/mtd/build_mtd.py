@@ -254,10 +254,24 @@ companies.sort(key=lambda c: (c["first"]["precision"] == "month", c["first"]["da
 bych = defaultdict(int)
 for c in companies:
     for ch in c["channels"]: bych[ch] += 1
+# This month so far for companies already listed in the last monthly report (hot MQLs, new MQLs, SQL companies), so their
+# journey pop-ups run through the current month. Only domains that report already publishes are written in plain text.
+cur = {}
+_rep = sorted(f for f in os.listdir(os.path.join(SITE, "public", "data")) if re.fullmatch(r"\d{4}-\d{2}\.json", f) and f[:7] < M)
+if _rep:
+    _R = json.load(open(os.path.join(SITE, "public", "data", _rep[-1])))
+    _doms = {x.get("domain") for k in ("hot", "companies") for x in (_R.get("defMql") or {}).get(k, [])}
+    _doms |= {x.get("domain") for x in (_R.get("sqlJourneys") or {}).get("companies", [])}
+    for d in sorted(x for x in _doms if x):
+        rk = hsh(root(d))
+        if rk in events and events[rk]:
+            v = month_vals(rk)
+            if sum(v): cur[d] = v
 out = {"month": M, "through": THRU, "asOf": dt.date.today().isoformat(), "newCount": len(companies), "activeCount": len(active), "newByChannel": dict(bych),
        "listNote": f"{MONTH} so far, through {dl(THRU)}. Refreshed every Monday morning, so the list grows through the month and the final count comes with the monthly report. LinkedIn reports clicks by company for each campaign, not for each ad, and its company data arrives a few days late. Website visits are counted by week, so the most recent date for a visit is the start of that week.",
        "domainNote": "Parent and child companies that share one website domain, such as a health system and its hospitals, can't always be told apart, so their activity may be combined. We're working through this with Factors.",
-       "missingFactors": [c["domain"] for c in companies if c["domain"] not in FA], "companies": companies}
+       "missingFactors": [c["domain"] for c in companies if c["domain"] not in FA], "companies": companies,
+       "cur": cur, "curNote": "This month so far for companies in the last monthly report: [website sessions, LinkedIn ad clicks, email clicks, Google or Bing ad visits]."}
 json.dump(out, open(os.path.join(SITE, "public", "data", "mtd.json"), "w"), separators=(",", ":"), ensure_ascii=False)
 if FINAL:
     for r in active:

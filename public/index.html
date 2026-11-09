@@ -141,6 +141,31 @@ tr.total td{font-weight:700;border-bottom:0}
 .placeholder{border-style:dashed}
 tr.future td{color:var(--muted)}
 .hbars{display:grid;gap:7px;margin-top:6px}
+/* grouped bars with hover (New MQLs by source) */
+.gb{position:relative;margin-top:8px;padding-left:34px}
+.gb-grid{position:absolute;inset:0 0 34px 34px;pointer-events:none}
+.gb-grid span{position:absolute;left:0;right:0;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+.gb-grid span b{position:absolute;left:-34px;top:-8px;width:28px;text-align:right;font-weight:500}
+.gb-cols{position:relative;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:6px;height:var(--h)}
+.gb-m{position:relative;display:flex;flex-direction:column;justify-content:flex-end;border-radius:8px;cursor:default;outline:none;transition:background .2s}
+.gb-bars{flex:1;display:flex;align-items:flex-end;justify-content:center;gap:2px;padding:0 3px}
+.gb-bars i{flex:1;max-width:16px;border-radius:3px 3px 0 0;transform-origin:bottom;animation:gbGrow .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--k)*45ms);transition:transform .2s,filter .2s,opacity .2s}
+@keyframes gbGrow{from{transform:scaleY(0)}}
+.gb-l{height:34px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);font-weight:600}
+.gb-cols:hover .gb-m:not(:hover) .gb-bars i,.gb-cols:focus-within .gb-m:not(:focus) .gb-bars i{opacity:.35}
+.gb-m:hover,.gb-m:focus{background:var(--soft)}
+.gb-m:hover .gb-bars i,.gb-m:focus .gb-bars i{transform:scaleY(1.05);filter:saturate(1.15)}
+.gb-m:hover .gb-l,.gb-m:focus .gb-l{color:var(--ink)}
+.gb-tip{position:absolute;top:6px;left:calc(100% + 6px);min-width:180px;background:var(--ink);color:#fff;border-radius:8px;padding:9px 11px;font-size:12px;line-height:1.5;opacity:0;pointer-events:none;transform:translateX(-4px);transition:opacity .18s,transform .18s;z-index:5;box-shadow:0 8px 22px rgba(0,0,0,.18)}
+.gb-m.gb-r .gb-tip{left:auto;right:calc(100% + 6px);transform:translateX(4px)}
+.gb-tip b{display:block;font-size:12.5px;margin-bottom:3px}
+.gb-tip span{display:flex;justify-content:space-between;gap:12px}
+.gb-tip span i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.gb-tip em{display:block;font-style:normal;opacity:.75;margin-top:4px;max-width:200px}
+.gb-m:hover .gb-tip,.gb-m:focus .gb-tip{opacity:1;transform:translateX(0)}
+@media (prefers-reduced-motion:reduce){.gb-bars i{animation:none;transition:none}}
+@media (max-width:700px){.gb-bars{gap:1px;padding:0 1px}.gb-cols{gap:2px}.gb-l{font-size:10.5px}}
+
 .hb{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(60px,1fr) auto;gap:10px;align-items:center;font-size:13px}
 .hb-l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hb-t{height:8px;background:var(--soft);border-radius:4px;position:relative}
@@ -465,6 +490,13 @@ function chart({labels,bars=[],lines=[],refs=[],fmt=N,h=230,stacked=false,partia
     const last=pts.map((p,i)=>[p,i]).filter(x=>x[0]).pop(); if(last&&l.endLabel!==false)g+=`<text x="${last[0][0]+7}" y="${last[0][1]+4}" class="lbl" style="fill:${l.color}">${fmt(l.values[last[1]])}</text>`;});
   return g+`</svg>`;
 }
+// Grouped bars, one group per month; hover or focus a month to highlight it and see its numbers.
+function gbars({labels,series,h=240,totals=null,totalLabel="Total",note=""}){
+  const mx=niceMax(Math.max(1,...series.flatMap(s=>s.values))*1.05), nt=ticks(mx);
+  const grid=Array.from({length:nt+1},(_,k)=>`<span style="bottom:${(k/nt*100).toFixed(2)}%"><b>${N(mx*k/nt)}</b></span>`).join("");
+  return `<div class="gb" style="--h:${h}px"><div class="gb-grid">${grid}</div><div class="gb-cols" style="--n:${labels.length}">${labels.map((lb,i)=>`<div class="gb-m${i>=labels.length/2?" gb-r":""}" tabindex="0" aria-label="${esc(lb)}: ${series.map(s=>`${s.name} ${s.values[i]||0}`).join(", ")}">
+    <div class="gb-tip"><b>${esc(lb)}${totals?` · ${totalLabel} ${N(totals[i])}`:""}</b>${series.map(s=>`<span><span><i style="background:${s.color}"></i>${esc(s.name)}</span>${N(s.values[i]||0)}</span>`).join("")}${note?`<em>${esc(note)}</em>`:""}</div>
+    <div class="gb-bars">${series.map(s=>`<i style="height:${((s.values[i]||0)/mx*100).toFixed(2)}%;background:${s.color};--k:${i}"></i>`).join("")}</div><div class="gb-l">${esc(lb)}</div></div>`).join("")}</div></div>`;}
 const legend=items=>`<div class="legend">${items.map(i=>`<span><i class="${i.box?'box':''} ${i.dash?'dash':''}" style="background:${i.color}"></i>${i.name}</span>`).join("")}</div>`;
 
 /* ---------- report month ---------- */
@@ -609,9 +641,9 @@ function defMqlPanel(){
     ${X.engagedYtd!=null?kpi(`Total Engaged Companies, ${YR}`,N(X.engagedYtd),`Engaged at least once, January to ${RM()}`):""}</div>`;
   const NB=X.newBySource;
   if(NB){const SC=[["Website visit","--mk-web"],["LinkedIn ad click","--c-hc"],["Google ad click","--c-ga"],["Email click","--mk-em"],["Bing ad click","--c-sl"]].filter(([k])=>sum(NB.bySource[k]||[]));
-    h+=`<div class="panel"><h3>New MQLs by source, month by month</h3><p class="sub">New MQLs each month by how they engaged that month. One company can count under more than one source.</p>
-    ${legend(SC.map(([k,c])=>({name:k,color:css(c)})))}
-    ${chart({labels:M().slice(0,NB.months),lines:SC.map(([k,c])=>({name:k,color:css(c),values:NB.bySource[k]})),h:240})}
+    h+=`<div class="panel"><h3>New MQLs by source, month by month</h3><p class="sub">New MQLs each month by how they engaged that month. One company can count under more than one source. Hover over a month to see its numbers.</p>
+    ${legend(SC.map(([k,c])=>({name:k,color:css(c),box:1})))}
+    ${gbars({labels:M().slice(0,NB.months),series:SC.map(([k,c])=>({name:k,color:css(c),values:NB.bySource[k]})),h:240,totals:NB.total,totalLabel:"New MQLs",note:"A company can count under more than one source."})}
     ${X.ytdNote?`<p class="sec-note">${esc(X.ytdNote)}</p>`:""}</div>`;}
   if(DM_SRC==="mtd"&&MTDATA&&MTDATA.month>X.month){const Y=dmMtdX();h+=defMqlList(Y,Y.companies);}
   else if(C.length) h+=defMqlList(X,C);
@@ -722,10 +754,11 @@ function defMqlList(X,C){
   const wk=d=>{const n=+d.slice(8,10);return n<=7?0:n<=14?1:n<=21?2:n<=28?3:4;}, WL=[`${MS3[DML.mo-1]} 1 to 7`,"8 to 14","15 to 21","22 to 28","29 to 31"];
   TLX.new={label:`New MQL, ${DML.name}`,
     head:k=>{const c=byD[k];return c?`<div class="tlx-dh">${coName(c.name,c.hubspotId)}<span class="note" style="margin:0">New MQL, ${DML.name} · ${esc(c.domain)}${c.lifecycle?` · HubSpot stage: ${esc(LC_LABEL(c.lifecycle))}`:""}${c.lastOutreach?` · last ${esc(c.lastOutreach.type)} ${fdShort(c.lastOutreach.date)}, ${c.lastOutreach.date.slice(0,4)}`:""}</span></div><div class="jr-c">${chips(c)}</div>`:"";},
-    chart:k=>{const c=byD[k];if(!c)return "";const ym=DML.m, tl=(c.tl&&c.tl.length?c.tl:[[ym,0,0,0,0,[]]]);
-      const cols=tl.map(x=>({m:x[0],segs:engSegs(x),sum:engSaid(x),items:x[0]===ym?`<ul class="jr-tl">${rows(c)}</ul>`:tlItems(x[5],liFor(c,x[0]))}));
-      return `<h3>Engagement by month since ${mlong(tl[0][0])}</h3>${mtl(cols,{sel:cols.length-1})}
-        <p class="note" style="margin:6px 0 0">${tl.length>1?`New MQLs had no engagement in the 12 months before ${DML.name}, so the earlier months are older history.`:`${esc(c.name)} first engaged in ${DML.name}.`} Select a month to see what they engaged with.</p>`;},
+    hs:k=>(byD[k]||{}).hubspotId||"",
+    chart:(k,out)=>{const c=byD[k];if(!c)return "";const ym=DML.m, tl=(c.tl&&c.tl.length?c.tl:[[ym,0,0,0,0,[]]]);
+      const cols=jCols(tl,out,curFor(c.domain,ym),x=>x[0]===ym?`<ul class="jr-tl">${rows(c)}</ul>`:tlItems(x[5],liFor(c,x[0])));
+      return `<h3>Journey by month, ${mlong(cols[0].m)} to ${mlong(cols[cols.length-1].m)}</h3>${mtl(cols,{sel:cols.length-1,legend:J_LEG()})}
+        <p class="note" style="margin:6px 0 0">From the first tracked touch to the most recent. ${tl.length>1?`New MQLs had no engagement in the 12 months before ${DML.name}, so earlier engagement is older history. `:""}Select a month to see what they engaged with. ${outNote(out)}</p>`;},
     body:k=>{const c=byD[k];if(!c)return "";return `<div class="eyebrow">LinkedIn impressions by campaign, May to ${DML.name}</div>${c.impressions.length?`<ul class="jr-tl">${c.impressions.map(i=>`<li><b>${esc(i.campaign)}</b> ${pl(i.views,"impression")}<span class="note" style="margin:0"> · last ${fdShort(i.last)}</span></li>`).join("")}</ul>`:`<p class="jr-p note">No LinkedIn impressions recorded</p>`}${exBtn(c.domain,c.name)}`;}};
   const rows=c=>events(c).map(x=>`<li><span class="note" style="margin:0">${x.d.endsWith("-00")?DML.name:fdShort(x.d)}</span> ${x.h}</li>`).join("");
   const lo=c=>c.lastOutreach?`${esc(c.lastOutreach.type)}, ${M()[+c.lastOutreach.date.slice(5,7)-1]} ${+c.lastOutreach.date.slice(8,10)}, ${c.lastOutreach.date.slice(0,4)}`:"None logged";
@@ -830,6 +863,32 @@ const tlItems=(it,la)=>{if(!it||!it.length)return "";const m=la&&la.m;let done=f
   return `<ul class="mtl-items">${it.map(([t,x])=>{if(t==="li"&&la){if(done)return "";done=true;return liBlock(m,la);}return `<li><b class="mkd ${TLK[t]||""}"></b>${esc(x)}</li>`;}).join("")}</ul>`;};
 const liFor=(o,m)=>{const v=o&&o.liAds&&o.liAds[m];return v?{...v,m}:null;};
 const mixBar=v=>{const t=sum(v.map(x=>x[0]));return t?`<span class="mix" aria-hidden="true">${v.filter(x=>x[0]).map(x=>`<i style="flex:${x[0]};background:var(${x[1]})"></i>`).join("")}</span>`:"";};
+// ---- Full journey in the pop-up: first tracked touch through the most recent month ----
+// Boldt's calls, 1:1 emails and replies come live from HubSpot (hs-outreach ?company=) when the pop-up opens;
+// the current month so far comes from the Monday refresh (mtd.json cur).
+const OUTR={};
+function jOut(id){if(!id)return Promise.resolve(false);return OUTR[id]||(OUTR[id]=fetch(`/api/hs-outreach?company=${encodeURIComponent(id)}`).then(r=>r.json()).then(j=>j.ok?j.items:null).catch(()=>null));}
+const ymAdd=(m,k)=>{let y=+m.slice(0,4),mo=+m.slice(5,7)+k;while(mo>12){y++;mo-=12;}while(mo<1){y--;mo+=12;}return `${y}-${String(mo).padStart(2,"0")}`;};
+const OUT_SEG=["Calls, 1:1 emails and replies","--ink"];
+const curFor=(domain,repM)=>MTDATA&&MTDATA.month>repM&&MTDATA.cur&&MTDATA.cur[domain]?{m:MTDATA.month,v:MTDATA.cur[domain],thru:MTDATA.through}:null;
+const outSaid=o=>{const n=t=>o.filter(z=>z.t===t).length;return [n("call")?plw(n("call"),"call"):"",n("email")?plw(n("email"),"1:1 email"):"",n("reply")?plw(n("reply"),"reply").replace(/replys$/,"replies"):""].filter(Boolean).join(", ");};
+const outItems=o=>{if(!o.length)return "";const ds=t=>o.filter(z=>z.t===t).map(z=>fdShort(z.d));
+  const parts=[["1:1 emails from Boldt","email"],["Calls","call"],["Replies to Boldt","reply"]].map(([l,t])=>{const d=ds(t);return d.length?`<b>${l}:</b> ${d.join(", ")}`:"";}).filter(Boolean);
+  return `<ul class="mtl-items"><li><b class="mkd mk-sa"></b><span>${parts.join(" · ")}</span></li></ul>`;};
+const outNote=o=>o===undefined?"Loading calls and 1:1 emails from HubSpot…":o===null?"Calls and 1:1 emails couldn't be loaded from HubSpot right now.":o===false?"No HubSpot company record is linked, so calls and 1:1 emails aren't shown.":"";
+// tl: [[month, website sessions, LinkedIn clicks, email clicks, ad visits, items]]; itemsFor(x) renders a tracked month's detail.
+function jCols(tl,out,cur,itemsFor){
+  const T={};(tl||[]).forEach(x=>T[x[0]]=x);
+  const O={};(Array.isArray(out)?out:[]).forEach(z=>{const m=z.d.slice(0,7);(O[m]||(O[m]=[])).push(z);});
+  const ms=[...Object.keys(T),...Object.keys(O),...(cur?[cur.m]:[])].sort(); if(!ms.length)return [];
+  const cols=[];
+  for(let m=ms[0];m<=ms[ms.length-1];m=ymAdd(m,1)){
+    const now=cur&&m===cur.m&&!T[m], x=T[m]||(now?[m,...cur.v,[]]:[m,0,0,0,0,[]]), o=O[m]||[];
+    cols.push({m,segs:engSegs(x).concat([[o.length,OUT_SEG[1],OUT_SEG[0]]]),sum:[engSaid(x),outSaid(o)].filter(Boolean).join(", ")+(now?` (so far, through ${fdShort(cur.thru)})`:""),
+      items:(T[m]?itemsFor(x):"")+outItems(o)+(now?`<p class="note" style="margin:6px 0 0">${MONTHS_LONG[+m.slice(5,7)-1]} so far, through ${fdShort(cur.thru)}, from the Monday refresh. The detail comes with the monthly report.</p>`:"")});
+    if(cols.length>120)break;}
+  return cols;}
+const J_LEG=()=>ENG.map(e=>[e[0],e[1]]).concat([OUT_SEG]);
 let MTL=[];
 // Clickable month-by-month columns for the journey pop-up. cols: [{m, segs:[[value, color var, name]], sum, items, foot, mark}]
 function mtl(cols,o={}){MTL=cols;
@@ -864,12 +923,17 @@ function jOpen(id,k){const o=TLX[id];if(!o)return; jClose(true);
   const keys=jKeys(id), i=keys.indexOf(k), prev=keys[i-1], next=keys[i+1];
   const m=document.createElement("div"); m.className="jmodal"; m.setAttribute("role","dialog"); m.setAttribute("aria-modal","true"); m.setAttribute("aria-label","Company journey");
   m.innerHTML=`<div class="jm-inner"><div class="jm-bar"><span class="note" style="margin:0">${esc(o.label||"")}${i>=0?` · ${i+1} of ${keys.length}`:""}</span><span class="jm-nav"><button type="button" class="btn-sm" data-jgo="${esc(prev||"")}" ${prev?"":"disabled"}>‹ Previous</button><button type="button" class="btn-sm" data-jgo="${esc(next||"")}" ${next?"":"disabled"}>Next ›</button><button type="button" class="btn-sm jm-x" aria-label="Close">Close ✕</button></span></div>
-    <div class="jm-head">${o.head(k)}</div><div class="jm-chart">${o.chart?o.chart(k):""}</div><div class="jm-body">${o.body(k)}</div></div>`;
+    <div class="jm-head">${o.head(k)}</div><div class="jm-chart">${o.chart?o.chart(k,o.hs&&o.hs(k)?undefined:false):""}</div><div class="jm-body">${o.body(k)}</div></div>`;
+  m.dataset.k=k;
   document.body.appendChild(m); document.body.classList.add("jm-open");
   m.querySelector(".jm-x").addEventListener("click",()=>jClose()); m.addEventListener("click",e=>{if(e.target===m)jClose();});
   m.querySelectorAll("[data-jgo]").forEach(b=>b.addEventListener("click",()=>b.dataset.jgo&&jOpen(id,b.dataset.jgo)));
   m.querySelectorAll(".co-link").forEach(a=>a.addEventListener("click",e=>e.stopPropagation()));
-  mtlBind(m); exInit(); m.querySelector(".jm-x").focus();}
+  mtlBind(m); exInit(); m.querySelector(".jm-x").focus();
+  if(o.chart&&o.hs&&o.hs(k)) jOut(o.hs(k)).then(out=>{if(!m.isConnected||m.dataset.k!==k)return;
+    const on=m.querySelector(".mtl-c.on"), was=on?MTL[+on.dataset.mtl].m:null, wasLast=on&&+on.dataset.mtl===MTL.length-1, ch=m.querySelector(".jm-chart");
+    ch.innerHTML=o.chart(k,out); mtlBind(m); m.querySelectorAll(".jm-chart .co-link").forEach(a=>a.addEventListener("click",e=>e.stopPropagation()));
+    if(was&&!wasLast){const i=MTL.findIndex(c=>c.m===was);const b=i>=0&&m.querySelector(`[data-mtl="${i}"]`);if(b)b.click();}});}
 function jClose(keep){document.querySelectorAll(".jmodal").forEach(x=>x.remove());if(!keep)document.body.classList.remove("jm-open");}
 document.addEventListener("keydown",e=>{const m=document.querySelector(".jmodal");if(!m||e.defaultPrevented)return;if(e.key==="Escape")jClose();if(e.key==="ArrowRight"){const b=m.querySelectorAll("[data-jgo]")[1];b&&!b.disabled&&b.click();}if(e.key==="ArrowLeft"){const b=m.querySelectorAll("[data-jgo]")[0];b&&!b.disabled&&b.click();}});
 function tlxInit(){
@@ -900,15 +964,15 @@ function hotPanel(X){
         `${act} of 12 months${first?`<small>Since ${esc(mlong(first))}</small>`:""}`,
         ms(h.last)]};});
   const head=k=>{const h=byK[k];return h?`<div class="tlx-dh">${coName(h.name,h.hubspotId)}<span class="note" style="margin:0">Hot MQL · ${esc(h.domain)}${h.state?` · ${esc(h.state)}`:""} · most recent engagement ${ms(h.last)}</span></div><div class="jr-c">${chips(h)}</div>`:"";};
-  const chartH=k=>{const h=byK[k];if(!h)return "";const tl=h.tl&&h.tl.length?h.tl:h.months.map(x=>[x[0],x[1],x[2],x[3],x[4],[]]);
-    const cols=tl.map(x=>({m:x[0],segs:engSegs(x),sum:engSaid(x),items:tlItems(x[5],liFor(h,x[0]))}));
-    return `<h3>Engagement by month since ${esc(mlong(tl[0][0]))}</h3>${mtl(cols)}<p class="note" style="margin:6px 0 0">Select a month to see what they engaged with. Website sessions here leave out the Google and Bing ad visits, which are shown on their own. ${esc(D.defMql.liAdsNote||"")}</p>`;};
+  const chartH=(k,out)=>{const h=byK[k];if(!h)return "";const tl=h.tl&&h.tl.length?h.tl:h.months.map(x=>[x[0],x[1],x[2],x[3],x[4],[]]);
+    const cols=jCols(tl,out,curFor(h.domain,D.defMql.month),x=>tlItems(x[5],liFor(h,x[0])));
+    return `<h3>Journey by month, ${esc(mlong(cols[0].m))} to ${esc(mlong(cols[cols.length-1].m))}</h3>${mtl(cols,{legend:J_LEG()})}<p class="note" style="margin:6px 0 0">From the first tracked touch to the most recent. Select a month to see what they engaged with. Website sessions here leave out the Google and Bing ad visits, which are shown on their own. ${esc(D.defMql.liAdsNote||"")} ${outNote(out)}</p>`;};
   const detail=k=>{const h=byK[k];if(!h)return "";return `${h.contact?`<p class="jr-p">Visited the contact page.</p>`:""}${exBtn(h.domain,h.name)}`;};
   const key=`<div class="strip-key">${[["Website","--mk-web"],["LinkedIn ad clicks","--gold"],["Google or Bing ad visits","--olive"],["Email clicks","--mk-em"]].map(([n,c])=>`<span><b class="mkd" style="background:var(${c})"></b>${n}</span>`).join("")}</div>`;
   const tools=`<div class="seg" role="group" aria-label="Sort"><button type="button" data-hsort="total" class="${HOT_SORT==="total"?"on":""}">Most engagements</button><button type="button" data-hsort="last" class="${HOT_SORT==="last"?"on":""}">Most recent</button></div>
     <label class="sel">Show <select id="hot-filter"><option value="all">All ${N(H.length)}</option><option value="contact">Visited the contact page (${cp})</option><option value="new">New MQLs, ${RM()} (${nw})</option><option value="30">30 or more engagements (${H.filter(h=>h.total>=30).length})</option></select></label>`;
   return `<div class="panel" id="hot-panel"><h3>Hot MQLs</h3><p class="sub">${N(H.length)} companies with 15 or more engagements or a contact page visit in the past 12 months. Each row sums up how the company engaged. Select a company to see its month by month timeline.</p>
-    ${tlx("hot",{rows,head,body:detail,chart:chartH,label:"Hot MQL",key,tools,bodyId:"hot-list",cols:[["Company","minmax(180px,1.3fr)"],["Engagements","minmax(110px,.6fr)"],["How they engaged","minmax(200px,1.4fr)"],["Active months","minmax(120px,.7fr)"],["Most recent","minmax(110px,.6fr)"]]})}
+    ${tlx("hot",{rows,head,body:detail,chart:chartH,hs:k=>(byK[k]||{}).hubspotId||"",label:"Hot MQL",key,tools,bodyId:"hot-list",cols:[["Company","minmax(180px,1.3fr)"],["Engagements","minmax(110px,.6fr)"],["How they engaged","minmax(200px,1.4fr)"],["Active months","minmax(120px,.7fr)"],["Most recent","minmax(110px,.6fr)"]]})}
     <p class="sec-note">${esc(X.hotRule||"")} Active months counts the past 12 months. Website sessions include visits from ad clicks.</p></div>`;
 }
 function hotSort(){const L=document.getElementById("hot-list");if(!L)return;const ds=[...L.querySelectorAll(":scope > .tlx-row")];
@@ -1026,14 +1090,22 @@ function sqlSection(mqlSql){
   const headS=k=>{const c=byK[k];return c?`<div class="tlx-dh">${coName(c.company,c.hubspotId)}<span class="note" style="margin:0">SQL · became sales qualified ${fdShort(c.sql)}, ${c.sql.slice(0,4)}</span></div><div class="jr-c">${chips(c)}</div>
       <p class="note" style="margin:8px 0 0">${c.firstAd?`Before SQL: ${N(c.before.impr+c.sqlMonth.impr)} LinkedIn impressions over ${c.before.months+(c.sqlMonth.impr?1:0)} months.`:"No LinkedIn impressions recorded."}${c.salesActivities?` ${N(c.salesActivities)} sales activities logged in HubSpot.`:""}</p>`:"";};
   const imx=Math.max(1,...C.flatMap(c=>c.monthly.map(x=>x.i)));
-  const chartS=k=>{const c=byK[k];if(!c)return "";const ms_=c.monthly.slice(firstIdx(c)), jm={};(c.journey||[]).forEach(m=>jm[m.m]=m);
+  const chartS=k=>{const c=byK[k];if(!c)return "";const jm={};(c.journey||[]).forEach(m=>jm[m.m]=m);
+    // Months from the first touch (HubSpot history can go back before the monthly counts) through this month so far.
+    const mon={};c.monthly.forEach(x=>mon[x.m]=x); const cur=curFor(c.domain,D.defMql.month);
+    const starts=[c.monthly[firstIdx(c)].m,...(c.journey||[]).filter(j=>j.items.some(i=>i.kind!=="q")).map(j=>j.m)].sort();
+    const endM=[c.monthly[c.monthly.length-1].m,cur?cur.m:""].sort().pop(), ms_=[];
+    for(let mm=starts[0];mm<=endM&&ms_.length<120;mm=ymAdd(mm,1)){
+      if(mon[mm]){ms_.push(mon[mm]);continue;}
+      if(cur&&mm===cur.m){const v=cur.v;ms_.push({m:mm,i:0,c:v[1],s:v[3],w:Math.max(0,v[0]-v[3]),e:v[2],t:0,now:1});continue;}
+      const x={m:mm,i:0,c:0,s:0,w:0,e:0,t:0};((jm[mm]||{}).items||[]).forEach(i=>{const kk=i.kind==="c0"?"c":i.kind==="f"?"e":i.kind;if("cswet".includes(kk)&&kk.length===1)x[kk]++;});ms_.push(x);}
     const SAY={c:"LinkedIn ad click",s:"Google or Bing ad visit",w:"website session",e:"email click"};
     const said=x=>SQS.map(([n,k2])=>!x[k2]?"":k2==="t"?`${N(x.t)} ${x.t===1?"call, meeting or 1:1 email":"calls, meetings or 1:1 emails"}`:plw(x[k2],SAY[k2])).filter(Boolean).concat(x.i?[`${N(x.i)} LinkedIn impressions`]:[]).join(", ");
     const cols=ms_.map(x=>{const j=jm[x.m];return {m:x.m,mark:x.m===c.sql.slice(0,7),segs:SQS.map(([n,k2,col])=>[x[k2]||0,col,n]),sum:said(x)+(x.m===c.sql.slice(0,7)?". Became an SQL":""),
       foot:x.i?`<i style="${(p=>`background:color-mix(in srgb,var(--c-hc) ${p}%,var(--soft));${p>55?"color:#fff;":""}`)(Math.round(15+85*Math.log1p(x.i)/Math.log1p(imx)))}">${x.i>=1000?N(x.i/1000,1)+"k":N(x.i)}</i>`:"<i></i>",
-      items:j&&j.items.length?`<ul class="jm-list">${jmonth(j)}</ul>`:x.i?`<p class="note" style="margin:0">LinkedIn ads only this month. No other tracked touches.</p>`:""};});
+      items:x.now?`<p class="note" style="margin:0">${MONTHS_LONG[+x.m.slice(5,7)-1]} so far, through ${fdShort(cur.thru)}, from the Monday refresh. The detail comes with the monthly report.</p>`:j&&j.items.length?`<ul class="jm-list">${jmonth(j)}</ul>`:x.i?`<p class="note" style="margin:0">LinkedIn ads only this month. No other tracked touches.</p>`:""};});
     const sqi=cols.findIndex(x=>x.mark);
-    return `<h3>Touches by month since ${esc(mlong(ms_[0].m))}</h3>${mtl(cols,{sel:sqi>=0?sqi:cols.length-1,legend:SQS.map(x=>[x[0],x[2]]),extraKey:`<div class="strip-key"><span><i></i>Row under the bars: LinkedIn impressions that month</span><span><i style="background:var(--soft);outline:2px solid var(--ink);outline-offset:-1px"></i>Became SQL</span></div>`})}
+    return `<h3>Journey by month, ${esc(mlong(ms_[0].m))} to ${esc(mlong(ms_[ms_.length-1].m))}</h3>${mtl(cols,{sel:sqi>=0?sqi:cols.length-1,legend:SQS.map(x=>[x[0],x[2]]),extraKey:`<div class="strip-key"><span><i></i>Row under the bars: LinkedIn impressions that month</span><span><i style="background:var(--soft);outline:2px solid var(--ink);outline-offset:-1px"></i>Became SQL</span></div>`})}
       <p class="note" style="margin:6px 0 0">Select a month to see each touch. Website, Google and Bing tracking starts March 16, 2026.</p>`;};
   const detail=k=>"";
   const key="";

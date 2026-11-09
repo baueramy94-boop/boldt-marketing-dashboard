@@ -187,3 +187,15 @@ Run these in Python and fix anything that fails:
 - Panel after Hot MQLs. Calls and 1:1 emails are read live from HubSpot by `netlify/functions/hs-outreach.mts` (HUBSPOT_TOKEN; the key can read calls, emails and tasks, checked with `/api/hs-access` on Nov 6, 2026). It returns dates, call or email, and company name, domain and industry only. No contacts, subjects or bodies.
 - Engagement comes from `public/data/engage-<month>.json`, built by `scripts/outreach_engage.py <month>` from the month's Factors "Account Details + Website Metrics" 2-day pulls (accounts/details), the Google and Bing Factors pulls (defmql/paid) and HubSpot email clicks (defmql/email_clicks.json). Healthcare only, senior living left out. Run it each month after those pulls; without the file the panel says it isn't available for that month.
 - Rules: healthcare companies (same industry and name test as compute.py), counted by root domain. A company engaged when a website session, ad visit or email click falls from the outreach day through 7 days after. Outreach in the last 7 days of the month is listed but kept out of the percentages. "Without recent outreach" = share of 8-day stretches in the month, for the same companies, with no 1:1 outreach from 7 days before through the end of the stretch, that had engagement (shown when there are 30 or more stretches).
+
+### Journey pop-ups on Leads (full history)
+- Hot MQL, New MQL and SQL pop-ups run month by month from the first tracked touch to the most recent month, with empty months shown.
+- Hot and New MQLs: when a pop-up opens, `hs-outreach?company=<HubSpot id>` returns that company's calls, emails Boldt sent and replies (dates only) and they are added as a "Calls, 1:1 emails and replies" bar segment and listed in each month. SQL pop-ups already carry HubSpot touches in `sqlJourneys` and now start at the first one, even before the monthly counts begin.
+- The current month so far comes from `mtd.json` `cur` (written by `build_mtd.py` for domains in the last monthly report: [website sessions, LinkedIn clicks, email clicks, Google or Bing ad visits]). It appears after the Monday refresh; the detail comes with the monthly report.
+
+### Project calendar (tracker.html) Now view
+- Each project shows once. Waiting on others with a due date (past due or in the next 90 days) stays in its date column with the gold pill; the waiting lane holds on-hold projects and waiting ones with no date in that range. "No due date" lists open projects without a date.
+- Ads archive: no headline over the image (a "No image preview" box only shows when the image fails); cards grow on hover on desktop and the image opens full size on click.
+
+### New MQLs by source
+- Grouped bar chart (`gbars`), bars grow in on load; hover or keyboard focus on a month highlights it and shows its numbers and the New MQL total.
