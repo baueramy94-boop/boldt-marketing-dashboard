@@ -154,6 +154,18 @@ body[data-view="ads"] #kpis, body[data-view="ads"] section.filters, body[data-vi
 .adc{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
 .adc .im{aspect-ratio:1/1;background:var(--navy);position:relative;overflow:hidden}
 .adc .im img{width:100%;height:100%;object-fit:cover;display:block}
+.adc{transition:transform .22s ease,box-shadow .22s ease;position:relative}
+.adc .im{cursor:zoom-in}
+.adc .im img+.ph{display:none}
+@media (hover:hover) and (min-width:701px){.adc:hover{transform:scale(1.12);box-shadow:0 14px 34px rgba(3,61,81,.22);z-index:3}}
+.adzoom{position:fixed;inset:0;z-index:80;background:rgba(10,24,32,.78);display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity .2s}
+.adzoom.on{opacity:1}
+.adzoom figure{margin:0;max-width:min(92vw,900px);max-height:92vh;display:flex;flex-direction:column;background:#fff;border-radius:12px;overflow:hidden;transform:scale(.94);transition:transform .2s}
+.adzoom.on figure{transform:scale(1)}
+.adzoom img{display:block;width:min(86vw,720px);max-width:100%;height:auto;max-height:78vh;object-fit:contain;background:#0b1a22}
+.adzoom figcaption{padding:10px 14px;font-size:13px;color:var(--ink);display:flex;justify-content:space-between;gap:12px;align-items:center}
+.adzoom figcaption b{font-weight:700}
+.adzoom button{border:0;background:var(--navy);color:#fff;border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer}
 .adc .im .ph{position:absolute;inset:0;display:flex;align-items:flex-end;padding:14px;color:#fff;font-weight:800;font-stretch:75%;font-size:20px;line-height:1.1;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 2px,transparent 2px 14px)}
 .adc .bd{padding:10px 12px;display:grid;gap:5px;font-size:12.5px}
 .adc .bd .h{font-weight:700;font-size:13.5px;line-height:1.3;color:var(--ink)}
@@ -699,20 +711,26 @@ function passesNoKpi(it){ const k = F.kpi; F.kpi = ""; const r = passes(it, true
 // ---------- Now view ----------
 function renderNow(){
   const vis = state.items.filter(it => passes(it));
-  const over = vis.filter(isOverdue).sort(sortByDue);
-  const inN = (a,b) => it => { const n = daysOut(it); return n !== null && n >= a && n <= b && it.status !== "Complete" && it.status !== "On hold"; };
+  // A card shows in one place. Waiting items with a due date (past due or in the next 90 days) stay in their date column
+  // with the "Waiting on others" pill; the waiting lane holds on-hold items and waiting items with no date in that range.
+  const WAIT = it => it.status === "Waiting on others", HOLD = it => it.status === "On hold";
+  const over = vis.filter(it => isOverdue(it) || (WAIT(it) && (daysOut(it) ?? 0) < 0)).sort(sortByDue);
+  const inN = (a,b) => it => { const n = daysOut(it); return n !== null && n >= a && n <= b && it.status !== "Complete" && !HOLD(it); };
   const byPri = (a,b) => sortByDue(a,b) || (PRI_ORDER[a.priority] ?? 3) - (PRI_ORDER[b.priority] ?? 3);
   const week = vis.filter(inN(0, DAYS_LEFT_IN_WEEK)).sort(byPri);
   const next30 = vis.filter(inN(DAYS_LEFT_IN_WEEK + 1, 30)).sort(byPri);
   const later = vis.filter(inN(31,90)).sort(byPri);
-  const waiting = vis.filter(it => it.status === "Waiting on others" || it.status === "On hold").sort(byPri);
+  const shown = new Set([...over, ...week, ...next30, ...later]);
+  const waiting = vis.filter(it => (WAIT(it) || HOLD(it)) && !shown.has(it)).sort(byPri);
+  const nodate = vis.filter(it => it.status !== "Complete" && !WAIT(it) && !HOLD(it) && daysOut(it) === null).sort((a,b) => (PRI_ORDER[a.priority] ?? 3) - (PRI_ORDER[b.priority] ?? 3) || a.title.localeCompare(b.title));
   const grp = list => withGroups(list, cardHTML, (arr, o) => o.slice(0,3).join(", ")+(o.length>3?" +"+(o.length-3):""));
   const lane = (title, list, cls, hint, wide) => `<div class="lane ${cls||""}"><h3>${title}<span class="badge">${list.length}</span></h3>${hint?`<div class="hint">${hint}</div>`:""}${list.length ? (wide ? `<div class="cardgrid">${grp(list)}</div>` : grp(list)) : '<div class="empty">Nothing here.</div>'}</div>`;
   const done = F.done ? vis.filter(it => it.status === "Complete").sort((a,b)=>sortByDue(b,a)) : [];
   const wk = `${MONTHS[TODAY.getMonth()]} ${TODAY.getDate()} to ${MONTHS[WEEK_END.getMonth()]} ${WEEK_END.getDate()}`;
   $("#v-now").innerHTML =
     `<div class="lanes four">${lane("Overdue", over, "overdue", "Past due and not marked complete.")}${lane("Due this week", week, "", wk)}${lane("Next 30 days", next30, "", "Includes this month's recurring work.")}${lane("Coming up: 31 to 90 days", later, "")}</div>
-     <div class="lanes second one">${lane("Waiting on others / on hold", waiting, "", "", true)}</div>
+     <div class="lanes second one">${lane("No due date", nodate, "", "Open projects without a due date. Add one in the project to move it into a column above.", true)}</div>
+     <div class="lanes second one">${lane("Waiting on others / on hold", waiting, "", "On hold, or waiting with no due date in the next 90 days. Waiting projects with a due date stay in their date column above.", true)}</div>
      ${F.done ? `<div class="lanes second one">${lane("Completed", done, "", "", true)}</div>` : ""}`;
 }
 
@@ -1306,6 +1324,17 @@ document.addEventListener("click", e => {
 let ADS = null, ADS_ERR = false, ADF = { plat:"linkedin", q:"", status:"active" };
 function loadAds(){ if (ADS || ADS_ERR) return; fetch("data/ads-archive.json", { cache:"no-store" }).then(r => { if (!r.ok) throw 0; return r.json(); }).then(j => { ADS = j; if (view === "ads") renderAds(); }).catch(() => { ADS_ERR = true; if (view === "ads") renderAds(); }); }
 const fmtN = n => Number(n||0).toLocaleString("en-US");
+// Click an ad image to see it full size; Escape, the button or the backdrop closes it.
+function adZoom(img){
+  const card = img.closest(".adc"), t = card ? (card.querySelector(".bd .h") || {}).textContent || "" : "";
+  const z = document.createElement("div"); z.className = "adzoom"; z.setAttribute("role","dialog"); z.setAttribute("aria-label","Ad preview");
+  z.innerHTML = `<figure><img src="${esc(img.currentSrc || img.src)}" alt="${esc(t)}"><figcaption><b>${esc(t)}</b><button type="button">Close</button></figcaption></figure>`;
+  const close = () => { z.classList.remove("on"); setTimeout(() => z.remove(), 200); document.removeEventListener("keydown", key); };
+  const key = e => { if (e.key === "Escape") close(); };
+  z.addEventListener("click", e => { if (e.target === z || e.target.tagName === "BUTTON") close(); });
+  document.addEventListener("keydown", key); document.body.appendChild(z); requestAnimationFrame(() => z.classList.add("on")); z.querySelector("button").focus();
+}
+document.addEventListener("click", e => { const im = e.target.closest && e.target.closest("#v-ads .adc .im img"); if (im) adZoom(im); });
 function renderAds(){
   if (!ADS) { loadAds(); $("#v-ads").innerHTML = `<div class="empty">${ADS_ERR ? "The ads archive isn't available right now." : "Loading ads..."}</div>`; return; }
   const q = ADF.q.toLowerCase(), on = s => /active|enabled/i.test(s||"");
@@ -1315,7 +1344,7 @@ function renderAds(){
     (ADS.linkedin || []).forEach(g => {
       const camps = g.campaigns.map(c => ({ ...c, ads: c.ads.filter(a => keep([g.group, c.campaign, a.title, a.landing, a.caption||""].join(" "), a.status)) })).filter(c => c.ads.length);
       if (!camps.length) return; const n = camps.reduce((s,c) => s + c.ads.length, 0); nAds += n;
-      body += `<details class="adgrp" open><summary><span>${esc(g.group)}</span><span class="sm">${n} ad${n>1?"s":""}</span></summary>${camps.map(c => `<div class="camp"><h4>${esc(c.campaign)}</h4><div class="adcards">${c.ads.map(a => `<div class="adc"><div class="im">${a.thumb || a.id ? `<img src="${/^https:$/.test(location.protocol) && !/claude/.test(location.hostname) && a.id ? "/api/img?id=" + esc(a.id) : esc(a.thumb)}" data-fb="${esc(a.thumb || "")}" alt="" loading="lazy" onerror="if(this.dataset.fb&&this.src.indexOf('/api/img')>-1){this.src=this.dataset.fb;this.dataset.fb=''}else{this.remove()}">` : ""}<div class="ph">${esc(a.title || "Document ad")}</div></div>
+      body += `<details class="adgrp" open><summary><span>${esc(g.group)}</span><span class="sm">${n} ad${n>1?"s":""}</span></summary>${camps.map(c => `<div class="camp"><h4>${esc(c.campaign)}</h4><div class="adcards">${c.ads.map(a => `<div class="adc"><div class="im">${a.thumb || a.id ? `<img src="${/^https:$/.test(location.protocol) && !/claude/.test(location.hostname) && a.id ? "/api/img?id=" + esc(a.id) : esc(a.thumb)}" data-fb="${esc(a.thumb || "")}" alt="" loading="lazy" onerror="if(this.dataset.fb&&this.src.indexOf('/api/img')>-1){this.src=this.dataset.fb;this.dataset.fb=''}else{this.remove()}">` : ""}<div class="ph">No image preview</div></div>
         <div class="bd"><div class="h">${esc(a.title || "(no headline)")}</div>${a.caption ? `<details class="cap"><summary><span class="cap-prev">${esc(a.caption.split("\n")[0].slice(0,120))}${a.caption.length>120||a.caption.includes("\n")?"…":""}</span><span class="cap-hide">Show less</span></summary><p>${esc(a.caption).replace(/\n/g,"<br>")}</p></details>` : ""}<div class="m"><span class="st ${on(a.status)?"on":"off"}">${on(a.status)?"Active":"Paused"}</span><span>${fmtN(a.impr)} impr.</span><span>${fmtN(a.clicks)} clicks</span><span>${a.impr ? (a.clicks/a.impr*100).toFixed(2)+"% CTR" : ""}</span></div>
         ${a.landing ? `<a href="${esc(a.landing)}" target="_blank" rel="noopener">${esc(a.landing.replace(/^https?:\/\/(www\.)?/,""))}</a>` : `<span class="m">Lead gen form or document ad</span>`}</div></div>`).join("")}</div></div>`).join("")}</details>`;
     });
