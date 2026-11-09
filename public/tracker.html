@@ -144,6 +144,7 @@ body[data-view="ads"] #kpis, body[data-view="ads"] section.filters, body[data-vi
 .adbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
 .adbar input[type=search]{flex:1 1 220px;min-width:180px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 10px}
 .adbar select{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 10px}
+.adper{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray);font-weight:600}
 .adgrp{background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:12px}
 .adgrp>summary{list-style:none;cursor:pointer;padding:12px 14px;display:flex;justify-content:space-between;gap:10px;align-items:center;font-weight:800;color:var(--navy);font-stretch:85%;font-size:16px}
 .adgrp>summary::-webkit-details-marker{display:none}
@@ -1320,7 +1321,13 @@ document.addEventListener("click", e => {
 });
 
 // ---------- ads archive (read-only; refreshed by the monthly report run) ----------
-let ADS = null, ADS_ERR = false, ADF = { plat:"linkedin", q:"", status:"active" };
+let ADS = null, ADS_ERR = false, ADF = { plat:"linkedin", q:"", status:"active", from:"", to:"" };
+// Month filter: an ad "ran" in the period when it had impressions in any of its months (ad.m from scripts/ads_monthly.py).
+const AMN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], amLbl = m => `${AMN[+m.slice(5,7)-1]} ${m.slice(0,4)}`;
+function adPeriod(){ const ms = (ADS && ADS.months) || []; const f = ADF.from || ms[0] || "", t = ADF.to || ms[ms.length-1] || ""; return { ms, f: f <= t ? f : t, t: f <= t ? t : f, full: (!ADF.from || ADF.from === ms[0]) && (!ADF.to || ADF.to === ms[ms.length-1]) }; }
+function adIn(a, P){ let i = 0, c = 0; Object.entries(a.m || {}).forEach(([k,v]) => { if (k >= P.f && k <= P.t) { i += v[0]; c += v[1]; } }); return { i, c, ran: i > 0 }; }
+function adRanSay(a){ const ks = Object.keys(a.m || {}).filter(k => a.m[k][0]).sort(); if (!ks.length) return ""; const runs = []; ks.forEach(k => { const r = runs[runs.length-1]; const prev = r && r[1]; const nx = prev && (+prev.slice(5,7) === 12 ? `${+prev.slice(0,4)+1}-01` : `${prev.slice(0,4)}-${String(+prev.slice(5,7)+1).padStart(2,"0")}`); if (r && nx === k) r[1] = k; else runs.push([k,k]); });
+  return "Ran " + runs.map(([a,b]) => a === b ? AMN[+a.slice(5,7)-1] : `${AMN[+a.slice(5,7)-1]} to ${AMN[+b.slice(5,7)-1]}`).join(", "); }
 function loadAds(){ if (ADS || ADS_ERR) return; fetch("data/ads-archive.json", { cache:"no-store" }).then(r => { if (!r.ok) throw 0; return r.json(); }).then(j => { ADS = j; if (view === "ads") renderAds(); }).catch(() => { ADS_ERR = true; if (view === "ads") renderAds(); }); }
 const fmtN = n => Number(n||0).toLocaleString("en-US");
 // Click an ad image to see it full size; Escape, the button or the backdrop closes it.
@@ -1336,35 +1343,42 @@ function adZoom(img){
 document.addEventListener("click", e => { const im = e.target.closest && e.target.closest("#v-ads .adc .im img"); if (im) adZoom(im); });
 function renderAds(){
   if (!ADS) { loadAds(); $("#v-ads").innerHTML = `<div class="empty">${ADS_ERR ? "The ads archive isn't available right now." : "Loading ads..."}</div>`; return; }
-  const q = ADF.q.toLowerCase(), on = s => /active|enabled/i.test(s||"");
-  const keep = (txt, st) => (!q || txt.toLowerCase().includes(q)) && (ADF.status === "all" || on(st));
+  const q = ADF.q.toLowerCase(), on = s => /active|enabled/i.test(s||""), P = adPeriod();
+  const keep = (txt, st, a) => { if (q && !txt.toLowerCase().includes(q)) return false; const r = adIn(a, P);
+    return ADF.status === "all" || (ADF.status === "active" ? on(st) : ADF.status === "ran" ? r.ran : !r.ran); };
+  const ord = (x, y) => (adIn(y, P).ran - adIn(x, P).ran) || (on(y.status) - on(x.status)) || (adIn(y, P).i - adIn(x, P).i);
+  const per = a => { const r = adIn(a, P); return P.full ? { i: a.impr, c: a.clicks, lbl: "" } : { i: r.i, c: r.c, lbl: P.f === P.t ? amLbl(P.f) + ": " : `${AMN[+P.f.slice(5,7)-1]} to ${amLbl(P.t)}: ` }; };
+  const ranTag = a => { const r = adIn(a, P), say = adRanSay(a); return `${P.full ? "" : `<span class="st ${r.ran ? "on" : "off"}">${r.ran ? "Ran in period" : "Didn't run"}</span>`}${say ? `<span>${esc(say)}</span>` : ""}`; };
   let body = "", nAds = 0;
   if (ADF.plat === "linkedin") {
     (ADS.linkedin || []).forEach(g => {
-      const camps = g.campaigns.map(c => ({ ...c, ads: c.ads.filter(a => keep([g.group, c.campaign, a.title, a.landing, a.caption||""].join(" "), a.status)) })).filter(c => c.ads.length);
+      const camps = g.campaigns.map(c => ({ ...c, ads: c.ads.filter(a => keep([g.group, c.campaign, a.title, a.landing, a.caption||""].join(" "), a.status, a)).sort(ord) })).filter(c => c.ads.length);
       if (!camps.length) return; const n = camps.reduce((s,c) => s + c.ads.length, 0); nAds += n;
       body += `<details class="adgrp" open><summary><span>${esc(g.group)}</span><span class="sm">${n} ad${n>1?"s":""}</span></summary>${camps.map(c => `<div class="camp"><h4>${esc(c.campaign)}</h4><div class="adcards">${c.ads.map(a => `<div class="adc"><div class="im">${a.thumb || a.id ? `<img src="${/^https:$/.test(location.protocol) && !/claude/.test(location.hostname) && a.id ? "/api/img?id=" + esc(a.id) : esc(a.thumb)}" data-fb="${esc(a.thumb || "")}" alt="" loading="lazy" onerror="if(this.dataset.fb&&this.src.indexOf('/api/img')>-1){this.src=this.dataset.fb;this.dataset.fb=''}else{this.remove()}">` : ""}<div class="ph">No image preview</div></div>
-        <div class="bd"><div class="h">${esc(a.title || "(no headline)")}</div>${a.caption ? `<details class="cap"><summary><span class="cap-prev">${esc(a.caption.split("\n")[0].slice(0,120))}${a.caption.length>120||a.caption.includes("\n")?"…":""}</span><span class="cap-hide">Show less</span></summary><p>${esc(a.caption).replace(/\n/g,"<br>")}</p></details>` : ""}<div class="m"><span class="st ${on(a.status)?"on":"off"}">${on(a.status)?"Active":"Paused"}</span><span>${fmtN(a.impr)} impr.</span><span>${fmtN(a.clicks)} clicks</span><span>${a.impr ? (a.clicks/a.impr*100).toFixed(2)+"% CTR" : ""}</span></div>
+        <div class="bd"><div class="h">${esc(a.title || "(no headline)")}</div>${a.caption ? `<details class="cap"><summary><span class="cap-prev">${esc(a.caption.split("\n")[0].slice(0,120))}${a.caption.length>120||a.caption.includes("\n")?"…":""}</span><span class="cap-hide">Show less</span></summary><p>${esc(a.caption).replace(/\n/g,"<br>")}</p></details>` : ""}<div class="m"><span class="st ${on(a.status)?"on":"off"}">${on(a.status)?"Active now":"Paused now"}</span>${ranTag(a)}</div><div class="m">${(x => `<span>${x.lbl}${fmtN(x.i)} impr.</span><span>${fmtN(x.c)} clicks</span><span>${x.i ? (x.c/x.i*100).toFixed(2)+"% CTR" : ""}</span>`)(per(a))}</div>
         ${a.landing ? `<a href="${esc(a.landing)}" target="_blank" rel="noopener">${esc(a.landing.replace(/^https?:\/\/(www\.)?/,""))}</a>` : `<span class="m">Lead gen form or document ad</span>`}</div></div>`).join("")}</div></div>`).join("")}</details>`;
     });
   } else {
     (ADS.google || []).forEach(c => {
-      const groups = c.adGroups.map(g => ({ ...g, ads: g.ads.filter(a => keep([c.campaign, g.adGroup, (a.headlines||[]).join(" "), (a.descriptions||[]).join(" ")].join(" "), a.status)) })).filter(g => g.ads.length);
+      const groups = c.adGroups.map(g => ({ ...g, ads: g.ads.filter(a => keep([c.campaign, g.adGroup, (a.headlines||[]).join(" "), (a.descriptions||[]).join(" ")].join(" "), a.status, a)).sort(ord) })).filter(g => g.ads.length);
       if (!groups.length) return; const n = groups.reduce((s,g) => s + g.ads.length, 0); nAds += n;
       body += `<details class="adgrp" open><summary><span>${esc(c.campaign)}${c.shared ? ' <span class="sm">Shared campaign</span>' : ""}</span><span class="sm">${n} ad${n>1?"s":""}</span></summary><div class="camp"><div class="adcards">${groups.map(g => g.ads.map(a => `<div class="gad"><div class="sp" style="color:var(--gray);text-transform:uppercase;letter-spacing:.04em;font-size:11px;font-weight:700">${esc(g.adGroup)}</div><div class="sp"><b>Sponsored</b> · ${esc((a.url||"").replace(/^https?:\/\/(www\.)?/,"").replace(/\/$/,""))}</div>
         <div class="gh">${esc((a.headlines||[]).slice(0,3).join(" | "))}</div><div class="gd">${esc((a.descriptions||[])[0] || "")}</div>
-        <div class="m" style="font-size:12px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap"><span class="st ${on(a.status)?"on":"off"}">${on(a.status)?"Active":"Paused"}</span><span>${fmtN(a.impr)} impr.</span><span>${fmtN(a.clicks)} clicks</span>${a.strength ? `<span>Ad strength: ${esc(a.strength.toLowerCase())}</span>` : ""}</div>
+        <div class="m" style="font-size:12px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap"><span class="st ${on(a.status)?"on":"off"}">${on(a.status)?"Active now":"Paused now"}</span>${ranTag(a)}${(x => `<span>${x.lbl}${fmtN(x.i)} impr.</span><span>${fmtN(x.c)} clicks</span>`)(per(a))}${a.strength ? `<span>Ad strength: ${esc(a.strength.toLowerCase())}</span>` : ""}</div>
         <details><summary>All ${(a.headlines||[]).length} headlines and ${(a.descriptions||[]).length} descriptions</summary><ul>${(a.headlines||[]).map(h => `<li>${esc(h)}</li>`).join("")}</ul><ul>${(a.descriptions||[]).map(h => `<li>${esc(h)}</li>`).join("")}</ul></details></div>`).join("")).join("")}</div></div></details>`;
     });
   }
   $("#v-ads").innerHTML = `<div class="adbar"><div class="boards" style="margin:0;background:#E3E6E9"><button type="button" data-aplat="linkedin" aria-pressed="${ADF.plat==="linkedin"}" style="color:var(--navy)">LinkedIn</button><button type="button" data-aplat="google" aria-pressed="${ADF.plat==="google"}" style="color:var(--navy)">Google Ads</button></div>
-    <input type="search" id="adq" placeholder="Search headlines, captions, campaigns, pages" value="${esc(ADF.q)}"><select id="adst"><option value="active" ${ADF.status==="active"?"selected":""}>Active ads</option><option value="all" ${ADF.status==="all"?"selected":""}>Active and paused</option></select><span class="count">${nAds} ad${nAds===1?"":"s"}</span></div>
+    <input type="search" id="adq" placeholder="Search headlines, captions, campaigns, pages" value="${esc(ADF.q)}"><select id="adst" aria-label="Which ads"><option value="active" ${ADF.status==="active"?"selected":""}>Active now</option><option value="ran" ${ADF.status==="ran"?"selected":""}>Ran in this period</option><option value="idle" ${ADF.status==="idle"?"selected":""}>Didn't run in this period</option><option value="all" ${ADF.status==="all"?"selected":""}>All ads</option></select>
+    ${P.ms.length ? `<label class="adper">From <select id="adfrom">${P.ms.map(m => `<option value="${m}" ${m===P.f?"selected":""}>${amLbl(m)}</option>`).join("")}</select></label><label class="adper">to <select id="adto">${P.ms.map(m => `<option value="${m}" ${m===P.t?"selected":""}>${amLbl(m)}</option>`).join("")}</select></label>${P.full ? "" : `<button type="button" class="b2" id="adall">All months</button>`}` : ""}<span class="count">${nAds} ad${nAds===1?"":"s"}</span></div>
     ${body || '<div class="empty">No ads match.</div>'}
-    <footer class="note">Healthcare and shared campaigns, ${esc(ADS.window || "2026")}. Updated ${esc(ADS.updated || "")} with each monthly report. LinkedIn images expire about a week after each update, so older cards show the headline instead.</footer>`;
+    <footer class="note">Healthcare and shared campaigns, ${esc(ADS.window || "2026")}. Updated ${esc(ADS.updated || "")} with each monthly report, including the month-by-month numbers behind the period filter. "Active now" and "Paused now" are each ad's current status; "Ran in period" means it had impressions in the months selected. LinkedIn images expire about a week after each update, so older cards may show "No image preview".</footer>`;
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-aplat]"); if (b) { ADF.plat = b.dataset.aplat; renderAds(); } const bd = e.target.closest("[data-board]"); if (bd) { BOARD = bd.dataset.board; try { localStorage.setItem("boldt-tracker-board", BOARD); } catch(x) {} Object.assign(F, { owner:"", ws:"" }); renderAll(); } });
 document.addEventListener("input", e => { if (e.target.id === "adq") { ADF.q = e.target.value; const pos = e.target.selectionStart; renderAds(); const el = $("#adq"); el.focus(); try { el.setSelectionRange(pos,pos); } catch(x) {} } });
-document.addEventListener("change", e => { if (e.target.id === "adst") { ADF.status = e.target.value; renderAds(); } });
+document.addEventListener("change", e => { if (e.target.id === "adst") { ADF.status = e.target.value; renderAds(); }
+  if (e.target.id === "adfrom" || e.target.id === "adto") { ADF[e.target.id === "adfrom" ? "from" : "to"] = e.target.value; if (ADF.status === "active" && !adPeriod().full) ADF.status = "ran"; renderAds(); } });
+document.addEventListener("click", e => { if (e.target.id === "adall") { ADF.from = ""; ADF.to = ""; renderAds(); } });
 
 syncArchive();
 let startView = "now"; try { startView = localStorage.getItem(KEY+":view") || "now"; } catch(e) {}
