@@ -673,6 +673,40 @@ function defMqlPanel(){
   h+=orPanel();
   return h;
 }
+/* ---------- MQL follow-up: speed to lead and overdue "marketing lead #1" tasks (live from HubSpot, hs-leadtasks) ---------- */
+let LT=null, LT_ERR="", LT_TRY=0;
+function ltPanel(){return `<div class="panel" id="lt-panel">${ltBody()}</div>`;}
+function ltLoad(fresh){fetch(`/api/hs-leadtasks${fresh?"?fresh=1":""}`).then(r=>r.json()).then(j=>{
+    if(!j.ready){LT_ERR="This turns on when HubSpot is connected.";} else if(!j.ok){LT_ERR=j.error||"Couldn't read follow-up tasks from HubSpot.";} else {LT=j;LT_ERR="";}
+    if(LT&&LT.scan&&!LT.scan.complete&&LT_TRY<20){LT_TRY++;setTimeout(()=>ltLoad(),2500);}
+  }).catch(()=>{LT_ERR="Couldn't load follow-up tasks. Refresh to try again.";}).then(()=>{const el=document.getElementById("lt-panel");if(el)el.innerHTML=ltBody();});}
+const ltDur=h=>h==null?"–":h<1?"Under 1 hour":h<48?plw(Math.round(h),"hour"):plw(Math.round(h/24),"day");
+const ltMed=a=>{if(!a.length)return null;const s=[...a].sort((x,y)=>x-y),k=Math.floor(s.length/2);return s.length%2?s[k]:(s[k-1]+s[k])/2;};
+const ltYM=t=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/Chicago",year:"numeric",month:"2-digit"}).format(new Date(t)).slice(0,7);
+const ltDay=t=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/Chicago",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(t));
+function ltBody(){
+  const head=`<h3>MQL follow-up</h3><p class="sub">"Marketing lead #1" tasks assigned to Chris White in HubSpot. Speed to lead is the time from when the task is created to when it's completed or deleted (deleted when the lead isn't relevant).</p>`;
+  if(LT_ERR)return head+`<p class="note">${esc(LT_ERR)}</p>`;
+  if(!LT)return head+`<p class="note">Loading follow-up tasks from HubSpot…</p>`;
+  const T=LT.tasks.filter(t=>t.c), now=LT.asOf, H=t=>(t.a-t.c)/36e5;
+  const acted=T.filter(t=>t.a&&t.a>=t.c), done=acted.filter(t=>t.k==="done"), del=acted.filter(t=>t.k==="del"), open=T.filter(t=>!t.a);
+  const med=ltMed(acted.map(H)), coh=T.filter(t=>now-t.c>=7*864e5);
+  const within=d=>coh.length?coh.filter(t=>t.a&&t.a>=t.c&&H(t)<=d*24).length/coh.length:null;
+  let h=head+`<div class="grid g-kpi">${kpi("Overdue now",N(LT.overdue.length),"Not started and past the due date")}
+    ${kpi("Median speed to lead",ltDur(med),`Across ${plw(acted.length,"task")} completed or deleted since ${fdShort(new Date(LT.since).toISOString().slice(0,10))}`)}
+    ${kpi("Handled within 1 day",within(1)==null?"–":P(within(1),0),`Within 3 days: ${within(3)==null?"–":P(within(3),0)} · within 7 days: ${within(7)==null?"–":P(within(7),0)}`)}
+    ${kpi("Completed vs deleted",`${N(done.length)} <small>/ ${N(del.length)}</small>`,`${N(open.length)} still open`)}</div>`;
+  const ms=[...new Set(T.map(t=>ltYM(t.c)))].sort();
+  if(ms.length)h+=`<div class="tbl-wrap" style="margin-top:12px"><table><thead><tr><th class="l">Created in</th><th>Tasks</th><th>Completed</th><th>Deleted</th><th>Still open</th><th>Median speed to lead</th><th>Within 1 day</th></tr></thead><tbody>${ms.map(m=>{
+    const a=T.filter(t=>ltYM(t.c)===m), ac=a.filter(t=>t.a&&t.a>=t.c), c7=a.filter(t=>now-t.c>=864e5);
+    return `<tr><td class="l">${esc(mlong(m))}</td><td>${N(a.length)}</td><td>${N(ac.filter(t=>t.k==="done").length)}</td><td>${N(ac.filter(t=>t.k==="del").length)}</td><td>${N(a.filter(t=>!t.a).length)}</td><td>${ltDur(ltMed(ac.map(H)))}</td><td>${c7.length?P(c7.filter(t=>t.a&&t.a>=t.c&&H(t)<=24).length/c7.length,0):"–"}</td></tr>`;}).join("")}</tbody></table></div>`;
+  const O=LT.overdue;
+  h+=`<h4 style="margin:16px 0 6px">Overdue MQL follow-up tasks (${N(O.length)})</h4>`;
+  h+=O.length?`<div class="tbl-wrap"><table><thead><tr><th class="l">Company</th><th class="l">Due</th><th>Days overdue</th><th class="l">Task created</th></tr></thead><tbody>${O.map(o=>`<tr><td class="l wrap-cell">${o.companyId?coName(o.company||o.domain||"Company record",o.companyId):'<span class="note" style="margin:0">No company linked</span>'}</td><td class="l">${fdShort(ltDay(o.due))}</td><td>${N(Math.max(1,Math.floor((now-o.due)/864e5)))}</td><td class="l">${fdShort(ltDay(o.created))}</td></tr>`).join("")}</tbody></table></div>`
+    :`<p class="note">No overdue MQL follow-up tasks.</p>`;
+  h+=`<p class="sec-note">Same filters as the HubSpot report: assigned to Chris White, title contains "marketing lead #1", status not in progress, completed, waiting or deferred, and past due. Speed to lead counts calendar time, including nights and weekends. "Within 1 day" is out of tasks created at least a day ago (the top figure uses tasks at least 7 days old). ${LT.scan&&!LT.scan.complete?"Deleted tasks are still being counted from HubSpot's deleted items; this updates on its own in a moment.":""}${LT.stale?" HubSpot didn't respond just now, so these are the last saved numbers.":""}</p>`;
+  return h;
+}
 /* ---------- Engagement after 1:1 outreach (calls and 1:1 emails from HubSpot, live; engagement from data/engage-<month>.json) ---------- */
 let OR_O=null, OR_E=null, OR_ERR="", OR_M="";
 const OR_SEN=/senior|retirement|assisted living|memory care|brookdale|erickson|sunrise|life ?plan|\bliving\b|nursing home|skilled nursing/i;
@@ -1169,6 +1203,7 @@ R.leads=()=>{
   let h=head("Leads",`Healthcare MQLs and SQLs, when and where companies engage, the full journey of SQL companies, and healthcare companies on the site from every source. New MQLs follow our engagement definition.`);
   const mqlSql={v:P(sqlY/sum(s.mql.slice(0,SQLN())),1),d:`Year to date. 2025: ${P(D.roiAnnual["2025"].mqlSql,1)}`};
   if(D.defMql) h+=defMqlPanel();
+  h+=ltPanel();
   if(D.trends) h+=trendsSection();
   h+=D.sqlJourneys?sqlSection(mqlSql):D.mqlJourneys?journeySection():`<div class="panel"><h3>${RM()} MQL accounts</h3><p class="sub">${D.mqlMonth.length} companies entered as MQLs in HubSpot${DONE()?"":" so far"} this month</p><ul class="list-2">
     ${D.mqlMonth.map(m=>`<li><span>${esc(m.name)}</span>${m.engaged?'<span class="chip good">Saw LinkedIn ads</span>':`<span class="note" style="margin:0">${m.date}</span>`}</li>`).join("")}</ul></div>`;
@@ -1595,7 +1630,7 @@ function render(){
   const dmf=document.getElementById("dm-filter"); if(dmf) dmf.addEventListener("change",()=>{const v=dmf.value;document.querySelectorAll("#dm-panel details.jr").forEach(d=>{d.style.display=v==="all"||d.dataset.ch.split("|").includes(v)?"":"none";});});
   document.querySelectorAll("[data-hsort]").forEach(b=>b.addEventListener("click",()=>{HOT_SORT=b.dataset.hsort;document.querySelectorAll("[data-hsort]").forEach(x=>x.classList.toggle("on",x===b));hotSort();}));
   document.querySelectorAll("[data-dmsrc]").forEach(b=>b.addEventListener("click",()=>{if(DM_SRC===b.dataset.dmsrc)return;DM_SRC=b.dataset.dmsrc;const y=scrollY;render();scrollTo(0,y);}));
-  hotSort(); lcInit(); tlxInit(); mqlSyncInit(); orLoad();
+  hotSort(); lcInit(); tlxInit(); mqlSyncInit(); orLoad(); if(!LT&&!LT_ERR)ltLoad();
   document.querySelectorAll("[data-applat]").forEach(b=>b.addEventListener("click",()=>{AP_PLAT=b.dataset.applat;const y=scrollY;render();scrollTo(0,y);}));
   document.querySelectorAll("[data-aprange]").forEach(b=>b.addEventListener("click",()=>{AP_RANGE=b.dataset.aprange;const y=scrollY;render();scrollTo(0,y);}));
   const hf=document.getElementById("hot-filter"); if(hf) hf.addEventListener("change",()=>{const v=hf.value;document.querySelectorAll("#hot-list .tlx-row").forEach(d=>{d.classList.toggle("f-off",!(v==="all"||(v==="contact"&&d.dataset.contact==="1")||(v==="new"&&d.dataset.new==="1")||(v==="30"&&+d.dataset.total>=30)));});});

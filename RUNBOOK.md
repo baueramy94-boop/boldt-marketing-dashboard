@@ -202,3 +202,8 @@ Run these in Python and fix anything that fails:
 
 ### Leads tab top (Nov 9, 2026)
 - The New MQLs by month and New SQLs by month charts were removed at Amy's request. The monthly average now shows on New MQLs by source as a dashed gold line, in the legend and subtitle, and in each month's hover box (above or below the average).
+
+### MQL follow-up panel (Leads)
+- Live from HubSpot through `netlify/functions/hs-leadtasks.mts` (HUBSPOT_TOKEN). Tasks assigned to Chris White (owner 128093036) whose title contains "marketing lead #1", created since Jan 1, 2026.
+- Overdue list = Amy's HubSpot report: status not In progress, Completed, Waiting or Deferred, and due date passed. Shows company name (task's company, else the contact's primary company), due date, days overdue, created date. Never task titles or contacts.
+- Speed to lead = task created to completed (completion date) or deleted (archived). Deleted tasks come from HubSpot's archived list, scanned a few seconds per request with progress in Netlify Blobs store "leadtasks" (keys scan, result). Results cached 10 minutes; `?fresh=1` skips the cache.
