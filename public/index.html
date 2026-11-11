@@ -696,15 +696,11 @@ function ltBody(){
     ${kpi("Median speed to lead",ltDur(med),`Across ${plw(acted.length,"task")} completed or deleted since ${fdShort(new Date(LT.since).toISOString().slice(0,10))}`)}
     ${kpi("Handled within 1 day",within(1)==null?"–":P(within(1),0),`Within 3 days: ${within(3)==null?"–":P(within(3),0)} · within 7 days: ${within(7)==null?"–":P(within(7),0)}`)}
     ${kpi("Completed vs deleted",`${N(done.length)} <small>/ ${N(del.length)}</small>`,`${N(open.length)} still open`)}</div>`;
-  const ms=[...new Set(T.map(t=>ltYM(t.c)))].sort();
-  if(ms.length)h+=`<div class="tbl-wrap" style="margin-top:12px"><table><thead><tr><th class="l">Created in</th><th>Tasks</th><th>Completed</th><th>Deleted</th><th>Still open</th><th>Median speed to lead</th><th>Within 1 day</th></tr></thead><tbody>${ms.map(m=>{
-    const a=T.filter(t=>ltYM(t.c)===m), ac=a.filter(t=>t.a&&t.a>=t.c), c7=a.filter(t=>now-t.c>=864e5);
-    return `<tr><td class="l">${esc(mlong(m))}</td><td>${N(a.length)}</td><td>${N(ac.filter(t=>t.k==="done").length)}</td><td>${N(ac.filter(t=>t.k==="del").length)}</td><td>${N(a.filter(t=>!t.a).length)}</td><td>${ltDur(ltMed(ac.map(H)))}</td><td>${c7.length?P(c7.filter(t=>t.a&&t.a>=t.c&&H(t)<=24).length/c7.length,0):"–"}</td></tr>`;}).join("")}</tbody></table></div>`;
   const O=LT.overdue;
   h+=`<h4 style="margin:16px 0 6px">Overdue MQL follow-up tasks (${N(O.length)})</h4>`;
   h+=O.length?`<div class="tbl-wrap"><table><thead><tr><th class="l">Company</th><th class="l">Due</th><th>Days overdue</th><th class="l">Task created</th></tr></thead><tbody>${O.map(o=>`<tr><td class="l wrap-cell">${o.companyId?coName(o.company||o.domain||"Company record",o.companyId):'<span class="note" style="margin:0">No company linked</span>'}</td><td class="l">${fdShort(ltDay(o.due))}</td><td>${N(Math.max(1,Math.floor((now-o.due)/864e5)))}</td><td class="l">${fdShort(ltDay(o.created))}</td></tr>`).join("")}</tbody></table></div>`
     :`<p class="note">No overdue MQL follow-up tasks.</p>`;
-  h+=`<p class="sec-note">Same filters as the HubSpot report: assigned to Chris White, title contains "marketing lead #1", status not in progress, completed, waiting or deferred, and past due. Speed to lead counts calendar time, including nights and weekends. "Within 1 day" is out of tasks created at least a day ago (the top figure uses tasks at least 7 days old). ${LT.scan&&!LT.scan.complete?"Deleted tasks are still being counted from HubSpot's deleted items; this updates on its own in a moment.":""}${LT.stale?" HubSpot didn't respond just now, so these are the last saved numbers.":""}</p>`;
+  h+=`<p class="sec-note">Same filters as the HubSpot report: assigned to Chris White, title contains "marketing lead #1", status not in progress, completed, waiting or deferred, and past due. Speed to lead counts calendar time, including nights and weekends. "Handled within" figures are out of tasks created at least 7 days ago. ${LT.scan&&!LT.scan.complete?"Deleted tasks are still being counted from HubSpot's deleted items; this updates on its own in a moment.":""}${LT.stale?" HubSpot didn't respond just now, so these are the last saved numbers.":""}</p>`;
   return h;
 }
 /* ---------- Engagement after 1:1 outreach (calls and 1:1 emails from HubSpot, live; engagement from data/engage-<month>.json) ---------- */

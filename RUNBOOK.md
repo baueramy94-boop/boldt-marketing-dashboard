@@ -206,4 +206,5 @@ Run these in Python and fix anything that fails:
 ### MQL follow-up panel (Leads)
 - Live from HubSpot through `netlify/functions/hs-leadtasks.mts` (HUBSPOT_TOKEN). Tasks assigned to Chris White (owner 128093036) whose title contains "marketing lead #1", created since Jan 1, 2026.
 - Overdue list = Amy's HubSpot report: status not In progress, Completed, Waiting or Deferred, and due date passed. Shows company name (task's company, else the contact's primary company), due date, days overdue, created date. Never task titles or contacts.
+- No month-by-month table (removed Nov 11, 2026 at Amy's request).
 - Speed to lead = task created to completed (completion date) or deleted (archived). Deleted tasks come from HubSpot's archived list, scanned a few seconds per request with progress in Netlify Blobs store "leadtasks" (keys scan, result). Results cached 10 minutes; `?fresh=1` skips the cache.
