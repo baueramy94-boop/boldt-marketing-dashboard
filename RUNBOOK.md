@@ -189,6 +189,7 @@ Run these in Python and fix anything that fails:
 - Rules: healthcare companies (same industry and name test as compute.py), counted by root domain. A company engaged when a website session, ad visit or email click falls from the outreach day through 7 days after. Outreach in the last 7 days of the month is listed but kept out of the percentages. "Without recent outreach" = share of 8-day stretches in the month, for the same companies, with no 1:1 outreach from 7 days before through the end of the stretch, that had engagement (shown when there are 30 or more stretches).
 
 ### Journey pop-ups on Leads (full history)
+- Each New MQL company row has a "View customer journey" button under the company name that opens the pop-up (clicking the row still works too).
 - Hot MQL, New MQL and SQL pop-ups run month by month from the first tracked touch to the most recent month, with empty months shown.
 - Hot and New MQLs: when a pop-up opens, `hs-outreach?company=<HubSpot id>` returns that company's calls, emails Boldt sent and replies (dates only) and they are added as a "Calls, 1:1 emails and replies" bar segment and listed in each month. SQL pop-ups already carry HubSpot touches in `sqlJourneys` and now start at the first one, even before the monthly counts begin.
 - The current month so far comes from `mtd.json` `cur` (written by `build_mtd.py` for domains in the last monthly report: [website sessions, LinkedIn clicks, email clicks, Google or Bing ad visits]). It appears after the Monday refresh; the detail comes with the monthly report.

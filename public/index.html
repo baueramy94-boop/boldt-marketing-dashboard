@@ -329,6 +329,9 @@ body.jm-open{overflow:hidden}
 .jr-n{display:flex;flex-direction:column;gap:2px}
 .jr-c{display:flex;flex-wrap:wrap;gap:5px}
 .jr-t{font-size:12.5px;color:var(--muted);line-height:1.45}
+.jr-more{align-self:flex-start;display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:4px 10px;border:1px solid var(--navy);border-radius:999px;background:transparent;color:var(--navy);font:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s,color .15s}
+.jr-more span{transition:transform .15s}
+.jr-more:hover,.jr-more:focus-visible{background:var(--navy);color:#fff}.jr-more:hover span,.jr-more:focus-visible span{transform:translateX(2px)}
 .jr-b{display:grid;grid-template-columns:3fr 2fr;gap:16px;padding:12px}
 .jr-tl{margin:6px 0 0;padding-left:16px;display:grid;gap:4px;font-size:13px}
 .jr-p{margin:6px 0 10px;font-size:13px}
@@ -818,7 +821,7 @@ function defMqlList(X,C){
   const loCell=c=>`<span class="jr-lo note lo" data-lo="${esc(String(c.hubspotId||""))}" style="margin:0"><span class="dm-lbl">Last 1:1 email or call: </span>${lo(c)}</span>`;
   const opts=[["all",`All ${C.length}`],["LinkedIn ad click",`LinkedIn clicks (${cnt("LinkedIn ad click")})`],["Google ad click",`Google ads (${cnt("Google ad click")})`],["Bing ad click",`Bing ads (${cnt("Bing ad click")})`],["Website visit",`Website (${cnt("Website visit")})`],["Email click",`Email (${cnt("Email click")})`]].filter(([v],i)=>i===0||cnt(v));
   const sorted=C.slice().sort((a,b)=>((b.last||b.first).date+(b.last||b.first).precision.replace("day","z")).localeCompare((a.last||a.first).date+(a.last||a.first).precision.replace("day","z")));
-  const list=`<div class="jr-list dm-list dm-lc" id="dm-list"><div class="dm-head" aria-hidden="true"><span>Company</span><span>How they engaged</span><span>Last 1:1 email or call</span><span>Most recent engagement</span><span>HubSpot lifecycle stage</span><span>Follow-up</span></div>${sorted.map(c=>`<details class="jr" id="dm-${esc(c.domain)}" data-ch="${esc(c.channels.join("|"))}"><summary><span class="jr-n">${coName(c.name,c.hubspotId)}<span class="note" style="margin:0">${esc(c.domain)}</span></span><span class="jr-c">${chips(c)}</span>${loCell(c)}
+  const list=`<div class="jr-list dm-list dm-lc" id="dm-list"><div class="dm-head" aria-hidden="true"><span>Company</span><span>How they engaged</span><span>Last 1:1 email or call</span><span>Most recent engagement</span><span>HubSpot lifecycle stage</span><span>Follow-up</span></div>${sorted.map(c=>`<details class="jr" id="dm-${esc(c.domain)}" data-ch="${esc(c.channels.join("|"))}"><summary><span class="jr-n">${coName(c.name,c.hubspotId)}<span class="note" style="margin:0">${esc(c.domain)}</span><button type="button" class="jr-more" data-journey="${esc(c.domain)}" aria-label="View the customer journey for ${esc(c.name)}">View customer journey <span aria-hidden="true">→</span></button></span><span class="jr-c">${chips(c)}</span>${loCell(c)}
       <span class="jr-t"><span class="dm-lbl">Most recent: </span>${c.last?`${esc(c.last.label)}<br>${esc(c.last.channel)}`:"–"}</span>${lcCell(c)}${taskBtn(c)}</summary>
       <div class="jr-b"><div><div class="eyebrow">What they engaged with in ${DML.name}</div><ul class="jr-tl">${rows(c)}</ul><div class="dm-task-f" hidden></div>${exBtn(c.domain,c.name)}</div>
         <div><div class="eyebrow">LinkedIn impressions by campaign, May to ${DML.name}</div>${c.impressions.length?`<ul class="jr-tl">${c.impressions.map(i=>`<li><b>${esc(i.campaign)}</b> ${pl(i.views,"impression")}<span class="note" style="margin:0"> · last ${fdShort(i.last)}</span></li>`).join("")}</ul>`:`<p class="jr-p note">No LinkedIn impressions recorded</p>`}</div></div></details>`).join("")}</div>`;
@@ -1633,6 +1636,7 @@ function render(){
   document.querySelectorAll("#dm-panel [data-task]").forEach(b=>b.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();dmTaskForm(b);}));
   document.querySelectorAll(".co-link").forEach(a=>a.addEventListener("click",e=>e.stopPropagation()));
   document.querySelectorAll("#dm-list > details.jr > summary").forEach(sm=>sm.addEventListener("click",e=>{if(e.target.closest("a,button,select,.lc"))return;e.preventDefault();jOpen("new",sm.parentElement.id.slice(3));}));
+  document.querySelectorAll("#dm-list .jr-more").forEach(b=>b.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();jOpen("new",b.dataset.journey);}));
   exInit();
   const ls=document.getElementById("loc-sel"); if(ls) ls.addEventListener("change",()=>{LOC_SEL=ls.value;document.getElementById("loc-body").innerHTML=locBody();});
   const af=document.getElementById("as-filter"); if(af) af.addEventListener("change",()=>{const v=af.value;document.querySelectorAll("#as-list li").forEach(li=>{const ok=v==="all"||(v==="hs"&&li.dataset.hs==="1")||(v==="new"&&li.dataset.hs==="0")||li.dataset.ch.split("|").includes(v);li.style.display=ok?"":"none";});});
