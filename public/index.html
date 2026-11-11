@@ -702,7 +702,7 @@ function ltBody(){
   let h=head+`<div class="grid g-kpi">${kpi("Overdue now",N(LT.overdue.length),"Not started and past the due date")}
     ${kpi("Median speed to lead",ltDur(med),`Across ${plw(acted.length,"task")} completed or deleted since ${fdShort(new Date(LT.since).toISOString().slice(0,10))}`)}
     ${kpi("Handled within 1 day",within(1)==null?"–":P(within(1),0),`Within 3 days: ${within(3)==null?"–":P(within(3),0)} · within 7 days: ${within(7)==null?"–":P(within(7),0)}`)}
-    ${kpi("Completed vs deleted",`${N(done.length)} <small>/ ${N(del.length)}</small>`,`${N(open.length)} still open`)}</div>`;
+    ${kpi("Completed vs deleted, year to date",`${N(done.length)} <small>/ ${N(del.length)}</small>`,`${N(open.length)} still open. Tasks created since ${fdShort(new Date(LT.since).toISOString().slice(0,10))}`)}</div>`;
   const O=LT.overdue;
   h+=`<h4 style="margin:16px 0 6px">Overdue MQL follow-up tasks (${N(O.length)})</h4>`;
   h+=O.length?`<div class="tbl-wrap"><table><thead><tr><th class="l">Company</th><th class="l">Due</th><th>Days overdue</th><th class="l">Task created</th></tr></thead><tbody>${O.map(o=>`<tr><td class="l wrap-cell">${o.companyId?coName(o.company||o.domain||"Company record",o.companyId):'<span class="note" style="margin:0">No company linked</span>'}</td><td class="l">${fdShort(ltDay(o.due))}</td><td>${N(Math.max(1,Math.floor((now-o.due)/864e5)))}</td><td class="l">${fdShort(ltDay(o.created))}</td></tr>`).join("")}</tbody></table></div>`
