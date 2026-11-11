@@ -329,6 +329,7 @@ body.jm-open{overflow:hidden}
 .jr-n{display:flex;flex-direction:column;gap:2px}
 .jr-c{display:flex;flex-wrap:wrap;gap:5px}
 .jr-t{font-size:12.5px;color:var(--muted);line-height:1.45}
+#mql-follow-up{scroll-margin-top:120px}.lt-h{display:flex;justify-content:space-between;align-items:center;gap:10px}.lt-h h3{margin:0}.lt-link{font-size:12px;padding:5px 10px}
 .jr-more{align-self:flex-start;display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:4px 10px;border:1px solid var(--navy);border-radius:999px;background:transparent;color:var(--navy);font:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s,color .15s}
 .jr-more span{transition:transform .15s}
 .jr-more:hover,.jr-more:focus-visible{background:var(--navy);color:#fff}.jr-more:hover span,.jr-more:focus-visible span{transform:translateX(2px)}
@@ -678,17 +679,20 @@ function defMqlPanel(){
 }
 /* ---------- MQL follow-up: speed to lead and overdue "marketing lead #1" tasks (live from HubSpot, hs-leadtasks) ---------- */
 let LT=null, LT_ERR="", LT_TRY=0;
-function ltPanel(){return `<div class="panel" id="lt-panel">${ltBody()}</div>`;}
+function ltPanel(){return `<div class="panel" id="mql-follow-up">${ltBody()}</div>`;}
+function ltCopy(b){const u=`${location.origin}/#leads/mql-follow-up`;const ok=()=>{b.textContent="Link copied";setTimeout(()=>{b.textContent="Copy link";},2000);};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(ok,()=>prompt("Copy this link:",u));else prompt("Copy this link:",u);}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest(".lt-link");if(b)ltCopy(b);});
 function ltLoad(fresh){fetch(`/api/hs-leadtasks${fresh?"?fresh=1":""}`).then(r=>r.json()).then(j=>{
     if(!j.ready){LT_ERR="This turns on when HubSpot is connected.";} else if(!j.ok){LT_ERR=(j.error||"Couldn't read follow-up tasks from HubSpot.")+(j.detail?` (${j.detail})`:"");} else {LT=j;LT_ERR="";}
     if(LT&&LT.scan&&!LT.scan.complete&&LT_TRY<20){LT_TRY++;setTimeout(()=>ltLoad(),2500);}
-  }).catch(()=>{LT_ERR="Couldn't load follow-up tasks. Refresh to try again.";}).then(()=>{const el=document.getElementById("lt-panel");if(el)el.innerHTML=ltBody();});}
+  }).catch(()=>{LT_ERR="Couldn't load follow-up tasks. Refresh to try again.";}).then(()=>{const el=document.getElementById("mql-follow-up");if(el)el.innerHTML=ltBody();});}
 const ltDur=h=>h==null?"–":h<1?"Under 1 hour":h<48?plw(Math.round(h),"hour"):plw(Math.round(h/24),"day");
 const ltMed=a=>{if(!a.length)return null;const s=[...a].sort((x,y)=>x-y),k=Math.floor(s.length/2);return s.length%2?s[k]:(s[k-1]+s[k])/2;};
 const ltYM=t=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/Chicago",year:"numeric",month:"2-digit"}).format(new Date(t)).slice(0,7);
 const ltDay=t=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/Chicago",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(t));
 function ltBody(){
-  const head=`<h3>MQL follow-up</h3><p class="sub">"Marketing lead #1" tasks assigned to Chris White in HubSpot. Speed to lead is the time from when the task is created to when it's completed or deleted (deleted when the lead isn't relevant).</p>`;
+  const head=`<div class="lt-h"><h3>MQL follow-up</h3><button type="button" class="btn-sm lt-link" title="Copy a link that opens the dashboard at this section">Copy link</button></div><p class="sub">"Marketing lead #1" tasks assigned to Chris White in HubSpot. Speed to lead is the time from when the task is created to when it's completed or deleted (deleted when the lead isn't relevant).</p>`;
   if(LT_ERR)return head+`<p class="note">${esc(LT_ERR)}</p>`;
   if(!LT)return head+`<p class="note">Loading follow-up tasks from HubSpot…</p>`;
   const T=LT.tasks.filter(t=>t.c), now=LT.asOf, H=t=>(t.a-t.c)/36e5;
@@ -1616,7 +1620,12 @@ function askInit(ready){const b=document.getElementById("askBtn");b.hidden=false
   inp.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();document.getElementById("askForm").requestSubmit();}});}
 
 /* ---------- shell ---------- */
-function current(){let h=(location.hash||"").slice(1);if(h==="accounts")h="leads";if(h==="summary")h="exec";return PAGES.some(p=>p[0]===h)?h:"exec";}
+// Links can point at a section: #leads/mql-follow-up opens Leads and scrolls to the element with that id.
+const secOf=()=>((location.hash||"").slice(1).split("/")[1]||"").replace(/[^a-z0-9-]/gi,"");
+let SEC_DONE="";
+function goSection(){const sec=secOf();if(!sec){SEC_DONE="";return;}if(SEC_DONE===location.hash)return;SEC_DONE=location.hash;
+  const go=()=>{const el=document.getElementById(sec);if(el)el.scrollIntoView({block:"start"});};setTimeout(go,60);setTimeout(go,900);}
+function current(){let h=(location.hash||"").slice(1).split("/")[0];if(h==="accounts")h="leads";if(h==="summary")h="exec";return PAGES.some(p=>p[0]===h)?h:"exec";}
 function render(){
   if(!D)return;
   const pg=current();
@@ -1629,7 +1638,7 @@ function render(){
   const dmf=document.getElementById("dm-filter"); if(dmf) dmf.addEventListener("change",()=>{const v=dmf.value;document.querySelectorAll("#dm-panel details.jr").forEach(d=>{d.style.display=v==="all"||d.dataset.ch.split("|").includes(v)?"":"none";});});
   document.querySelectorAll("[data-hsort]").forEach(b=>b.addEventListener("click",()=>{HOT_SORT=b.dataset.hsort;document.querySelectorAll("[data-hsort]").forEach(x=>x.classList.toggle("on",x===b));hotSort();}));
   document.querySelectorAll("[data-dmsrc]").forEach(b=>b.addEventListener("click",()=>{if(DM_SRC===b.dataset.dmsrc)return;DM_SRC=b.dataset.dmsrc;const y=scrollY;render();scrollTo(0,y);}));
-  hotSort(); lcInit(); tlxInit(); mqlSyncInit(); orLoad(); if(!LT&&!LT_ERR)ltLoad();
+  hotSort(); lcInit(); tlxInit(); mqlSyncInit(); orLoad(); if(!LT&&!LT_ERR)ltLoad(); goSection();
   document.querySelectorAll("[data-applat]").forEach(b=>b.addEventListener("click",()=>{AP_PLAT=b.dataset.applat;const y=scrollY;render();scrollTo(0,y);}));
   document.querySelectorAll("[data-aprange]").forEach(b=>b.addEventListener("click",()=>{AP_RANGE=b.dataset.aprange;const y=scrollY;render();scrollTo(0,y);}));
   const hf=document.getElementById("hot-filter"); if(hf) hf.addEventListener("change",()=>{const v=hf.value;document.querySelectorAll("#hot-list .tlx-row").forEach(d=>{d.classList.toggle("f-off",!(v==="all"||(v==="contact"&&d.dataset.contact==="1")||(v==="new"&&d.dataset.new==="1")||(v==="30"&&+d.dataset.total>=30)));});});

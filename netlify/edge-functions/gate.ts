@@ -28,7 +28,9 @@ button{font:inherit;font-weight:700;padding:11px;border:0;border-radius:8px;back
 <h1>Boldt Marketing Dashboard</h1><p>Enter the team password to continue.</p>${msg ? `<p class="err">${msg}</p>` : ""}
 <label>Your name <input name="name" autocomplete="name" placeholder="Shown on calendar edits"></label>
 <label>Password <input name="password" type="password" autocomplete="current-password" required autofocus></label>
-<button type="submit">Open dashboard</button></form></body></html>`;
+<input type="hidden" name="next" value="">
+<button type="submit">Open dashboard</button></form>
+<script>document.querySelector('[name=next]').value=location.pathname+location.search+location.hash;</script></body></html>`;
 
 const html = (body: string, status = 200, headers: Record<string, string> = {}) =>
   new Response(body, { status, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex", ...headers } });
@@ -45,7 +47,10 @@ export default async (request: Request, context: Context) => {
     const form = await request.formData();
     if (String(form.get("password") || "") !== password) return html(page("That password didn't match."), 401);
     const name = String(form.get("name") || "").trim().slice(0, 40);
-    const h = new Headers({ location: "/", "cache-control": "no-store" });
+    // Send people back to the page they opened (path and #section), or the home page if it doesn't look like one of ours.
+    const nx = String(form.get("next") || "");
+    const back = nx.length < 200 && /^\/(?!\/)[A-Za-z0-9._\-\/]*(\?[A-Za-z0-9=&._\-]*)?(#[A-Za-z0-9._\-\/]*)?$/.test(nx) && !nx.startsWith("/login") && !nx.startsWith("/logout") ? nx : "/";
+    const h = new Headers({ location: back, "cache-control": "no-store" });
     h.append("set-cookie", `${COOKIE}=${good}; Path=/; Max-Age=${DAYS * 86400}; HttpOnly; Secure; SameSite=Lax`);
     h.append("set-cookie", `bmd_user=${encodeURIComponent(name)}; Path=/; Max-Age=${DAYS * 86400}; Secure; SameSite=Lax`);
     return new Response(null, { status: 303, headers: h });

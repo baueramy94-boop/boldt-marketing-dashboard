@@ -205,6 +205,7 @@ Run these in Python and fix anything that fails:
 - The New MQLs by month and New SQLs by month charts were removed at Amy's request. The monthly average now shows on New MQLs by source as a dashed gold line, in the legend and subtitle, and in each month's hover box (above or below the average).
 
 ### MQL follow-up panel (Leads)
+- Direct link: `https://boldt-marketing-dashboard.netlify.app/#leads/mql-follow-up` (the panel's Copy link button). Any `#<page>/<element id>` link opens that page and scrolls to the element. The login page now returns people to the link they opened after they sign in.
 - Live from HubSpot through `netlify/functions/hs-leadtasks.mts` (HUBSPOT_TOKEN). Tasks assigned to Chris White (owner 128093036) whose title contains "marketing lead #1", created since Jan 1, 2026.
 - Overdue list = Amy's HubSpot report: status not In progress, Completed, Waiting or Deferred, and due date passed. Shows company name (task's company, else the contact's primary company), due date, days overdue, created date. Never task titles or contacts.
 - No month-by-month table (removed Nov 11, 2026 at Amy's request).
