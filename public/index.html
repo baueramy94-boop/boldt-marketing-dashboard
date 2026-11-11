@@ -677,7 +677,7 @@ function defMqlPanel(){
 let LT=null, LT_ERR="", LT_TRY=0;
 function ltPanel(){return `<div class="panel" id="lt-panel">${ltBody()}</div>`;}
 function ltLoad(fresh){fetch(`/api/hs-leadtasks${fresh?"?fresh=1":""}`).then(r=>r.json()).then(j=>{
-    if(!j.ready){LT_ERR="This turns on when HubSpot is connected.";} else if(!j.ok){LT_ERR=j.error||"Couldn't read follow-up tasks from HubSpot.";} else {LT=j;LT_ERR="";}
+    if(!j.ready){LT_ERR="This turns on when HubSpot is connected.";} else if(!j.ok){LT_ERR=(j.error||"Couldn't read follow-up tasks from HubSpot.")+(j.detail?` (${j.detail})`:"");} else {LT=j;LT_ERR="";}
     if(LT&&LT.scan&&!LT.scan.complete&&LT_TRY<20){LT_TRY++;setTimeout(()=>ltLoad(),2500);}
   }).catch(()=>{LT_ERR="Couldn't load follow-up tasks. Refresh to try again.";}).then(()=>{const el=document.getElementById("lt-panel");if(el)el.innerHTML=ltBody();});}
 const ltDur=h=>h==null?"–":h<1?"Under 1 hour":h<48?plw(Math.round(h),"hour"):plw(Math.round(h/24),"day");

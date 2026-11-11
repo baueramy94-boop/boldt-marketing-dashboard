@@ -36,7 +36,7 @@ export default async (req: Request) => {
       const r = await fetch(`${API}/crm/v3/objects/tasks/search`, { method: "POST", headers: auth, body: JSON.stringify({
         limit: 200, after, properties: PROPS, sorts: [{ propertyName: "hs_createdate", direction: "ASCENDING" }],
         filterGroups: [{ filters: [{ propertyName: "hubspot_owner_id", operator: "EQ", value: OWNER }, { propertyName: "hs_createdate", operator: "GTE", value: String(SINCE) }] }] }) });
-      if (!r.ok) throw new Error(`tasks search ${r.status}`);
+      if (!r.ok) throw new Error(`tasks search ${r.status}: ${String(((await r.json().catch(() => ({}))) as any).message || "").slice(0, 240)}`);
       const d: any = await r.json();
       (d.results || []).forEach((t: any) => { if (isLead(t.properties)) live.push(t); });
       after = d.paging?.next?.after; if (!after) break;
@@ -48,7 +48,7 @@ export default async (req: Request) => {
     while (Date.now() - t0 < 6500) {
       const u = `${API}/crm/v3/objects/tasks?archived=true&limit=100&properties=${PROPS.join(",")}${st.after ? `&after=${encodeURIComponent(st.after)}` : ""}`;
       const r = await fetch(u, { headers: auth });
-      if (!r.ok) throw new Error(`archived tasks ${r.status}`);
+      if (!r.ok) throw new Error(`archived tasks ${r.status}: ${String(((await r.json().catch(() => ({}))) as any).message || "").slice(0, 240)}`);
       const d: any = await r.json(); pages++;
       for (const t of d.results || []) {
         const p = t.properties || {}, cr = ms(p.hs_createdate);
@@ -110,9 +110,10 @@ export default async (req: Request) => {
     if (st.passes > 0) await store.setJSON("result", { at: now, data });
     return json(data);
   } catch (e: any) {
-    console.log(`hs-leadtasks failed: ${e?.message || e}`);
+    const detail = String(e?.message || e).slice(0, 300);
+    console.log(`hs-leadtasks failed: ${detail}`);
     if (cached) return json({ ...cached.data, stale: true });
-    return json({ ok: false, ready: true, error: "Couldn't read follow-up tasks from HubSpot." }, 502);
+    return json({ ok: false, ready: true, error: "Couldn't read follow-up tasks from HubSpot.", detail }, 502);
   }
 };
 
