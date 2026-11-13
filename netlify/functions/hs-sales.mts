@@ -23,6 +23,7 @@ const REPS = [{ name: "Chris White", id: "128093036" }, { name: "Heidi Lau", id:
 const PIPELINES = ["sales pipeline", "warm sales pipeline"];
 const YEAR = 2026;
 const BUDGET_MS = 7000;
+const DEALS = false; // Pipeline is switched off for now (Amy, Nov 13, 2026); true reads deals again
 const VER = 2; // raise when the saved month format changes, so old copies are rebuilt
 const TTL_DONE = 12 * 3600e3, TTL_CUR = 15 * 60e3, TTL_TASKS = 10 * 60e3, TTL_DEALS = 30 * 60e3, TTL_REPS = 24 * 3600e3;
 const DISP: Record<string, string> = {
@@ -196,7 +197,7 @@ export default async (req: Request) => {
     if (tasks?.truncated) health.push("More than 3,000 open tasks; open task counts are low.");
 
     // 4. Pipeline: deals in the Sales Pipeline and Warm Sales Pipeline.
-    let pipeline: any = (!fresh && (await cacheGet(store, "deals", TTL_DEALS))) || null;
+    let pipeline: any = DEALS ? (!fresh && (await cacheGet(store, "deals", TTL_DEALS))) || null : { ready: false, off: true };
     if (!pipeline && left() > 2000) {
       try {
         const pl = await hs(`/crm/v3/pipelines/deals`);

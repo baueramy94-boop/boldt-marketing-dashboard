@@ -465,6 +465,8 @@ try{sessionStorage.setItem("bmd_dash","sales");}catch(e){}
 const HS_PORTAL="4587932";
 const MONTHS_LONG=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const MS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+/* Pipeline (deals) is switched off for now at Amy's request (Nov 13, 2026). Set to true, and DEALS to true in hs-sales.mts, to bring back the tab and the deal tiles. */
+const SHOW_PIPELINE=false;
 let S=null, ERR="", TRIES=0, SEL="", TEXT={}, TXT_MONTHS=[], VIEWREP="team", SUMREP="team", GOALREP="team", GOALS=null, GOALS_ERR="";
 let LT=null, LT_ERR="", LT_TRY=0;
 
@@ -552,7 +554,7 @@ function narrativePanel(){const T=TEXT[SEL];if(!T)return "";
 function ltMedian(){if(!LT)return null;const T=LT.tasks.filter(t=>t.c&&t.a&&t.a>=t.c).map(t=>(t.a-t.c)/36e5);return ltMed(T);}
 
 R.summary=()=>{const m=SEL, mn=mLong(m);
-  let h=head("Sales Summary",`Healthcare sales activity for ${mn} 2026${sofar(m)}: calls, 1:1 emails, meetings, follow-up and pipeline for ${S.reps.map(r=>r.name).join(" and ")}.`);
+  let h=head("Sales Summary",`Healthcare sales activity for ${mn} 2026${sofar(m)}: calls, 1:1 emails, meetings and follow-up for ${S.reps.map(r=>r.name).join(" and ")}.`);
   h+=narrativePanel();
   const tk=S.tasks, od=tk?sum(S.reps.map(r=>tk.byRep[r.id].overdue)):null, op=tk?sum(S.reps.map(r=>tk.byRep[r.id].open)):null;
   const med=ltMedian(), pl=S.pipeline&&S.pipeline.ready?S.pipeline:null;
@@ -754,7 +756,7 @@ R.recs=()=>{const T=TEXT[SEL]||{}, RC=T.recs||[];
   return h+`<div class="panel"><ol class="recs">${RC.map(r=>`<li><div class="rec-h"><span class="chip ${r.pri==="High"?"bad":r.pri==="Medium"?"warn":""}">${esc(r.pri)}</span><b>${esc(r.title)}</b></div><p>${esc(r.detail)}</p><span class="note">Owner: ${esc(r.owner)}</span></li>`).join("")}</ol></div>`;};
 
 /* ---------- shell ---------- */
-const PAGES=()=>[["summary","Summary"],["activity","Activity"],["emails","1:1 Emails"],["speed","Speed To Lead"],["tasks","All Tasks"],["pipeline","Pipeline"],["goals","Goals"],...(TXT_MONTHS.length?[["recs","Recommendations"]]:[])];
+const PAGES=()=>[["summary","Summary"],["activity","Activity"],["emails","1:1 Emails"],["speed","Speed To Lead"],["tasks","All Tasks"],...(SHOW_PIPELINE?[["pipeline","Pipeline"]]:[]),["goals","Goals"],...(TXT_MONTHS.length?[["recs","Recommendations"]]:[])];
 const asOfLabel=()=>new Intl.DateTimeFormat("en-US",{timeZone:"America/Chicago",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}).format(new Date(S.asOf))+" CT";
 function current(){const h=(location.hash||"").slice(1).split("/")[0];return PAGES().some(p=>p[0]===h)?h:"summary";}
 function render(keep){
@@ -788,12 +790,12 @@ function loadText(m){if(TEXT[m]!==undefined||!TXT_MONTHS.includes(m))return;TEXT
 function load(fresh){fetch(`/api/hs-sales${fresh?"?fresh=1":""}`,{cache:"no-store"}).then(r=>r.json()).then(j=>{
     if(j.ready===false){ERR="This dashboard turns on when HubSpot is connected.";}
     else if(!j.ok){ERR=j.error==="signed out"?"Your session ended. Refresh the page to sign in again.":"Sales activity didn't load from HubSpot. Refresh to try again.";}
-    else{S=j;ERR="";
+    else{S=j;ERR="";if(!SHOW_PIPELINE)S.pipeline=null;
       if(!SEL){const done=S.months.filter(m=>!isCur(m));SEL=done.length?done[done.length-1]:S.months[S.months.length-1];}   /* open on the last complete month, like the marketing report */
       picker();loadText(SEL);
       if(S.partial&&TRIES<30){TRIES++;setTimeout(()=>load(),2000);}}
   }).catch(()=>{if(!S)ERR="Sales activity didn't load. Refresh to try again.";}).then(()=>render(true));}
-document.getElementById("foot").textContent="Source: HubSpot (calls, 1:1 emails, meetings, tasks and deals owned by the healthcare sales team). Numbers are live and update as activity is logged.";
+document.getElementById("foot").textContent="Source: HubSpot (calls, 1:1 emails, meetings and tasks owned by the healthcare sales team). Numbers are live and update as activity is logged.";
 fetch("data/sales-index.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{TXT_MONTHS=(j&&j.months)||[];if(S){loadText(SEL);render(true);}}).catch(()=>{});
 load(); ltLoad(); loadGoals();
 })();
