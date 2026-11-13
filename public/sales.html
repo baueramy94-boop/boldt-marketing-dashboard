@@ -523,10 +523,10 @@ R.summary=()=>{const m=SEL, mn=mLong(m);
     ${kpi(`1:1 emails sent, ${mn}${sofar(m)}`,N(team(m,"emails")),delta(m,"emails"))}
     ${kpi(`Meetings held, ${mn}${sofar(m)}`,N(team(m,"held")),delta(m,"held"))}
     ${kpi("Median speed to lead",LT?ltDur(med):"–",LT?`MQL follow-up tasks since ${fdShort(new Date(LT.since).toISOString().slice(0,10))}. <a href="#speed">See detail</a>`:"Loading from HubSpot")}
-    ${kpi("Open tasks now",op==null?"–":N(op),od==null?"":`${N(od)} overdue. <a href="#tasks">See detail</a>`)}
+    ${kpi("All open tasks now",op==null?"–":N(op),od==null?"":`${N(od)} overdue. <a href="#tasks">See detail</a>`)}
     ${pl?kpi("Open deals now",N(pl.open.length),`${plw(pl.monthly[m]?pl.monthly[m].created:0,"new deal")} in ${mn}. <a href="#pipeline">See detail</a>`):""}</div>`;
   h+=`<div class="panel"><h3>By rep, ${mn}${sofar(m)}</h3><p class="sub">Activity logged in HubSpot, with the team total</p>${repTable(
-    ["Calls","1:1 emails sent","Replies received","Meetings held","Tasks completed","Days active","Open tasks now","Overdue now"],
+    ["Calls","1:1 emails sent","Replies received","Meetings held","Tasks completed","Days active","All open tasks now","All overdue now"],
     r=>[N(val(m,r.id,"calls")),N(val(m,r.id,"emails")),N(val(m,r.id,"replies")),N(val(m,r.id,"held")),N(val(m,r.id,"tasksDone")),N(val(m,r.id,"days")),tk?N(tk.byRep[r.id].open):"–",tk?N(tk.byRep[r.id].overdue):"–"],
     ()=>[N(team(m,"calls")),N(team(m,"emails")),N(team(m,"replies")),N(team(m,"held")),N(team(m,"tasksDone")),"",op==null?"–":N(op),od==null?"–":N(od)])}
     <p class="sec-note">Days active counts days with at least one call, 1:1 email or meeting held.</p></div>`;
@@ -585,13 +585,13 @@ function ltBody(){
 R.speed=()=>head("Speed To Lead","How quickly new marketing qualified leads get a first follow-up from sales. This is the same MQL follow-up section shown on the Marketing Dashboard's Leads page.")+`<div class="panel" id="mql-follow-up">${ltBody()}</div>`;
 
 R.tasks=()=>{const m=SEL, mn=mLong(m), tk=S.tasks;
-  let h=head("Tasks",`Open and overdue HubSpot tasks right now, and tasks created and completed by month.`);
+  let h=head("All Tasks",`Every open and overdue HubSpot task assigned to the team right now, whatever the type, and tasks created and completed by month. MQL follow-up tasks alone are on the <a href="#speed">Speed To Lead</a> page.`);
   if(!tk) return h+`<div class="empty">${S.partial?"Loading open tasks from HubSpot…":"Open tasks aren't available right now."}</div>`;
   const t=k=>sum(S.reps.map(r=>tk.byRep[r.id][k]));
-  h+=`<div class="grid g-kpi">${kpi("Open tasks now",N(t("open")),`${N(t("high"))} marked high priority`)}${kpi("Overdue now",N(t("overdue")),t("open")?`${rate(t("overdue"),t("open"))} of open tasks`:"")}
+  h+=`<div class="grid g-kpi">${kpi("All open tasks now",N(t("open")),`${N(t("high"))} marked high priority`)}${kpi("All overdue now",N(t("overdue")),t("open")?`${rate(t("overdue"),t("open"))} of open tasks`:"")}
     ${kpi("Due today",N(t("dueToday")))}${kpi("Due in the next 7 days",N(t("dueWeek")))}${kpi("In progress or waiting",N(t("working")))}
     ${kpi(`Completed, ${mn}${sofar(m)}`,N(team(m,"tasksDone")),delta(m,"tasksDone"))}</div>`;
-  h+=`<div class="panel"><h3>Open tasks by rep</h3><p class="sub">As of ${asOfLabel()}</p>${repTable(
+  h+=`<div class="panel"><h3>All open tasks by rep</h3><p class="sub">As of ${asOfLabel()}</p>${repTable(
     ["Open","Overdue","Oldest overdue","Due today","Due next 7 days","Due later","No due date","In progress or waiting","High priority",`Completed, ${mn}`,`Created, ${mn}`],
     r=>{const b=tk.byRep[r.id];return [N(b.open),N(b.overdue),b.oldest?plw(b.oldest,"day"):"–",N(b.dueToday),N(b.dueWeek),N(b.later),N(b.noDue),N(b.working),N(b.high),N(val(m,r.id,"tasksDone")),N(val(m,r.id,"tasksNew"))];},
     ()=>[N(t("open")),N(t("overdue")),"",N(t("dueToday")),N(t("dueWeek")),N(t("later")),N(t("noDue")),N(t("working")),N(t("high")),N(team(m,"tasksDone")),N(team(m,"tasksNew"))])}</div>`;
@@ -643,7 +643,7 @@ R.recs=()=>{const T=TEXT[SEL]||{}, RC=T.recs||[];
   return h+`<div class="panel"><ol class="recs">${RC.map(r=>`<li><div class="rec-h"><span class="chip ${r.pri==="High"?"bad":r.pri==="Medium"?"warn":""}">${esc(r.pri)}</span><b>${esc(r.title)}</b></div><p>${esc(r.detail)}</p><span class="note">Owner: ${esc(r.owner)}</span></li>`).join("")}</ol></div>`;};
 
 /* ---------- shell ---------- */
-const PAGES=()=>[["summary","Summary"],["activity","Activity"],["speed","Speed To Lead"],["tasks","Tasks"],["pipeline","Pipeline"],["trends","Month Over Month"],...(TXT_MONTHS.length?[["recs","Recommendations"]]:[])];
+const PAGES=()=>[["summary","Summary"],["activity","Activity"],["speed","Speed To Lead"],["tasks","All Tasks"],["pipeline","Pipeline"],["trends","Month Over Month"],...(TXT_MONTHS.length?[["recs","Recommendations"]]:[])];
 const asOfLabel=()=>new Intl.DateTimeFormat("en-US",{timeZone:"America/Chicago",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}).format(new Date(S.asOf))+" CT";
 function current(){const h=(location.hash||"").slice(1).split("/")[0];return PAGES().some(p=>p[0]===h)?h:"summary";}
 function render(keep){

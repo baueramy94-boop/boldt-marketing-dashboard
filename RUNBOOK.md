@@ -218,14 +218,14 @@ The site now holds two dashboards. `public/start.html` asks which one to open (o
 ### How it works
 - Healthcare only. Healthcare sales = **Chris White** (owner 128093036) and **Heidi Lau** (owner id looked up by name). Pipeline = deals in the HubSpot pipelines named **Sales Pipeline** and **Warm Sales Pipeline**.
 - Numbers are live from HubSpot through `netlify/functions/hs-sales.mts` (HUBSPOT_TOKEN), the same way the MQL follow-up panel works. Nothing is pulled by the monthly run for the numbers. Results are kept in Netlify Blobs store "sales": finished months for 12 hours, the current month for 15 minutes, open tasks for 10 minutes, deals for 30 minutes. `/api/hs-sales?fresh=1` skips the saved copy.
-- Pages: Summary, Activity, Speed To Lead, Tasks, Pipeline, Month Over Month, and Recommendations (shown once a monthly write-up exists). The month picker opens on the last complete month.
+- Pages: Summary, Activity, Speed To Lead, All Tasks, Pipeline, Month Over Month, and Recommendations (shown once a monthly write-up exists). The month picker opens on the last complete month.
 - Speed To Lead is the MQL follow-up section from the Marketing Dashboard's Leads page (`/api/hs-leadtasks`), unchanged.
 - Definitions (keep `hs-sales.mts` and this list in step):
   - Calls: logged calls owned by the rep, by call time in Central time, leaving out inbound and canceled calls. Connected, voicemail and no answer come from the call outcome.
   - 1:1 emails sent: emails with direction EMAIL owned by the rep. Replies received: direction INCOMING_EMAIL owned by the rep. Marketing emails are never counted.
   - Meetings: owned by the rep, by start time, canceled left out. Held = start time has passed and the outcome is not No show.
   - Days active: days with at least one call, 1:1 email sent or meeting held.
-  - Tasks: open = not Completed. Overdue = not In progress, Completed, Waiting or Deferred, and past due (the same rule as Amy's HubSpot report). Tasks created and completed are counted by month.
+  - All Tasks: every task assigned to the rep, whatever the title (the MQL follow-up section counts only "marketing lead #1" tasks, so its overdue number is smaller). Open = not Completed. Overdue = not In progress, Completed, Waiting or Deferred, and past due (the same rule as Amy's HubSpot report). Tasks created and completed are counted by month.
   - Deals: open = not in a closed stage. Won = closed stage with 100% probability. New by create date; won and lost by close date. "No activity in 30 days" uses the deal's last activity date.
 - The page returns counts only: no contacts, email subjects, bodies or task titles. Deal names appear in the open deal list.
 - Setup and data problems never show on the page. The function lists them in `health`, which only shows when the page is opened as `sales.html?health=1` (for Amy).
