@@ -429,6 +429,17 @@ body.editing .ed-mod{background:color-mix(in srgb,var(--yellow) 16%,transparent)
 .rep-dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:7px;vertical-align:1px}
 tr.tot td{font-weight:700;border-top:2px solid var(--line)}
 .goal-in{font:inherit;font-size:15px;font-weight:700;width:104px;padding:6px 8px;text-align:right;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums}
+.subj-btn{all:unset;cursor:pointer;font-weight:600;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.subj-btn:hover{text-decoration-color:var(--gold)}.subj-btn:focus-visible{outline:2px solid var(--yellow);outline-offset:2px;border-radius:3px}
+.em-modal{position:fixed;inset:0;z-index:40;background:rgba(2,28,38,.55);display:grid;place-items:center;padding:16px}
+.em-box{background:var(--surface);color:var(--ink);border-radius:12px;width:min(760px,100%);max-height:min(86vh,900px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.3)}
+.em-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:14px 18px;background:var(--navy);color:#fff;border-bottom:3px solid var(--yellow)}
+.em-head h3{font-size:17px;margin-top:2px}.em-head .ask-x{all:unset;cursor:pointer;font-size:24px;line-height:1;padding:2px 8px;color:#fff;border-radius:6px}.em-head .ask-x:focus-visible{outline:2px solid #fff}
+.em-body{padding:16px 18px;overflow:auto;display:grid;gap:14px}
+.em-one{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.em-meta{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:9px 12px;background:var(--soft);font-size:13px}.em-meta span{color:var(--muted)}.em-meta .chip{color:var(--ink)}.em-meta .chip.good{color:var(--good)}
+.em-text{padding:12px 14px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.55}
+@media print{.em-modal{display:none}}
 .goal-in:focus{outline:2px solid var(--yellow);border-color:var(--gold)}
 .panel>.g-kpi>.kpi{border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
 .kpi .d .up,.kpi .d .dn{font-weight:700}
@@ -454,7 +465,7 @@ try{sessionStorage.setItem("bmd_dash","sales");}catch(e){}
 const HS_PORTAL="4587932";
 const MONTHS_LONG=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const MS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-let S=null, ERR="", TRIES=0, SEL="", TEXT={}, TXT_MONTHS=[], VIEWREP="team", SUMREP="team", GOALS=null, GOALS_ERR="";
+let S=null, ERR="", TRIES=0, SEL="", TEXT={}, TXT_MONTHS=[], VIEWREP="team", SUMREP="team", GOALREP="team", GOALS=null, GOALS_ERR="";
 let LT=null, LT_ERR="", LT_TRY=0;
 
 /* ---------- formatting (same helpers as the marketing dashboard) ---------- */
@@ -593,9 +604,23 @@ R.emails=()=>{const m=SEL, mn=mLong(m), E=S.email||{}, e=team(m,"emails");
     <p class="sec-note">Directional means fewer than 30 emails, too few to rely on.</p></div>`;
   const SU=[...(E.subjects||[])], top=tr?[...SU].filter(x=>x.n>=5).sort((a,b)=>b.r/b.n-a.r/a.n||b.o/b.n-a.o/a.n).slice(0,5):[];
   if(top.length) h+=`<div class="panel"><h3>Subject lines with the best reply rate</h3><p class="sub">Sent 5 or more times this year</p>${hbars(top.map(x=>({k:x.s,v:Math.round(x.r/x.n*100)})),{fmt:v=>v+"%",color:css("--good")})}</div>`;
-  h+=`<div class="panel"><h3>Subject lines used 3 or more times, year to date (${N(SU.length)})</h3><p class="sub">Most used first</p>${SU.length?`<div class="tbl-wrap"><table><thead><tr><th class="l">Subject line</th><th>Emails sent</th>${tr?"<th>Opened</th><th>Open rate</th><th>Clicked</th><th>Click rate</th><th>Replied</th><th>Reply rate</th>":""}</tr></thead><tbody>${SU.map(x=>`<tr><td class="l wrap-cell">${esc(x.s)}</td><td>${N(x.n)}</td>${tr?`<td>${N(x.o)}</td><td>${r3(x.o,x.n)}</td><td>${N(x.c)}</td><td>${r3(x.c,x.n)}</td><td>${N(x.r)}</td><td>${r3(x.r,x.n)}</td>`:""}</tr>`).join("")}</tbody></table></div>`:`<p class="note">No subject line has been used 3 or more times this year.</p>`}
+  h+=`<div class="panel"><h3>Subject lines used 3 or more times, year to date (${N(SU.length)})</h3><p class="sub">Most used first. Select a subject line to read the emails sent with it.</p>${SU.length?`<div class="tbl-wrap"><table><thead><tr><th class="l">Subject line</th><th>Emails sent</th>${tr?"<th>Opened</th><th>Open rate</th><th>Clicked</th><th>Click rate</th><th>Replied</th><th>Reply rate</th>":""}</tr></thead><tbody>${SU.map(x=>`<tr><td class="l wrap-cell"><button type="button" class="subj-btn" data-subj="${esc(x.s)}" title="Read the most recent emails sent with this subject line">${esc(x.s)}</button></td><td>${N(x.n)}</td>${tr?`<td>${N(x.o)}</td><td>${r3(x.o,x.n)}</td><td>${N(x.c)}</td><td>${r3(x.c,x.n)}</td><td>${N(x.r)}</td><td>${r3(x.r,x.n)}</td>`:""}</tr>`).join("")}</tbody></table></div>`:`<p class="note">No subject line has been used 3 or more times this year.</p>`}
     <p class="sec-note">Opens, clicks and replies count emails with at least one. Opens rely on tracking in the email, so some real opens are not counted. Subject lines used once or twice are left out of this list and counted in the style table above.</p></div>`;
   return h;};
+
+// Pop-up with the most recent emails sent under a subject line (hs-email). Email text only: no recipient names or addresses are requested.
+function emailClose(){document.querySelectorAll(".em-modal").forEach(x=>x.remove());document.removeEventListener("keydown",emailKey);if(emailOpen.from&&emailOpen.from.focus)emailOpen.from.focus();}
+function emailKey(e){if(e.key==="Escape")emailClose();}
+function emailOpen(subject){emailOpen.from=document.activeElement;
+  const m=document.createElement("div");m.className="em-modal";m.setAttribute("role","dialog");m.setAttribute("aria-modal","true");m.setAttribute("aria-label",`Emails with the subject ${subject}`);
+  m.innerHTML=`<div class="em-box"><div class="em-head"><div><span class="eyebrow" style="color:#fff;opacity:.75">Subject line</span><h3>${esc(subject)}</h3></div><button type="button" class="ask-x" aria-label="Close">×</button></div><div class="em-body"><p class="note">Loading emails from HubSpot…</p></div></div>`;
+  m.addEventListener("click",e=>{if(e.target===m||e.target.closest(".ask-x"))emailClose();});document.addEventListener("keydown",emailKey);document.body.appendChild(m);m.querySelector(".ask-x").focus();
+  const body=m.querySelector(".em-body");
+  fetch(`/api/hs-email?subject=${encodeURIComponent(subject)}`).then(r=>r.json()).then(j=>{
+    if(!j.ok||!j.emails||!j.emails.length){body.innerHTML=`<p class="note">${j.ok?"No email text is available for this subject line.":"The emails didn't load from HubSpot. Close this and try again."}</p>`;return;}
+    const rn=id=>{const r=S.reps.find(x=>x.id===id);return r?r.name:"";};
+    body.innerHTML=`<p class="note" style="margin:0 0 4px">${j.emails.length===1?"The most recent email":`The ${N(j.emails.length)} most recent emails`} sent with this subject line.</p>`+j.emails.map(e=>`<article class="em-one"><div class="em-meta"><b>${esc(rn(e.owner)||"Sales")}</b><span>${fdShort(e.d)}, ${esc(e.d.slice(0,4))}</span>${e.tracked?`<span class="chip ${e.opens?"good":""}">${e.opens?`Opened ${N(e.opens)}×`:"Not opened"}</span>${e.clicks?`<span class="chip good">Clicked</span>`:""}${e.replies?`<span class="chip good">Replied</span>`:""}`:""}</div><div class="em-text">${esc(e.text||"(No text in this email.)")}</div></article>`).join("");
+  }).catch(()=>{body.innerHTML=`<p class="note">The emails didn't load. Close this and try again.</p>`;});}
 
 R.goals=()=>{const m=SEL, mn=mLong(m);
   let h=head("Goals",`Monthly goals by sales rep for ${mn} 2026. Change the month at the top right to set another month.`);
@@ -606,8 +631,9 @@ R.goals=()=>{const m=SEL, mn=mLong(m);
     <div class="tbl-wrap"><table><thead><tr><th class="l">Rep</th>${GM.map(x=>`<th>${x[1]}</th>`).join("")}</tr></thead><tbody>${S.reps.map((r,i)=>`<tr>${repCell(r,i)}${GM.map(([k,l])=>{const g=goal(m,r.id,k);return `<td><input class="goal-in" type="number" min="0" max="100000" step="1" inputmode="numeric" value="${g==null?"":g}" data-goal="${esc(r.id)}|${k}" aria-label="${esc(r.name)} goal for ${l}"><div class="note" style="margin:3px 0 0">Actual${sofar(m)}: ${N(val(m,r.id,k))}${pctChip(val(m,r.id,k),g)}</div></td>`;}).join("")}</tr>`).join("")}
     <tr class="tot"><td class="l">Team total</td>${GM.map(([k])=>{const g=teamGoal(m,k);return `<td>${g==null?"–":N(g)}<div class="note" style="margin:3px 0 0;font-weight:400">Actual${sofar(m)}: ${N(team(m,k))}${pctChip(team(m,k),g)}</div></td>`;}).join("")}</tr></tbody></table></div>
     <p class="sec-note" id="goal-st" aria-live="polite">${lg?`Last changed by ${esc(lg.by)} on ${fdShort(String(lg.at).slice(0,10))}.`:""}</p></div>`;
-  const ms=S.months.filter(x=>goalMonth(x));
-  if(ms.length) h+=`<div class="panel"><h3>Goal attainment by month, team total</h3><p class="sub">Actual as a share of the team goal</p><div class="tbl-wrap"><table><thead><tr><th class="l">Metric</th>${ms.map(x=>`<th>${mShort(x)}${isCur(x)?"*":""}</th>`).join("")}</tr></thead><tbody>${GM.map(([k,l])=>`<tr><td>${l}</td>${ms.map(x=>{const g=teamGoal(x,k);return `<td>${g?`${N(team(x,k))} of ${N(g)}${pctChip(team(x,k),g)}`:"–"}</td>`;}).join("")}</tr>`).join("")}</tbody></table></div>${ms.some(isCur)?`<p class="note">* Month to date.</p>`:""}</div>`;
+  const ms=S.months.filter(x=>goalMonth(x)), gw=GOALREP==="team"?null:GOALREP, ga=(x,k)=>gw?val(x,gw,k):team(x,k), gg=(x,k)=>gw?goal(x,gw,k):teamGoal(x,k);
+  if(ms.length) h+=`<div class="panel"><div class="lt-h"><h3>Goal attainment by month: ${gw?esc(S.reps.find(r=>r.id===gw).name):"team total"}</h3><div class="seg" role="group" aria-label="Show">${[["team","Team total"],...S.reps.map(r=>[r.id,r.name])].map(([id,n])=>`<button type="button" data-goalrep="${esc(id)}" class="${GOALREP===id?"on":""}">${esc(n)}</button>`).join("")}</div></div>
+    <p class="sub">Actual as a share of the goal${gw?"":". The team goal shows when every rep has a goal for that metric"}</p><div class="tbl-wrap"><table><thead><tr><th class="l">Metric</th>${ms.map(x=>`<th>${mShort(x)}${isCur(x)?"*":""}</th>`).join("")}</tr></thead><tbody>${GM.map(([k,l])=>`<tr><td>${l}</td>${ms.map(x=>{const g=gg(x,k);return `<td>${g?`${N(ga(x,k))} of ${N(g)}${pctChip(ga(x,k),g)}`:"–"}</td>`;}).join("")}</tr>`).join("")}</tbody></table></div>${ms.some(isCur)?`<p class="note">* Month to date.</p>`:""}</div>`;
   return h;};
 function saveGoal(inp){const [rep,metric]=inp.dataset.goal.split("|"), st=document.getElementById("goal-st"), cur=goal(SEL,rep,metric), v=inp.value.trim();
   if((v===""&&(cur==null||!GOALS[SEL]))||(v!==""&&GOALS[SEL]&&Number(v)===cur))return;
@@ -621,7 +647,7 @@ function saveGoal(inp){const [rep,metric]=inp.dataset.goal.split("|"), st=docume
 function loadGoals(){fetch("/api/sales-goals",{cache:"no-store"}).then(r=>r.json()).then(j=>{if(!j.ok)throw 0;GOALS=j.goals||{};GOALS_ERR="";}).catch(()=>{GOALS_ERR="Goals aren't available right now. Refresh to try again.";}).then(()=>{if(S)render(true);});}
 
 R.activity=()=>{const m=SEL, mn=mLong(m);
-  let h=head("Activity",`Calls, 1:1 emails and meetings logged in HubSpot by rep. Tables show ${mn} 2026${sofar(m)}; charts show the year.`);
+  let h=head("Activity",`Calls, 1:1 emails and meetings logged in HubSpot by rep. Tiles and the rep table show ${mn} 2026${sofar(m)}; the month over month table shows the year.`);
   const c=team(m,"calls"), e=team(m,"emails");
   h+=`<div class="grid g-kpi">${kpi(`Calls, ${mn}`,N(c),delta(m,"calls"))}${kpi("Calls connected",N(team(m,"connected")),c?`${rate(team(m,"connected"),c)} of calls`:"")}
     ${kpi("Time on calls",`${N(team(m,"callMin"))} <small>min</small>`,c?`${N(team(m,"callMin")/c,1)} minutes per call`:"")}
@@ -631,15 +657,14 @@ R.activity=()=>{const m=SEL, mn=mLong(m);
     ["Calls","Connected","Connect rate","Left voicemail","Minutes on calls","1:1 emails sent","Replies received","Meetings held","No-shows","Days active"],
     r=>{const g=k=>val(m,r.id,k);return [N(g("calls")),N(g("connected")),rate(g("connected"),g("calls")),N(g("voicemail")),N(g("callMin")),N(g("emails")),N(g("replies")),N(g("held")),N(g("noShow")),N(g("days"))];},
     ()=>[N(c),N(team(m,"connected")),rate(team(m,"connected"),c),N(team(m,"voicemail")),N(team(m,"callMin")),N(e),N(team(m,"replies")),N(team(m,"held")),N(team(m,"noShow")),""])}</div>`;
-  h+=`<div class="grid g-2">${monthChart("Calls by month","Outbound calls logged, by rep","calls")}${monthChart("1:1 emails sent by month","Emails sent to contacts from HubSpot or a connected inbox, by rep","emails")}</div>`;
-  const other=c-team(m,"connected")-team(m,"voicemail")-team(m,"noAnswer");
-  h+=`<div class="grid g-2">${monthChart("Meetings held by month","Meetings on the calendar that took place, by rep","held")}
-    <div class="panel"><h3>Call outcomes, ${mn}${sofar(m)}</h3><p class="sub">Outcome logged on each call, team total</p>${c?hbars([{k:"Connected",v:team(m,"connected"),color:css("--good")},{k:"Left voicemail or message",v:team(m,"voicemail")},{k:"No answer or busy",v:team(m,"noAnswer"),color:css("--c-budget")},{k:"Other or no outcome logged",v:Math.max(other,0),color:css("--c-budget")}]):`<p class="note">No calls logged in ${mn}.</p>`}
-    ${tkUp()}</div></div>`;
+  h+=momPanel(ACT_ROWS,false,"Month over month");
+  const other=c-team(m,"connected")-team(m,"voicemail")-team(m,"noAnswer"), up=tkUp();
+  h+=`<div class="grid g-2"><div class="panel"><h3>Call outcomes, ${mn}${sofar(m)}</h3><p class="sub">Outcome logged on each call, team total</p>${c?hbars([{k:"Connected",v:team(m,"connected"),color:css("--good")},{k:"Left voicemail or message",v:team(m,"voicemail")},{k:"No answer or busy",v:team(m,"noAnswer"),color:css("--c-budget")},{k:"Other or no outcome logged",v:Math.max(other,0),color:css("--c-budget")}]):`<p class="note">No calls logged in ${mn}.</p>`}</div>
+    ${up?`<div class="panel"><h3>Meetings booked for the next 30 days</h3><p class="sub">On the calendar now, by rep</p>${up}</div>`:""}</div>`;
   h+=`<p class="sec-note">Calls leave out inbound and canceled calls. Emails are 1:1 emails the rep sent; marketing emails are not counted. Replies are incoming emails logged to the rep. Meetings count by start date and leave out canceled meetings.</p>`;
   return h;};
 function tkUp(){const tk=S.tasks;if(!tk||!tk.upcomingMeetings)return "";const u=tk.upcomingMeetings;
-  return `<h4 style="margin:18px 0 6px">Meetings booked for the next 30 days</h4>${hbars(S.reps.map((r,i)=>({k:r.name,v:u[r.id]||0,color:repColor(i)})))}`;}
+  return `${hbars(S.reps.map((r,i)=>({k:r.name,v:u[r.id]||0,color:repColor(i)})))}`;}
 
 /* Speed to lead: the same MQL follow-up section as the marketing dashboard's Leads page (hs-leadtasks). */
 function ltLoad(fresh){fetch(`/api/hs-leadtasks${fresh?"?fresh=1":""}`).then(r=>r.json()).then(j=>{
@@ -710,17 +735,22 @@ R.pipeline=()=>{const m=SEL, mn=mLong(m), pl=S.pipeline;
   h+=`<div class="panel"><h3>Open deals (${N(rows.length)})</h3><p class="sub">Longest without logged activity first</p>${rows.length?`<div class="tbl-wrap"><table><thead><tr><th class="l">Deal</th><th class="l">Pipeline</th><th class="l">Stage</th><th class="l">Owner</th><th>Days open</th><th>Days in stage</th><th>Days since last activity</th></tr></thead><tbody>${rows.map(d=>`<tr><td class="l wrap-cell"><a class="co-link" href="https://app.hubspot.com/contacts/${HS_PORTAL}/record/0-3/${esc(d.id)}" target="_blank" rel="noopener"><b>${esc(d.name)}</b></a></td><td class="l">${esc(pn(d.pipeline))}</td><td class="l">${esc(d.stage)}</td><td class="l">${esc(on(d.owner))}</td><td>${N(d.age)}</td><td>${d.inStage==null?"–":N(d.inStage)}</td><td>${d.quiet==null?`<span class="chip warn">None logged</span>`:d.quiet>=30?`<span class="chip warn">${N(d.quiet)}</span>`:N(d.quiet)}</td></tr>`).join("")}</tbody></table></div>`:`<p class="note">No open deals.</p>`}</div>`;
   return h;};
 
-R.trends=()=>{const pl=S.pipeline&&S.pipeline.ready?S.pipeline:null, ms=S.months;
+const ACT_ROWS=[["Calls","calls"],["Calls connected","connected"],["Minutes on calls","callMin"],["1:1 emails sent","emails"],["Replies received","replies"],["Meetings held","held"],["Meeting no-shows","noShow"]];
+// Month over month table with a Team / rep switch. Used on Activity (activity rows) and Month Over Month (everything).
+function momPanel(rows,deals,title){const pl=deals&&S.pipeline&&S.pipeline.ready?S.pipeline:null, ms=S.months;
   const who=VIEWREP==="team"?null:VIEWREP, g=(m,k)=>who?val(m,who,k):team(m,k);
-  let h=head("Month Over Month","Every sales metric by month for 2026.");
-  h+=`<div class="seg" role="group" aria-label="Show">${[["team","Team total"],...S.reps.map(r=>[r.id,r.name])].map(([id,n])=>`<button type="button" data-rep="${esc(id)}" class="${VIEWREP===id?"on":""}">${esc(n)}</button>`).join("")}</div>`;
-  const rows=[["Calls","calls"],["Calls connected","connected"],["Minutes on calls","callMin"],["1:1 emails sent","emails"],["Replies received","replies"],["Meetings held","held"],["Meeting no-shows","noShow"],["Tasks created","tasksNew"],["Tasks completed","tasksDone"]];
-  if(who) rows.push(["Days active","days"]);
+  rows=[...rows]; if(who) rows.push(["Days active","days"]);
   const cell=(m,v)=>has(m)?N(v):"–";
-  let body=rows.map(([l,k])=>`<tr><td>${l}</td>${ms.map(m=>`<td>${cell(m,g(m,k))}</td>`).join("")}<td><b>${N(sum(ms.map(m=>g(m,k))))}</b></td></tr>`).join("");
-  if(pl&&!who) body+=[["New deals","created"],["Deals won","won"],["Deals closed lost","lost"]].map(([l,k])=>`<tr><td>${l}</td>${ms.map(m=>`<td>${N((pl.monthly[m]||{})[k]||0)}</td>`).join("")}<td><b>${N(sum(ms.map(m=>(pl.monthly[m]||{})[k]||0)))}</b></td></tr>`).join("");
-  h+=`<div class="panel"><h3>${who?esc(S.reps.find(r=>r.id===who).name):"Team total"}, 2026</h3><div class="tbl-wrap"><table class="mom"><thead><tr><th class="l">Metric</th>${ms.map(m=>`<th>${mShort(m)}${isCur(m)?"*":""}</th>`).join("")}<th>Year to date</th></tr></thead><tbody>${body}</tbody></table></div>
-    <p class="note">* ${mLong(ms[ms.length-1])} is month to date.</p></div>`;
+  const chg=k=>{const done=ms.filter(m=>!isCur(m)&&has(m));if(done.length<2)return "<td>–</td>";const a=g(done[done.length-1],k),b=g(done[done.length-2],k);if(!b)return "<td>–</td>";const c=(a-b)/b;return `<td class="${Math.abs(c)<.005?"":(c>0)===(k!=="noShow")?"up":"dn"}">${c>=0?"+":""}${P(c,0)}</td>`;};
+  const done=ms.filter(m=>!isCur(m)&&has(m)), cl=done.length>=2?`${mShort(done[done.length-1])} vs ${mShort(done[done.length-2])}`:"Change";
+  let body=rows.map(([l,k])=>`<tr><td>${l}</td>${ms.map(m=>`<td>${cell(m,g(m,k))}</td>`).join("")}${chg(k)}<td><b>${N(sum(ms.map(m=>g(m,k))))}</b></td></tr>`).join("");
+  if(pl&&!who) body+=[["New deals","created"],["Deals won","won"],["Deals closed lost","lost"]].map(([l,k])=>`<tr><td>${l}</td>${ms.map(m=>`<td>${N((pl.monthly[m]||{})[k]||0)}</td>`).join("")}<td>–</td><td><b>${N(sum(ms.map(m=>(pl.monthly[m]||{})[k]||0)))}</b></td></tr>`).join("");
+  return `<div class="panel"><div class="lt-h"><h3>${title}: ${who?esc(S.reps.find(r=>r.id===who).name):"team total"}, 2026</h3><div class="seg" role="group" aria-label="Show">${[["team","Team total"],...S.reps.map(r=>[r.id,r.name])].map(([id,n])=>`<button type="button" data-rep="${esc(id)}" class="${VIEWREP===id?"on":""}">${esc(n)}</button>`).join("")}</div></div>
+    <div class="tbl-wrap" style="margin-top:10px"><table class="mom"><thead><tr><th class="l">Metric</th>${ms.map(m=>`<th>${mShort(m)}${isCur(m)?"*":""}</th>`).join("")}<th>${cl}</th><th>Year to date</th></tr></thead><tbody>${body}</tbody></table></div>
+    <p class="note">* ${mLong(ms[ms.length-1])} is month to date and is left out of the change column.</p></div>`;}
+R.trends=()=>{
+  let h=head("Month Over Month","Every sales metric by month for 2026.");
+  h+=momPanel([...ACT_ROWS,["Tasks created","tasksNew"],["Tasks completed","tasksDone"]],true,"All metrics");
   h+=`<div class="grid g-2">${monthChart("Sales touches by month","Calls, 1:1 emails sent and meetings held, by rep",touches)}${monthChart("Tasks completed by month","By rep","tasksDone")}</div>`;
   return h;};
 
@@ -744,6 +774,8 @@ function render(keep){
   if(S.partial) html+=`<p class="note" aria-live="polite">Still loading the rest of the year from HubSpot. This fills in on its own.</p>`;
   if(HEALTH&&S.health&&S.health.length) html+=`<div class="panel"><h3>Data health (Amy only)</h3><ul>${S.health.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;
   v.innerHTML=html;
+  document.querySelectorAll("[data-goalrep]").forEach(b=>b.addEventListener("click",()=>{GOALREP=b.dataset.goalrep;render.force=true;render(true);render.force=false;}));
+  document.querySelectorAll("[data-subj]").forEach(b=>b.addEventListener("click",()=>emailOpen(b.dataset.subj)));
   document.querySelectorAll("[data-sumrep]").forEach(b=>b.addEventListener("click",()=>{SUMREP=b.dataset.sumrep;render(true);}));
   document.querySelectorAll("[data-goal]").forEach(i=>i.addEventListener("change",()=>saveGoal(i)));
   document.querySelectorAll("[data-rep]").forEach(b=>b.addEventListener("click",()=>{VIEWREP=b.dataset.rep;render(true);}));
@@ -751,7 +783,7 @@ function render(keep){
   if(keep)scrollTo(0,y);
   const t=document.querySelector('.tabs a[aria-current="page"]'); if(t&&t.scrollIntoView) t.scrollIntoView({block:"nearest",inline:"nearest"});
 }
-const HEALTH=/[?&]health=1/.test(location.search);
+const HEALTH=/health=1/.test(location.search+location.hash);
 addEventListener("hashchange",()=>{render();scrollTo(0,0);});
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>render(true));
 function picker(){if(document.getElementById("mpick")||!S)return;const sel=document.createElement("select");sel.id="mpick";sel.className="month-pick";sel.setAttribute("aria-label","Report month");

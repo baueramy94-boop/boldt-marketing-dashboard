@@ -203,15 +203,19 @@ export default async (req: Request) => {
         const mine = (pl.results || []).filter((p: any) => PIPELINES.includes(String(p.label || "").trim().toLowerCase()));
         if (!mine.length) throw new Error(`no pipeline named ${PIPELINES.join(" or ")}; found ${(pl.results || []).map((p: any) => p.label).join(", ")}`);
         const stage: Record<string, any> = {};
-        mine.forEach((p: any) => (p.stages || []).forEach((s: any) => (stage[s.id] = { label: s.label, order: s.displayOrder, pipeline: p.id,
-          closed: String(s.metadata?.isClosed) === "true", won: String(s.metadata?.isClosed) === "true" && Number(s.metadata?.probability) >= 1 })));
+        // Boldt's stages: "Closed / In Construction" and "In Construction" are won; "Closed Lost", "Dead" and "No Interest" are lost.
+        // Any other stage falls back to HubSpot's own closed flag. The unnamed "xxxx" stage is left out.
+        mine.forEach((p: any) => (p.stages || []).forEach((s: any) => { const L = String(s.label || "").trim();
+          if (/^x+$/i.test(L)) return;
+          const won = /in construction|closed won/i.test(L), lost = /closed lost|^dead$|no interest/i.test(L), hsClosed = String(s.metadata?.isClosed) === "true";
+          stage[s.id] = { label: L, order: s.displayOrder, pipeline: p.id, closed: won || lost || hsClosed, won: won || (!lost && hsClosed && Number(s.metadata?.probability) >= 1) }; }));
         const deals = await searchAll("deals", ["dealname", "dealstage", "pipeline", "hubspot_owner_id", "createdate", "closedate", "amount", "notes_last_updated", "hs_v2_date_entered_current_stage"],
           [{ propertyName: "pipeline", operator: "IN", values: mine.map((p: any) => String(p.id)) }], "createdate", 25);
         const pm = (v: any) => { const t = ms(v); return t ? dayCT(t).slice(0, 7) : ""; };
         const monthly: Record<string, any> = {}; months.forEach((ym) => (monthly[ym] = { created: 0, won: 0, lost: 0 }));
         const open: any[] = []; let amount = 0;
         const stages = mine.map((p: any) => ({ id: String(p.id), label: p.label, stages: (p.stages || []).slice().sort((a: any, b: any) => a.displayOrder - b.displayOrder)
-          .filter((s: any) => !stage[s.id].closed).map((s: any) => ({ id: s.id, label: s.label, n: 0, amount: 0 })) }));
+          .filter((s: any) => stage[s.id] && !stage[s.id].closed).map((s: any) => ({ id: s.id, label: s.label, n: 0, amount: 0 })) }));
         deals.rows.forEach((d) => { const p = d.properties || {}, s = stage[p.dealstage]; if (!s) return;
           const cm = pm(p.createdate); if (monthly[cm]) monthly[cm].created++;
           if (s.closed) { const km = pm(p.closedate); if (monthly[km]) monthly[km][s.won ? "won" : "lost"]++; return; }
