@@ -736,7 +736,7 @@ R.pipeline=()=>{const m=SEL, mn=mLong(m), pl=S.pipeline;
   return h;};
 
 const ACT_ROWS=[["Calls","calls"],["Calls connected","connected"],["Minutes on calls","callMin"],["1:1 emails sent","emails"],["Replies received","replies"],["Meetings held","held"],["Meeting no-shows","noShow"]];
-// Month over month table with a Team / rep switch. Used on Activity (activity rows) and Month Over Month (everything).
+// Month over month table with a Team / rep switch, shown on Activity.
 function momPanel(rows,deals,title){const pl=deals&&S.pipeline&&S.pipeline.ready?S.pipeline:null, ms=S.months;
   const who=VIEWREP==="team"?null:VIEWREP, g=(m,k)=>who?val(m,who,k):team(m,k);
   rows=[...rows]; if(who) rows.push(["Days active","days"]);
@@ -748,19 +748,13 @@ function momPanel(rows,deals,title){const pl=deals&&S.pipeline&&S.pipeline.ready
   return `<div class="panel"><div class="lt-h"><h3>${title}: ${who?esc(S.reps.find(r=>r.id===who).name):"team total"}, 2026</h3><div class="seg" role="group" aria-label="Show">${[["team","Team total"],...S.reps.map(r=>[r.id,r.name])].map(([id,n])=>`<button type="button" data-rep="${esc(id)}" class="${VIEWREP===id?"on":""}">${esc(n)}</button>`).join("")}</div></div>
     <div class="tbl-wrap" style="margin-top:10px"><table class="mom"><thead><tr><th class="l">Metric</th>${ms.map(m=>`<th>${mShort(m)}${isCur(m)?"*":""}</th>`).join("")}<th>${cl}</th><th>Year to date</th></tr></thead><tbody>${body}</tbody></table></div>
     <p class="note">* ${mLong(ms[ms.length-1])} is month to date and is left out of the change column.</p></div>`;}
-R.trends=()=>{
-  let h=head("Month Over Month","Every sales metric by month for 2026.");
-  h+=momPanel([...ACT_ROWS,["Tasks created","tasksNew"],["Tasks completed","tasksDone"]],true,"All metrics");
-  h+=`<div class="grid g-2">${monthChart("Sales touches by month","Calls, 1:1 emails sent and meetings held, by rep",touches)}${monthChart("Tasks completed by month","By rep","tasksDone")}</div>`;
-  return h;};
-
 R.recs=()=>{const T=TEXT[SEL]||{}, RC=T.recs||[];
   let h=head("Recommendations",`Next steps from ${mLong(SEL)}'s sales numbers.`);
   if(!RC.length) return h+`<div class="empty">Recommendations are written with each monthly report on the 1st.</div>`;
   return h+`<div class="panel"><ol class="recs">${RC.map(r=>`<li><div class="rec-h"><span class="chip ${r.pri==="High"?"bad":r.pri==="Medium"?"warn":""}">${esc(r.pri)}</span><b>${esc(r.title)}</b></div><p>${esc(r.detail)}</p><span class="note">Owner: ${esc(r.owner)}</span></li>`).join("")}</ol></div>`;};
 
 /* ---------- shell ---------- */
-const PAGES=()=>[["summary","Summary"],["activity","Activity"],["emails","1:1 Emails"],["speed","Speed To Lead"],["tasks","All Tasks"],["pipeline","Pipeline"],["trends","Month Over Month"],["goals","Goals"],...(TXT_MONTHS.length?[["recs","Recommendations"]]:[])];
+const PAGES=()=>[["summary","Summary"],["activity","Activity"],["emails","1:1 Emails"],["speed","Speed To Lead"],["tasks","All Tasks"],["pipeline","Pipeline"],["goals","Goals"],...(TXT_MONTHS.length?[["recs","Recommendations"]]:[])];
 const asOfLabel=()=>new Intl.DateTimeFormat("en-US",{timeZone:"America/Chicago",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}).format(new Date(S.asOf))+" CT";
 function current(){const h=(location.hash||"").slice(1).split("/")[0];return PAGES().some(p=>p[0]===h)?h:"summary";}
 function render(keep){
