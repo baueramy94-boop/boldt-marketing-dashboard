@@ -213,7 +213,7 @@ Run these in Python and fix anything that fails:
 
 ## Sales Dashboard (sales.html), added Nov 13, 2026
 
-The site now holds two dashboards. `public/start.html` asks which one to open (once per browser session, when someone opens the site without a page link), and both dashboards carry a Marketing | Sales switch in the top bar. Same password, same Netlify project.
+The site now holds two dashboards. `public/start.html` asks which one to open, with a third box linking to the project tracker (`tracker.html`), (once per browser session, when someone opens the site without a page link), and both dashboards carry a Marketing | Sales switch in the top bar. Same password, same Netlify project.
 
 ### How it works
 - Healthcare only. Healthcare sales = **Chris White** (owner 128093036) and **Heidi Lau** (owner id looked up by name). Pipeline = deals in the HubSpot pipelines named **Sales Pipeline** and **Warm Sales Pipeline**.
