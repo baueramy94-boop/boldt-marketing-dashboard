@@ -230,7 +230,7 @@ export default async (req: Request) => {
     } else if (!pipeline) { pipeline = { ready: false, pending: true }; partial = true; }
 
     const data = { ok: true, ready: true, asOf: now, today, reps, months, activity, email, tasks, pipeline, partial, health };
-    console.log(`hs-sales reps=${reps.length} months=${Object.keys(activity).length}/${months.length} partial=${partial} health=${health.length} ms=${Date.now() - t0}`);
+    console.log(`hs-sales reps=${reps.length} months=${Object.keys(activity).length}/${months.length} partial=${partial} health=${health.length} deals=${pipeline?.ready ? pipeline.open.length + " open" : "not ready"} ms=${Date.now() - t0}${health.length ? " | " + health.join(" | ") : ""}`);
     return json(data);
   } catch (e: any) {
     const detail = String(e?.message || e).slice(0, 300);
