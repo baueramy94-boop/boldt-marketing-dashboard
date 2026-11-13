@@ -210,3 +210,33 @@ Run these in Python and fix anything that fails:
 - Overdue list = Amy's HubSpot report: status not In progress, Completed, Waiting or Deferred, and due date passed. Shows company name (task's company, else the contact's primary company), due date, days overdue, created date. Never task titles or contacts.
 - No month-by-month table (removed Nov 11, 2026 at Amy's request).
 - Speed to lead = task created to completed (completion date) or deleted (archived). Deleted tasks come from HubSpot's archived list, scanned a few seconds per request with progress in Netlify Blobs store "leadtasks" (keys scan, result). Results cached 10 minutes; `?fresh=1` skips the cache.
+
+## Sales Dashboard (sales.html), added Nov 13, 2026
+
+The site now holds two dashboards. `public/start.html` asks which one to open (once per browser session, when someone opens the site without a page link), and both dashboards carry a Marketing | Sales switch in the top bar. Same password, same Netlify project.
+
+### How it works
+- Healthcare only. Healthcare sales = **Chris White** (owner 128093036) and **Heidi Lau** (owner id looked up by name). Pipeline = deals in the HubSpot pipelines named **Sales Pipeline** and **Warm Sales Pipeline**.
+- Numbers are live from HubSpot through `netlify/functions/hs-sales.mts` (HUBSPOT_TOKEN), the same way the MQL follow-up panel works. Nothing is pulled by the monthly run for the numbers. Results are kept in Netlify Blobs store "sales": finished months for 12 hours, the current month for 15 minutes, open tasks for 10 minutes, deals for 30 minutes. `/api/hs-sales?fresh=1` skips the saved copy.
+- Pages: Summary, Activity, Speed To Lead, Tasks, Pipeline, Month Over Month, and Recommendations (shown once a monthly write-up exists). The month picker opens on the last complete month.
+- Speed To Lead is the MQL follow-up section from the Marketing Dashboard's Leads page (`/api/hs-leadtasks`), unchanged.
+- Definitions (keep `hs-sales.mts` and this list in step):
+  - Calls: logged calls owned by the rep, by call time in Central time, leaving out inbound and canceled calls. Connected, voicemail and no answer come from the call outcome.
+  - 1:1 emails sent: emails with direction EMAIL owned by the rep. Replies received: direction INCOMING_EMAIL owned by the rep. Marketing emails are never counted.
+  - Meetings: owned by the rep, by start time, canceled left out. Held = start time has passed and the outcome is not No show.
+  - Days active: days with at least one call, 1:1 email sent or meeting held.
+  - Tasks: open = not Completed. Overdue = not In progress, Completed, Waiting or Deferred, and past due (the same rule as Amy's HubSpot report). Tasks created and completed are counted by month.
+  - Deals: open = not in a closed stage. Won = closed stage with 100% probability. New by create date; won and lost by close date. "No activity in 30 days" uses the deal's last activity date.
+- The page returns counts only: no contacts, email subjects, bodies or task titles. Deal names appear in the open deal list.
+- Setup and data problems never show on the page. The function lists them in `health`, which only shows when the page is opened as `sales.html?health=1` (for Amy).
+
+### Monthly run on the 1st: the sales write-up
+After the marketing report is saved, write the sales write-up for the month just ended:
+
+1. Pull the month's numbers from HubSpot with the definitions above (calls, 1:1 emails sent, replies, meetings held, tasks created and completed, open and overdue tasks, new, won and lost deals, median speed to lead), by rep and team total, plus the month before for comparison.
+2. Write `public/data/sales-YYYY-MM.json`:
+   `{"month":"YYYY-MM","written":"Mon D, YYYY","headline":"two sentences","wins":[[title,detail]],"focus":[[title,detail]],"recs":[{"pri":"High|Medium|Low","title":"","detail":"","owner":""}],"figures":{...the numbers used...}}`
+   3 or 4 wins, 2 or 3 focus items, 3 to 5 recommendations. Every figure in the text must match `figures`.
+3. Add the month to the front of `months` in `public/data/sales-index.json`. Commit both with the marketing data ("Report data for <Month> YYYY").
+4. The same golden rules apply: healthcare only, no setup or data-quality talk, no em dashes, plain wording. Write about the team's activity and follow-up in a constructive way; name reps only with numbers, never with judgments.
+5. Add a "Sales dashboard" part to the data health note: anything in `health`, months where a rep shows no logged activity, and any gap between the write-up figures and the live page.
