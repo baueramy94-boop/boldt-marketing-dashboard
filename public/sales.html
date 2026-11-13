@@ -428,6 +428,9 @@ body.editing .ed-mod{background:color-mix(in srgb,var(--yellow) 16%,transparent)
 .dash-sw a:focus-visible{outline:2px solid #fff;outline-offset:-3px}
 .rep-dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:7px;vertical-align:1px}
 tr.tot td{font-weight:700;border-top:2px solid var(--line)}
+.goal-in{font:inherit;font-size:15px;font-weight:700;width:104px;padding:6px 8px;text-align:right;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums}
+.goal-in:focus{outline:2px solid var(--yellow);border-color:var(--gold)}
+.panel>.g-kpi>.kpi{border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
 .kpi .d .up,.kpi .d .dn{font-weight:700}
 .kpi .d a{color:inherit;font-weight:600}
 @media print{.dash-sw{display:none}}
@@ -451,7 +454,7 @@ try{sessionStorage.setItem("bmd_dash","sales");}catch(e){}
 const HS_PORTAL="4587932";
 const MONTHS_LONG=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const MS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-let S=null, ERR="", TRIES=0, SEL="", TEXT={}, TXT_MONTHS=[], VIEWREP="team";
+let S=null, ERR="", TRIES=0, SEL="", TEXT={}, TXT_MONTHS=[], VIEWREP="team", SUMREP="team", GOALS=null, GOALS_ERR="";
 let LT=null, LT_ERR="", LT_TRY=0;
 
 /* ---------- formatting (same helpers as the marketing dashboard) ---------- */
@@ -472,6 +475,16 @@ function gbars({labels,series,h=220,totals=null,totalLabel="Team",note=""}){
   return `<div class="gb" style="--h:${h}px"><div class="gb-grid">${grid}</div><div class="gb-cols" style="--n:${labels.length}">${labels.map((lb,i)=>`<div class="gb-m${i>=labels.length/2?" gb-r":""}" tabindex="0" aria-label="${esc(lb)}: ${series.map(s=>`${s.name} ${s.values[i]||0}`).join(", ")}">
     <div class="gb-tip"><b>${esc(lb)}${totals?` · ${totalLabel} ${N(totals[i])}`:""}</b>${series.map(s=>`<span><span><i style="background:${s.color}"></i>${esc(s.name)}</span>${N(s.values[i]||0)}</span>`).join("")}${note?`<em>${esc(note)}</em>`:""}</div>
     <div class="gb-bars">${series.map(s=>`<i style="height:${((s.values[i]||0)/mx*100).toFixed(2)}%;background:${s.color};--k:${i}"></i>`).join("")}</div><div class="gb-l">${esc(lb)}</div></div>`).join("")}</div></div>`;}
+// One stacked bar per month, split by type; hover or focus a month for its numbers.
+function sbars({labels,series,h=240,totalLabel="Total"}){
+  const totals=labels.map((_,i)=>sum(series.map(s=>s.values[i]||0))), mx=niceMax(Math.max(1,...totals)*1.12), nt=ticks(mx);
+  const grid=Array.from({length:nt+1},(_,k)=>`<span style="bottom:${(k/nt*100).toFixed(2)}%"><b>${N(mx*k/nt)}</b></span>`).join("");
+  return `<div class="gb sb" style="--h:${h}px"><div class="gb-grid">${grid}</div><div class="gb-cols" style="--n:${labels.length}">${labels.map((lb,i)=>{
+    const t=totals[i], hp=t/mx*100;
+    const segs=series.map(s=>[s,(s.values[i]||0)]).filter(x=>x[1]).map(([s,v])=>`<b style="flex:${v};background:${s.color}" title="${esc(s.name)}: ${N(v)}"></b>`).join("");
+    return `<div class="gb-m${i>=labels.length/2?" gb-r":""}" tabindex="0" aria-label="${esc(lb)}: ${totalLabel} ${N(t)}; ${series.map(s=>`${s.name} ${s.values[i]||0}`).join(", ")}">
+    <div class="gb-tip"><b>${esc(lb)} · ${totalLabel} ${N(t)}</b>${series.map(s=>`<span><span><i style="background:${s.color}"></i>${esc(s.name)}</span>${N(s.values[i]||0)}</span>`).join("")}</div>
+    <div class="gb-bars" style="position:relative">${t?`<div class="sb-col" style="height:${hp.toFixed(2)}%;--k:${i}">${segs}</div><span class="sb-v" style="bottom:${hp.toFixed(2)}%">${N(t)}</span>`:""}</div><div class="gb-l">${esc(lb)}</div></div>`;}).join("")}</div></div>`;}
 const legend=items=>`<div class="legend">${items.map(i=>`<span><i class="box" style="background:${i.color}"></i>${esc(i.name)}</span>`).join("")}</div>`;
 function head(title,sub){return `<div class="page-head"><h2>${title}</h2><p>${sub}</p></div>`;}
 function kpi(l,v,d=""){return `<div class="panel kpi"><div class="l">${l}</div><div class="v num">${v}</div>${d?`<div class="d">${d}</div>`:""}</div>`;}
@@ -492,6 +505,19 @@ const A=(ym,id)=>(S.activity[ym]||{})[id]||null;
 const val=(ym,id,k)=>{const a=A(ym,id);return a?a[k]||0:0;};
 const team=(ym,k)=>sum(S.reps.map(r=>val(ym,r.id,k)));
 const has=ym=>!!S.activity[ym];
+const ytdMonths=()=>S.months.filter(m=>m<=SEL&&has(m));
+const ytd=(k,id)=>sum(ytdMonths().map(m=>id?val(m,id,k):team(m,k)));
+const ytdLabel=()=>{const ms=ytdMonths();return ms.length?`Jan to ${mShort(ms[ms.length-1])}`:"";};
+/* goals: a month without its own goals uses the most recent earlier month that has them */
+const GM=[["calls","Calls"],["emails","1:1 emails sent"],["held","Meetings held"],["tasksDone","Tasks completed"]];
+function goalMonth(ym){if(!GOALS)return "";const ks=Object.keys(GOALS).filter(k=>/^\d{4}-\d{2}$/.test(k)&&k<=ym).sort();return ks.length?ks[ks.length-1]:"";}
+const goal=(ym,id,k)=>{const g=goalMonth(ym);const v=g?((GOALS[g]||{})[id]||{})[k]:null;return v==null?null:v;};
+const teamGoal=(ym,k)=>{const v=S.reps.map(r=>goal(ym,r.id,k));return v.some(x=>x==null)?null:sum(v);};   /* a team goal only when every rep has one */
+function pctChip(a,g){if(g==null)return "";if(!g)return "";const p=a/g;return ` <span class="chip ${p>=1?"good":p>=.7?"warn":""}">${P(p,0)}</span>`;}
+const vsGoal=(a,g)=>g==null?N(a):`${N(a)} <span class="note" style="margin:0">of ${N(g)}</span>${pctChip(a,g)}`;
+function goalsPanel(m){if(!GOALS||!goalMonth(m)||!GM.some(([k])=>S.reps.some(r=>goal(m,r.id,k)!=null)))return "";
+  return `<div class="panel"><h3>Progress against goals, ${mLong(m)}${sofar(m)}</h3><p class="sub">Actual of goal, by rep. <a href="#goals">Set or change goals</a></p>${repTable(GM.map(x=>x[1]),
+    r=>GM.map(([k])=>vsGoal(val(m,r.id,k),goal(m,r.id,k))),()=>GM.map(([k])=>vsGoal(team(m,k),teamGoal(m,k))))}</div>`;}
 const touches=(ym,id)=>val(ym,id,"calls")+val(ym,id,"emails")+val(ym,id,"held");
 // Change against the month before. Left out for the month in progress, where a partial month would read as a drop.
 function delta(ym,k,upGood=true){const p=prevYM(ym);if(!p||!has(p)||isCur(ym))return p&&has(p)?`${mLong(p)}: ${N(team(p,k))}`:"";
@@ -530,8 +556,69 @@ R.summary=()=>{const m=SEL, mn=mLong(m);
     r=>[N(val(m,r.id,"calls")),N(val(m,r.id,"emails")),N(val(m,r.id,"replies")),N(val(m,r.id,"held")),N(val(m,r.id,"tasksDone")),N(val(m,r.id,"days")),tk?N(tk.byRep[r.id].open):"–",tk?N(tk.byRep[r.id].overdue):"–"],
     ()=>[N(team(m,"calls")),N(team(m,"emails")),N(team(m,"replies")),N(team(m,"held")),N(team(m,"tasksDone")),"",op==null?"–":N(op),od==null?"–":N(od)])}
     <p class="sec-note">Days active counts days with at least one call, 1:1 email or meeting held.</p></div>`;
-  h+=monthChart("Sales touches by month","Calls, 1:1 emails sent and meetings held, by rep",touches);
+  h+=goalsPanel(m);
+  const yl=ytdLabel(), plY=k=>pl?sum(ytdMonths().map(x=>(pl.monthly[x]||{})[k]||0)):null;
+  h+=`<div class="panel"><h3>Year to date, ${yl} 2026</h3><p class="sub">Team totals, then by rep</p>
+    <div class="grid g-kpi" style="margin-bottom:14px">${[["Calls","calls"],["1:1 emails sent","emails"],["Meetings held","held"],["Tasks completed","tasksDone"]].map(([l,k])=>`<div class="kpi"><div class="l">${l}</div><div class="v num">${N(ytd(k))}</div><div class="d">${N(ytd(k)/Math.max(ytdMonths().length,1))} a month on average</div></div>`).join("")}
+    ${pl?`<div class="kpi"><div class="l">New deals</div><div class="v num">${N(plY("created"))}</div><div class="d">${N(plY("won"))} won · ${N(plY("lost"))} closed lost</div></div>`:""}</div>
+    ${repTable(["Calls","Calls connected","1:1 emails sent","Replies received","Meetings held","Tasks completed","Days active"],
+      r=>["calls","connected","emails","replies","held","tasksDone","days"].map(k=>N(ytd(k,r.id))),
+      ()=>["calls","connected","emails","replies","held","tasksDone"].map(k=>N(ytd(k))).concat([""]))}</div>`;
+  const who=SUMREP==="team"?null:SUMREP, g=(x,k)=>who?val(x,who,k):team(x,k);
+  const ser=[{name:"Calls",color:css("--c-li"),values:S.months.map(x=>g(x,"calls"))},{name:"1:1 emails sent",color:css("--c-ga"),values:S.months.map(x=>g(x,"emails"))},{name:"Meetings held",color:css("--c-sl"),values:S.months.map(x=>g(x,"held"))}];
+  h+=`<div class="panel"><div class="lt-h"><h3>Sales activity by month, by type</h3><div class="seg" role="group" aria-label="Show">${[["team","Team total"],...S.reps.map(r=>[r.id,r.name])].map(([id,n])=>`<button type="button" data-sumrep="${esc(id)}" class="${SUMREP===id?"on":""}">${esc(n)}</button>`).join("")}</div></div>
+    <p class="sub">Calls, 1:1 emails sent and meetings held each month. Hover a month for the counts.</p>${legend(ser)}${sbars({labels:S.months.map(mShort),series:ser})}
+    <p class="note">${mLong(S.months[S.months.length-1])} is month to date.</p></div>`;
   return h;};
+
+R.emails=()=>{const m=SEL, mn=mLong(m), E=S.email||{}, e=team(m,"emails");
+  let h=head("1:1 Email Performance",`How the team's 1:1 sales emails perform: opens, clicks and replies by rep, by subject line and by subject line style.`);
+  const tr=E.trackedOk, r3=(a,b)=>b?P(a/b,0):"–";
+  h+=`<div class="grid g-kpi">${kpi(`1:1 emails sent, ${mn}${sofar(m)}`,N(e),delta(m,"emails"))}
+    ${tr?kpi("Opened",r3(team(m,"eOpen"),e),`${N(team(m,"eOpen"))} emails opened at least once`):""}${tr?kpi("Clicked",r3(team(m,"eClick"),e),`${N(team(m,"eClick"))} emails with a link click`):""}
+    ${tr?kpi("Replied",r3(team(m,"eReply"),e),`${N(team(m,"eReply"))} emails that got a reply`):""}
+    ${kpi("New conversations",N(team(m,"eNew")),`${N(team(m,"eThread"))} more were replies or forwards in a thread`)}</div>`;
+  h+=`<div class="panel"><h3>By rep</h3><p class="sub">${mn}${sofar(m)}, then year to date (${ytdLabel()})</p>${repTable(
+    [`Sent, ${mShort(m)}`,...(tr?["Open rate","Click rate","Reply rate"]:[]),"Sent, year to date",...(tr?["Open rate, YTD","Click rate, YTD","Reply rate, YTD"]:[])],
+    r=>{const g=k=>val(m,r.id,k),y=k=>ytd(k,r.id);return [N(g("emails")),...(tr?[r3(g("eOpen"),g("emails")),r3(g("eClick"),g("emails")),r3(g("eReply"),g("emails"))]:[]),N(y("emails")),...(tr?[r3(y("eOpen"),y("emails")),r3(y("eClick"),y("emails")),r3(y("eReply"),y("emails"))]:[])];},
+    ()=>[N(e),...(tr?[r3(team(m,"eOpen"),e),r3(team(m,"eClick"),e),r3(team(m,"eReply"),e)]:[]),N(ytd("emails")),...(tr?[r3(ytd("eOpen"),ytd("emails")),r3(ytd("eClick"),ytd("emails")),r3(ytd("eReply"),ytd("emails"))]:[])])}</div>`;
+  if(!E.subjectsOk) return h+`<div class="empty">Subject line results will show here once subject lines are available to the dashboard.</div>`;
+  const T=E.traits||{}, groups=[["len","Length"],["q","Question or statement"],["num","Number in the subject"],["boldt","Names Boldt"],["you","Speaks to the reader"]];
+  const base=sum(Object.entries(T).filter(([k])=>k.startsWith("q:")).map(([,x])=>x.n)), baseO=sum(Object.entries(T).filter(([k])=>k.startsWith("q:")).map(([,x])=>x.o)), baseR=sum(Object.entries(T).filter(([k])=>k.startsWith("q:")).map(([,x])=>x.r));
+  const lift=(a,n,ba,bn)=>{if(!n||!bn||!ba)return "";const d=a/n-ba/bn;return Math.abs(d)<.005?"":` <span class="${d>0?"up":"dn"}">${d>0?"+":""}${(d*100).toFixed(0)} pts</span>`;};
+  h+=`<div class="panel"><h3>What kind of subject line works, year to date</h3><p class="sub">New 1:1 emails only (replies and forwards left out). ${tr?`All subject lines: ${r3(baseO,base)} opened, ${r3(baseR,base)} replied. Points show the gap to that average.`:""}</p>
+    <div class="tbl-wrap"><table><thead><tr><th class="l">Subject line style</th><th>Emails sent</th>${tr?"<th>Open rate</th><th>Click rate</th><th>Reply rate</th>":""}<th class="l"></th></tr></thead><tbody>${groups.map(([gk,gl])=>{
+      const rows=Object.entries(T).filter(([k])=>k.startsWith(gk+":")).sort((a,b)=>b[1].n-a[1].n);
+      return rows.length?`<tr><td class="l" colspan="${tr?6:3}"><span class="eyebrow">${gl}</span></td></tr>`+rows.map(([k,x])=>`<tr><td class="l">${esc(k.slice(gk.length+1))}</td><td>${N(x.n)}</td>${tr?`<td>${r3(x.o,x.n)}${lift(x.o,x.n,baseO,base)}</td><td>${r3(x.c,x.n)}</td><td>${r3(x.r,x.n)}${lift(x.r,x.n,baseR,base)}</td>`:""}<td class="l">${x.n<30?'<span class="chip">Directional</span>':""}</td></tr>`).join(""):"";}).join("")}</tbody></table></div>
+    <p class="sec-note">Directional means fewer than 30 emails, too few to rely on.</p></div>`;
+  const SU=[...(E.subjects||[])], top=tr?[...SU].filter(x=>x.n>=5).sort((a,b)=>b.r/b.n-a.r/a.n||b.o/b.n-a.o/a.n).slice(0,5):[];
+  if(top.length) h+=`<div class="panel"><h3>Subject lines with the best reply rate</h3><p class="sub">Sent 5 or more times this year</p>${hbars(top.map(x=>({k:x.s,v:Math.round(x.r/x.n*100)})),{fmt:v=>v+"%",color:css("--good")})}</div>`;
+  h+=`<div class="panel"><h3>Subject lines used 3 or more times, year to date (${N(SU.length)})</h3><p class="sub">Most used first</p>${SU.length?`<div class="tbl-wrap"><table><thead><tr><th class="l">Subject line</th><th>Emails sent</th>${tr?"<th>Opened</th><th>Open rate</th><th>Clicked</th><th>Click rate</th><th>Replied</th><th>Reply rate</th>":""}</tr></thead><tbody>${SU.map(x=>`<tr><td class="l wrap-cell">${esc(x.s)}</td><td>${N(x.n)}</td>${tr?`<td>${N(x.o)}</td><td>${r3(x.o,x.n)}</td><td>${N(x.c)}</td><td>${r3(x.c,x.n)}</td><td>${N(x.r)}</td><td>${r3(x.r,x.n)}</td>`:""}</tr>`).join("")}</tbody></table></div>`:`<p class="note">No subject line has been used 3 or more times this year.</p>`}
+    <p class="sec-note">Opens, clicks and replies count emails with at least one. Opens rely on tracking in the email, so some real opens are not counted. Subject lines used once or twice are left out of this list and counted in the style table above.</p></div>`;
+  return h;};
+
+R.goals=()=>{const m=SEL, mn=mLong(m);
+  let h=head("Goals",`Monthly goals by sales rep for ${mn} 2026. Change the month at the top right to set another month.`);
+  if(GOALS_ERR&&!GOALS) return h+`<div class="empty">${esc(GOALS_ERR)}</div>`;
+  if(!GOALS) return h+`<div class="empty">Loading goals…</div>`;
+  const gm=goalMonth(m), own=!!GOALS[m], lg=(GOALS._log||{})[gm];
+  h+=`<div class="panel"><h3>Goals for ${mn}</h3><p class="sub">${!gm?"No goals set yet. Type a number to set one.":own?"Type a number to change a goal. Clear the box to remove it.":`Carried forward from ${mLong(gm)}. Change any number to give ${mn} its own goals.`} Changes save when you leave the box, and everyone with the dashboard password sees them.</p>
+    <div class="tbl-wrap"><table><thead><tr><th class="l">Rep</th>${GM.map(x=>`<th>${x[1]}</th>`).join("")}</tr></thead><tbody>${S.reps.map((r,i)=>`<tr>${repCell(r,i)}${GM.map(([k,l])=>{const g=goal(m,r.id,k);return `<td><input class="goal-in" type="number" min="0" max="100000" step="1" inputmode="numeric" value="${g==null?"":g}" data-goal="${esc(r.id)}|${k}" aria-label="${esc(r.name)} goal for ${l}"><div class="note" style="margin:3px 0 0">Actual${sofar(m)}: ${N(val(m,r.id,k))}${pctChip(val(m,r.id,k),g)}</div></td>`;}).join("")}</tr>`).join("")}
+    <tr class="tot"><td class="l">Team total</td>${GM.map(([k])=>{const g=teamGoal(m,k);return `<td>${g==null?"–":N(g)}<div class="note" style="margin:3px 0 0;font-weight:400">Actual${sofar(m)}: ${N(team(m,k))}${pctChip(team(m,k),g)}</div></td>`;}).join("")}</tr></tbody></table></div>
+    <p class="sec-note" id="goal-st" aria-live="polite">${lg?`Last changed by ${esc(lg.by)} on ${fdShort(String(lg.at).slice(0,10))}.`:""}</p></div>`;
+  const ms=S.months.filter(x=>goalMonth(x));
+  if(ms.length) h+=`<div class="panel"><h3>Goal attainment by month, team total</h3><p class="sub">Actual as a share of the team goal</p><div class="tbl-wrap"><table><thead><tr><th class="l">Metric</th>${ms.map(x=>`<th>${mShort(x)}${isCur(x)?"*":""}</th>`).join("")}</tr></thead><tbody>${GM.map(([k,l])=>`<tr><td>${l}</td>${ms.map(x=>{const g=teamGoal(x,k);return `<td>${g?`${N(team(x,k))} of ${N(g)}${pctChip(team(x,k),g)}`:"–"}</td>`;}).join("")}</tr>`).join("")}</tbody></table></div>${ms.some(isCur)?`<p class="note">* Month to date.</p>`:""}</div>`;
+  return h;};
+function saveGoal(inp){const [rep,metric]=inp.dataset.goal.split("|"), st=document.getElementById("goal-st"), cur=goal(SEL,rep,metric), v=inp.value.trim();
+  if((v===""&&(cur==null||!GOALS[SEL]))||(v!==""&&GOALS[SEL]&&Number(v)===cur))return;
+  if(st)st.textContent="Saving…";
+  /* the first change to a month that was carried forward copies the carried goals in, so the other numbers stay as shown */
+  const gm=goalMonth(SEL), posts=[];
+  if(!GOALS[SEL]&&gm) S.reps.forEach(r=>GM.forEach(([k])=>{const g=goal(SEL,r.id,k);if(g!=null&&!(r.id===rep&&k===metric))posts.push({month:SEL,rep:r.id,metric:k,value:g});}));
+  posts.push({month:SEL,rep,metric,value:v===""?null:Number(v)});
+  posts.reduce((p,b)=>p.then(()=>fetch("/api/sales-goals",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(b)}).then(r=>r.json()).then(j=>{if(!j.ok)throw new Error(j.error||"");GOALS=j.goals;})),Promise.resolve())
+    .then(()=>{render.force=true;render(true);render.force=false;}).catch(e=>{if(st)st.textContent=`That didn't save${e&&e.message?` (${e.message})`:""}. Try again.`;});}
+function loadGoals(){fetch("/api/sales-goals",{cache:"no-store"}).then(r=>r.json()).then(j=>{if(!j.ok)throw 0;GOALS=j.goals||{};GOALS_ERR="";}).catch(()=>{GOALS_ERR="Goals aren't available right now. Refresh to try again.";}).then(()=>{if(S)render(true);});}
 
 R.activity=()=>{const m=SEL, mn=mLong(m);
   let h=head("Activity",`Calls, 1:1 emails and meetings logged in HubSpot by rep. Tables show ${mn} 2026${sofar(m)}; charts show the year.`);
@@ -643,7 +730,7 @@ R.recs=()=>{const T=TEXT[SEL]||{}, RC=T.recs||[];
   return h+`<div class="panel"><ol class="recs">${RC.map(r=>`<li><div class="rec-h"><span class="chip ${r.pri==="High"?"bad":r.pri==="Medium"?"warn":""}">${esc(r.pri)}</span><b>${esc(r.title)}</b></div><p>${esc(r.detail)}</p><span class="note">Owner: ${esc(r.owner)}</span></li>`).join("")}</ol></div>`;};
 
 /* ---------- shell ---------- */
-const PAGES=()=>[["summary","Summary"],["activity","Activity"],["speed","Speed To Lead"],["tasks","All Tasks"],["pipeline","Pipeline"],["trends","Month Over Month"],...(TXT_MONTHS.length?[["recs","Recommendations"]]:[])];
+const PAGES=()=>[["summary","Summary"],["activity","Activity"],["emails","1:1 Emails"],["speed","Speed To Lead"],["tasks","All Tasks"],["pipeline","Pipeline"],["trends","Month Over Month"],["goals","Goals"],...(TXT_MONTHS.length?[["recs","Recommendations"]]:[])];
 const asOfLabel=()=>new Intl.DateTimeFormat("en-US",{timeZone:"America/Chicago",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}).format(new Date(S.asOf))+" CT";
 function current(){const h=(location.hash||"").slice(1).split("/")[0];return PAGES().some(p=>p[0]===h)?h:"summary";}
 function render(keep){
@@ -651,11 +738,14 @@ function render(keep){
   if(ERR&&!S){v.innerHTML=`<div class="empty">${esc(ERR)}</div>`;return;}
   if(!S)return;
   const pg=current(), y=scrollY;
+  if(keep&&document.activeElement&&document.activeElement.classList&&document.activeElement.classList.contains("goal-in")&&pg==="goals"&&!render.force)return;
   document.getElementById("tabs").innerHTML=PAGES().map(([id,n])=>`<a href="#${id}" ${id===pg?'aria-current="page"':''}>${n}</a>`).join("");
   let html=has(SEL)||pg==="speed"?R[pg]():`<div class="empty">Loading ${mLong(SEL)} from HubSpot…</div>`;
   if(S.partial) html+=`<p class="note" aria-live="polite">Still loading the rest of the year from HubSpot. This fills in on its own.</p>`;
   if(HEALTH&&S.health&&S.health.length) html+=`<div class="panel"><h3>Data health (Amy only)</h3><ul>${S.health.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;
   v.innerHTML=html;
+  document.querySelectorAll("[data-sumrep]").forEach(b=>b.addEventListener("click",()=>{SUMREP=b.dataset.sumrep;render(true);}));
+  document.querySelectorAll("[data-goal]").forEach(i=>i.addEventListener("change",()=>saveGoal(i)));
   document.querySelectorAll("[data-rep]").forEach(b=>b.addEventListener("click",()=>{VIEWREP=b.dataset.rep;render(true);}));
   document.getElementById("asof").textContent=`Live from HubSpot · ${asOfLabel()}`;
   if(keep)scrollTo(0,y);
@@ -679,6 +769,6 @@ function load(fresh){fetch(`/api/hs-sales${fresh?"?fresh=1":""}`,{cache:"no-stor
   }).catch(()=>{if(!S)ERR="Sales activity didn't load. Refresh to try again.";}).then(()=>render(true));}
 document.getElementById("foot").textContent="Source: HubSpot (calls, 1:1 emails, meetings, tasks and deals owned by the healthcare sales team). Numbers are live and update as activity is logged.";
 fetch("data/sales-index.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{TXT_MONTHS=(j&&j.months)||[];if(S){loadText(SEL);render(true);}}).catch(()=>{});
-load(); ltLoad();
+load(); ltLoad(); loadGoals();
 })();
 </script>

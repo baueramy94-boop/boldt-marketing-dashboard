@@ -218,7 +218,7 @@ The site now holds two dashboards. `public/start.html` asks which one to open (o
 ### How it works
 - Healthcare only. Healthcare sales = **Chris White** (owner 128093036) and **Heidi Lau** (owner id looked up by name). Pipeline = deals in the HubSpot pipelines named **Sales Pipeline** and **Warm Sales Pipeline**.
 - Numbers are live from HubSpot through `netlify/functions/hs-sales.mts` (HUBSPOT_TOKEN), the same way the MQL follow-up panel works. Nothing is pulled by the monthly run for the numbers. Results are kept in Netlify Blobs store "sales": finished months for 12 hours, the current month for 15 minutes, open tasks for 10 minutes, deals for 30 minutes. `/api/hs-sales?fresh=1` skips the saved copy.
-- Pages: Summary, Activity, Speed To Lead, All Tasks, Pipeline, Month Over Month, and Recommendations (shown once a monthly write-up exists). The month picker opens on the last complete month.
+- Pages: Summary (with year to date and activity by type), Activity, 1:1 Emails, Speed To Lead, All Tasks, Pipeline, Month Over Month, Goals, and Recommendations (shown once a monthly write-up exists). The month picker opens on the last complete month.
 - Speed To Lead is the MQL follow-up section from the Marketing Dashboard's Leads page (`/api/hs-leadtasks`), unchanged.
 - Definitions (keep `hs-sales.mts` and this list in step):
   - Calls: logged calls owned by the rep, by call time in Central time, leaving out inbound and canceled calls. Connected, voicemail and no answer come from the call outcome.
@@ -227,7 +227,9 @@ The site now holds two dashboards. `public/start.html` asks which one to open (o
   - Days active: days with at least one call, 1:1 email sent or meeting held.
   - All Tasks: every task assigned to the rep, whatever the title (the MQL follow-up section counts only "marketing lead #1" tasks, so its overdue number is smaller). Open = not Completed. Overdue = not In progress, Completed, Waiting or Deferred, and past due (the same rule as Amy's HubSpot report). Tasks created and completed are counted by month.
   - Deals: open = not in a closed stage. Won = closed stage with 100% probability. New by create date; won and lost by close date. "No activity in 30 days" uses the deal's last activity date.
-- The page returns counts only: no contacts, email subjects, bodies or task titles. Deal names appear in the open deal list.
+- 1:1 Emails page: opens, clicks and replies on emails the rep sent (`hs_email_open_count`, `hs_email_click_count`, `hs_email_reply_count`, counted as emails with at least one). Subject line results cover new emails only (subjects starting RE: or FW: are left out), list a subject only when 3 or more emails share it, and compare styles (length, question, number, names Boldt, speaks to "you"). Fewer than 30 emails is marked Directional. Reading subject lines needs the `sales-email-read` permission on HUBSPOT_TOKEN.
+- Goals page: monthly goals by rep for calls, 1:1 emails sent, meetings held and tasks completed, saved through `netlify/functions/sales-goals.mts` in Netlify Blobs store "sales-goals". Anyone with the site password can change them. A month without its own goals uses the most recent earlier month's. The monthly run never changes goals; it reports against them.
+- The page returns no contacts, email bodies or task titles. Deal names appear in the open deal list.
 - Setup and data problems never show on the page. The function lists them in `health`, which only shows when the page is opened as `sales.html?health=1` (for Amy).
 
 ### Monthly run on the 1st: the sales write-up

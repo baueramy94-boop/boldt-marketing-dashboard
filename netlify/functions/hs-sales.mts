@@ -5,8 +5,9 @@ import { getStore } from "@netlify/blobs";
 // GET /api/hs-sales -> { ok, ready, asOf, reps: [{ id, name }], months: ["2026-01", ...],
 //                        activity: { "2026-01": { <repId>: { calls, connected, voicemail, noAnswer, callMin, emails, replies,
 //                                                           meetings, held, noShow, days, tasksDone, tasksNew } } },
-//                        tasks: { byRep, aging, types, upcomingMeetings }, pipeline: { ... }, partial, health: [...] }
-// Counts only: no contacts, subjects, bodies or task titles. Deal names are returned for the open deal list.
+//                        email: { subjects: [{ s, n, o, c, r }], traits }, tasks: { byRep, aging, types, upcomingMeetings }, pipeline: { ... }, partial, health: [...] }
+// No contacts, email bodies or task titles. Email subject lines are returned only when 3 or more emails share one
+// (replies and forwards left out). Deal names are returned for the open deal list.
 // Rules (keep in step with RUNBOOK.md, "Sales Dashboard"):
 //   Calls     every logged call owned by the rep except inbound and canceled, by call time (Central).
 //   Emails    1:1 emails the rep sent (hs_email_direction = EMAIL); replies = INCOMING_EMAIL owned by the rep.
@@ -22,6 +23,7 @@ const REPS = [{ name: "Chris White", id: "128093036" }, { name: "Heidi Lau", id:
 const PIPELINES = ["sales pipeline", "warm sales pipeline"];
 const YEAR = 2026;
 const BUDGET_MS = 7000;
+const VER = 2; // raise when the saved month format changes, so old copies are rebuilt
 const TTL_DONE = 12 * 3600e3, TTL_CUR = 15 * 60e3, TTL_TASKS = 10 * 60e3, TTL_DEALS = 30 * 60e3, TTL_REPS = 24 * 3600e3;
 const DISP: Record<string, string> = {
   "f240bbac-87c9-4f6e-bf70-924b57d47db7": "connected", "b2cf5968-551e-4856-9783-52b3da59a7d0": "voicemail",
@@ -84,7 +86,7 @@ export default async (req: Request) => {
     REPS.forEach((r) => { if (!reps.some((x) => x.name === r.name)) health.push(`${r.name} was not found as a HubSpot owner, so the numbers leave ${r.name.split(" ")[0]} out.`); });
     const ids = reps.map((r) => r.id);
     const ownerIn = { propertyName: "hubspot_owner_id", operator: "IN", values: ids };
-    const blank = () => ({ calls: 0, connected: 0, voicemail: 0, noAnswer: 0, callMin: 0, emails: 0, replies: 0, meetings: 0, held: 0, noShow: 0, days: 0, tasksDone: 0, tasksNew: 0 });
+    const blank = () => ({ eOpen: 0, eClick: 0, eReply: 0, eNew: 0, eThread: 0, calls: 0, connected: 0, voicemail: 0, noAnswer: 0, callMin: 0, emails: 0, replies: 0, meetings: 0, held: 0, noShow: 0, days: 0, tasksDone: 0, tasksNew: 0 });
 
     // 2. Activity by month and rep.
     const now = Date.now(), today = dayCT(now), curYM = today.slice(0, 7);
@@ -99,10 +101,29 @@ export default async (req: Request) => {
       const range = (prop: string) => [{ propertyName: prop, operator: "GTE", value: from }, { propertyName: prop, operator: "LT", value: to }];
       const [calls, emails, meets] = await Promise.all([
         searchAll("calls", ["hs_timestamp", "hs_call_direction", "hs_call_status", "hs_call_disposition", "hs_call_duration", "hubspot_owner_id"], [ownerIn, ...range("hs_timestamp")], "hs_timestamp"),
-        searchAll("emails", ["hs_timestamp", "hs_email_direction", "hubspot_owner_id"], [ownerIn, ...range("hs_timestamp")], "hs_timestamp"),
+        searchAll("emails", ["hs_timestamp", "hs_email_direction", "hubspot_owner_id", "hs_email_subject", "hs_email_open_count", "hs_email_click_count", "hs_email_reply_count"], [ownerIn, ...range("hs_timestamp")], "hs_timestamp"),
         searchAll("meetings", ["hs_timestamp", "hs_meeting_start_time", "hs_meeting_outcome", "hubspot_owner_id"], [ownerIn, ...range("hs_timestamp")], "hs_timestamp"),
       ]);
       const out: Record<string, any> = {}, days: Record<string, Set<string>> = {};
+      // Subject lines: new 1:1 emails only (replies and forwards are counted apart), grouped by subject, with opens, clicks and replies.
+      const S: Record<string, any> = {}, traits: Record<string, any> = {}; let withSubject = 0, tracked = 0;
+      const subj = (p: any, o: any) => {
+        const raw = String(p.hs_email_subject || "").replace(/\s+/g, " ").trim();
+        const has = (k: string) => p[k] != null && p[k] !== "";
+        if (has("hs_email_open_count") || has("hs_email_click_count") || has("hs_email_reply_count")) tracked++;
+        const op = Number(p.hs_email_open_count) > 0 ? 1 : 0, cl = Number(p.hs_email_click_count) > 0 ? 1 : 0, rp = Number(p.hs_email_reply_count) > 0 ? 1 : 0;
+        o.eOpen += op; o.eClick += cl; o.eReply += rp;
+        if (!raw) return; withSubject++;
+        if (/^(re|fw|fwd)\s*:/i.test(raw)) { o.eThread++; return; }
+        o.eNew++;
+        const key = raw.toLowerCase(), g = S[key] || (S[key] = { s: raw.slice(0, 140), n: 0, o: 0, c: 0, r: 0 });
+        g.n++; g.o += op; g.c += cl; g.r += rp;
+        const words = raw.split(" ").length;
+        const tags = [words <= 4 ? "len:4 words or fewer" : words <= 7 ? "len:5 to 7 words" : "len:8 words or more",
+          /\?/.test(raw) ? "q:Asks a question" : "q:Statement", /\d/.test(raw) ? "num:Includes a number" : "num:No number",
+          /\bboldt\b/i.test(raw) ? "boldt:Names Boldt" : "boldt:Does not name Boldt", /\byou(r|rs)?\b/i.test(raw) ? "you:Speaks to \"you\"" : "you:No \"you\""];
+        tags.forEach((t) => { const x = traits[t] || (traits[t] = { n: 0, o: 0, c: 0, r: 0 }); x.n++; x.o += op; x.c += cl; x.r += rp; });
+      };
       ids.forEach((id) => { out[id] = blank(); days[id] = new Set(); });
       const at = (x: any, prop = "hs_timestamp") => { const t = ms(x.properties?.[prop]) || ms(x.properties?.hs_timestamp); const d = t ? dayCT(t) : ""; return d.startsWith(ym) ? { t, d } : null; };
       calls.rows.forEach((c) => { const p = c.properties || {}, o = out[String(p.hubspot_owner_id)], w = at(c); if (!o || !w) return;
@@ -111,7 +132,7 @@ export default async (req: Request) => {
         o.callMin += (Number(p.hs_call_duration) || 0) / 60000; });
       emails.rows.forEach((e) => { const p = e.properties || {}, o = out[String(p.hubspot_owner_id)], w = at(e); if (!o || !w) return;
         const dir = String(p.hs_email_direction || "").toUpperCase();
-        if (dir === "EMAIL") { o.emails++; days[p.hubspot_owner_id].add(w.d); } else if (dir === "INCOMING_EMAIL") o.replies++; });
+        if (dir === "EMAIL") { o.emails++; days[p.hubspot_owner_id].add(w.d); subj(p, o); } else if (dir === "INCOMING_EMAIL") o.replies++; });
       meets.rows.forEach((x) => { const p = x.properties || {}, o = out[String(p.hubspot_owner_id)], w = at(x, "hs_meeting_start_time"); if (!o || !w) return;
         const oc = String(p.hs_meeting_outcome || "").toUpperCase(); if (oc === "CANCELED") return;
         o.meetings++; if (oc === "NO_SHOW") o.noShow++; else if (w.t <= now) { o.held++; days[p.hubspot_owner_id].add(w.d); } });
@@ -123,18 +144,29 @@ export default async (req: Request) => {
         out[id].tasksNew = await count("tasks", [own, { propertyName: "hs_createdate", operator: "GTE", value: a }, { propertyName: "hs_createdate", operator: "LT", value: b }]);
         out[id].days = days[id].size; out[id].callMin = Math.round(out[id].callMin);
       }
-      return { at: Date.now(), reps: ids.join(","), data: out, truncated: calls.truncated || emails.truncated || meets.truncated };
+      const subjects = Object.values(S).sort((a: any, b: any) => b.n - a.n).slice(0, 500);
+      return { at: Date.now(), v: VER, reps: ids.join(","), data: out, email: { subjects, traits, withSubject, tracked }, truncated: calls.truncated || emails.truncated || meets.truncated };
     };
     // Newest months first, so the report month shows before the rest of the year fills in.
     for (const ym of [...months].reverse()) {
       const c = act[ym], ttl = ym === curYM ? TTL_CUR : TTL_DONE;
-      if (c && c.reps === ids.join(",") && !fresh && now - c.at < ttl) continue;
+      if (c && c.v === VER && c.reps === ids.join(",") && !fresh && now - c.at < ttl) continue;
       if (left() < 2500) { partial = true; continue; }
       try { act[ym] = await buildMonth(ym); await store.setJSON("activity", act); }
       catch (e: any) { partial = !c; health.push(`Activity for ${ym} could not be read (${String(e?.message || e).slice(0, 140)}).`); break; }
     }
     const activity: Record<string, any> = {};
-    months.forEach((ym) => { const c = act[ym]; if (c && c.reps === ids.join(",")) { activity[ym] = c.data; if (c.truncated) health.push(`${ym} has more activity than one pull returns; counts for that month are low.`); } else partial = true; });
+    months.forEach((ym) => { const c = act[ym]; if (c && c.v === VER && c.reps === ids.join(",")) { activity[ym] = c.data; if (c.truncated) health.push(`${ym} has more activity than one pull returns; counts for that month are low.`); } else partial = true; });
+
+    // 2b. 1:1 email subject lines, year to date: subjects sent 3 or more times, and results by subject line trait.
+    const SY: Record<string, any> = {}, TY: Record<string, any> = {}; let withSubject = 0, tracked = 0, sentAll = 0;
+    months.forEach((ym) => { const c = act[ym]; if (!c || c.v !== VER || !c.email) return;
+      withSubject += c.email.withSubject; tracked += c.email.tracked; sentAll += ids.reduce((t, id) => t + (c.data[id]?.emails || 0), 0);
+      c.email.subjects.forEach((x: any) => { const k = x.s.toLowerCase(), g = SY[k] || (SY[k] = { s: x.s, n: 0, o: 0, c: 0, r: 0 }); g.n += x.n; g.o += x.o; g.c += x.c; g.r += x.r; });
+      Object.entries(c.email.traits).forEach(([k, x]: any) => { const g = TY[k] || (TY[k] = { n: 0, o: 0, c: 0, r: 0 }); g.n += x.n; g.o += x.o; g.c += x.c; g.r += x.r; }); });
+    const email = { subjectsOk: withSubject > 0, trackedOk: tracked > 0, subjects: Object.values(SY).filter((x: any) => x.n >= 3).sort((a: any, b: any) => b.n - a.n).slice(0, 100), traits: TY };
+    if (sentAll > 0 && !withSubject) health.push("Email subject lines come back empty. The dashboard's HubSpot key needs the sales-email-read permission to read them.");
+    if (sentAll > 0 && !tracked) health.push("No open, click or reply counts came back on 1:1 emails, so subject line results show sends only.");
 
     // 3. Open tasks and upcoming meetings.
     let tasks: any = (!fresh && (await cacheGet(store, "tasks", TTL_TASKS))) || null;
@@ -193,7 +225,7 @@ export default async (req: Request) => {
       } catch (e: any) { pipeline = { ready: false }; health.push(`Deals could not be read (${String(e?.message || e).slice(0, 200)}).`); }
     } else if (!pipeline) { pipeline = { ready: false, pending: true }; partial = true; }
 
-    const data = { ok: true, ready: true, asOf: now, today, reps, months, activity, tasks, pipeline, partial, health };
+    const data = { ok: true, ready: true, asOf: now, today, reps, months, activity, email, tasks, pipeline, partial, health };
     console.log(`hs-sales reps=${reps.length} months=${Object.keys(activity).length}/${months.length} partial=${partial} health=${health.length} ms=${Date.now() - t0}`);
     return json(data);
   } catch (e: any) {
