@@ -14,7 +14,7 @@ async function sign(password: string, secret: string) {
 }
 
 const page = (msg = "") => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Boldt Marketing Dashboard</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&display=swap" rel="stylesheet">
+<title>Boldt Dashboards</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--navy:#033D51;--yellow:#EBBC4E;--ink:#1B1B1B;--muted:#5C6670;--bg:#F3F4F5;--card:#fff;--line:#DADFE3}
 @media (prefers-color-scheme:dark){:root{--ink:#EEF2F4;--muted:#A7B3BB;--bg:#0E1A20;--card:#14252D;--line:#25404B}}
@@ -25,7 +25,7 @@ input{font:inherit;font-size:16px;padding:10px 12px;border-radius:8px;border:1px
 button{font:inherit;font-weight:700;padding:11px;border:0;border-radius:8px;background:var(--navy);color:#fff;cursor:pointer}
 .err{color:#B5452F;font-weight:600}
 </style></head><body><form method="post" action="/login">
-<h1>Boldt Marketing Dashboard</h1><p>Enter the team password to continue.</p>${msg ? `<p class="err">${msg}</p>` : ""}
+<h1>Boldt Dashboards</h1><p>Marketing and Sales. Enter the team password to continue.</p>${msg ? `<p class="err">${msg}</p>` : ""}
 <label>Your name <input name="name" autocomplete="name" placeholder="Shown on calendar edits"></label>
 <label>Password <input name="password" type="password" autocomplete="current-password" required autofocus></label>
 <input type="hidden" name="next" value="">

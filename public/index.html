@@ -420,11 +420,19 @@ body.editing .ed-mod{background:color-mix(in srgb,var(--yellow) 16%,transparent)
 
 @media (max-width:640px){.asof{margin-left:0;order:3}.scope{order:2;padding:3px 12px}.kpi .v{font-size:30px}.tabs{top:calc(env(safe-area-inset-top,0px) + 91px)}}
 @media (prefers-reduced-motion:no-preference){.panel,.ad{animation:rise .35s ease both}@keyframes rise{from{transform:translateY(4px)}to{transform:none}}}
+/* dashboard switch (Marketing | Sales) */
+.dash-sw{display:inline-flex;border:1.5px solid rgba(255,255,255,.4);border-radius:999px;overflow:hidden;font-size:13px;font-weight:700}
+.dash-sw a{padding:6px 14px;color:#fff;text-decoration:none;white-space:nowrap}
+.dash-sw a[aria-current="page"]{background:var(--yellow);color:#1B1B1B}
+.dash-sw a:not([aria-current]):hover{background:rgba(255,255,255,.16)}
+.dash-sw a:focus-visible{outline:2px solid #fff;outline-offset:-3px}
+@media print{.dash-sw{display:none}}
 </style>
 
 <header class="mast">
   <div class="wrap">
     <div class="brand"><img src="boldt-logo.png" alt="Boldt"><h1>Marketing Dashboard</h1></div>
+    <nav class="dash-sw" aria-label="Dashboard"><a href="index.html#exec" aria-current="page">Marketing</a><a href="sales.html">Sales</a></nav>
     <span class="scope">Healthcare</span>
     <div class="asof" id="asof"></div>
     <button type="button" class="edit-btn" id="editBtn" hidden aria-pressed="false">Edit text</button>
@@ -447,6 +455,8 @@ body.editing .ed-mod{background:color-mix(in srgb,var(--yellow) 16%,transparent)
 
 <script>
 (function(){
+/* On the live site, opening the dashboard without a page link shows the Marketing / Sales chooser once per browser session. */
+try{if(/netlify\.app$|boldt/i.test(location.hostname)&&!location.hash&&!sessionStorage.getItem("bmd_dash")){location.replace("start.html");return;}sessionStorage.setItem("bmd_dash","marketing");}catch(e){}
 const PAGES=[["exec","Executive Summary"],["trends","Month Over Month"],["paid","Paid Media"],["creative","Ads & Creative"],["website","Website"],["leads","Leads"],["roi","ROI & Variables"],["budget","Budget"],["recs","Recommendations"]];
 let D=null; const DIV="HC";
 /* LinkedIn image links expire about a week after each pull; on the live site /api/img serves a saved copy. */
