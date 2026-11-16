@@ -331,6 +331,22 @@ body.jm-open{overflow:hidden}
 .jr-n{display:flex;flex-direction:column;gap:2px}
 .jr-c{display:flex;flex-wrap:wrap;gap:5px}
 .jr-t{font-size:12.5px;color:var(--muted);line-height:1.45}
+/* R&D tab */
+.rnd-act{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rnd-sum{font-size:15px;line-height:1.55;margin:10px 0 4px;color:var(--ink)}
+.rnd-brief h4,#industry h4,#marketing h4{margin:18px 0 8px;font-size:14px}
+.rnd-stories{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.rnd-story,.rnd-trend,.rnd-item{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--surface)}
+.rnd-item{margin-bottom:10px}
+.rnd-story h5,.rnd-item h5{margin:0 0 4px;font-size:14px;line-height:1.35}.rnd-story h5 a,.rnd-item h5 a{color:var(--ink);text-decoration:none}.rnd-story h5 a:hover,.rnd-item h5 a:hover{text-decoration:underline}
+.rnd-story p,.rnd-trend p,.rnd-item p{margin:6px 0 0;font-size:13px;line-height:1.5}
+.rnd-meta{color:var(--muted);font-size:12px!important}.rnd-meta a{color:inherit}
+.rnd-why{background:var(--soft);border-radius:6px;padding:6px 8px}
+.rnd-trends{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.rnd-opp{margin-top:6px}.rnd-ul{margin:0;padding-left:18px;font-size:13px;line-height:1.5}.rnd-ul li{margin:4px 0}
+.rnd-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
+.chip-btn{border:1px solid var(--line);background:transparent;border-radius:999px;padding:4px 10px;font:inherit;font-size:12px;cursor:pointer;color:var(--ink)}.chip-btn.on{background:var(--navy);border-color:var(--navy);color:#fff}
+
 #mql-follow-up{scroll-margin-top:120px}.lt-h{display:flex;justify-content:space-between;align-items:center;gap:10px}.lt-h h3{margin:0}.lt-link{font-size:12px;padding:5px 10px}
 .jr-more{align-self:flex-start;display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:4px 10px;border:1px solid var(--navy);border-radius:999px;background:transparent;color:var(--navy);font:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s,color .15s}
 .jr-more span{transition:transform .15s}
@@ -459,7 +475,7 @@ body.editing .ed-mod{background:color-mix(in srgb,var(--yellow) 16%,transparent)
 (function(){
 /* On the live site, opening the dashboard without a page link shows the Marketing / Sales chooser once per browser session. */
 try{if(/netlify\.app$|boldt/i.test(location.hostname)&&!location.hash&&!sessionStorage.getItem("bmd_dash")){location.replace("start.html");return;}sessionStorage.setItem("bmd_dash","marketing");}catch(e){}
-const PAGES=[["exec","Executive Summary"],["trends","Month Over Month"],["paid","Paid Media"],["creative","Ads & Creative"],["website","Website"],["leads","Leads"],["roi","ROI & Variables"],["budget","Budget"],["recs","Recommendations"]];
+const PAGES=[["exec","Executive Summary"],["trends","Month Over Month"],["paid","Paid Media"],["creative","Ads & Creative"],["website","Website"],["leads","Leads"],["roi","ROI & Variables"],["budget","Budget"],["recs","Recommendations"],["rnd","R&D"]];
 let D=null; const DIV="HC";
 /* LinkedIn image links expire about a week after each pull; on the live site /api/img serves a saved copy. */
 const LIVE_IMG=/netlify\.app$|boldt/i.test(location.hostname)&&location.protocol==="https:";
@@ -691,6 +707,46 @@ function defMqlPanel(){
   h+=orPanel();
   return h;
 }
+/* ---------- R&D: weekly executive briefing, healthcare industry intelligence, marketing best practices (data/rnd/*.json) ---------- */
+let RND_IX=null, RND={}, RND_W="", RND_ERR="", RND_IND="all", RND_MKT="all";
+function rndLoad(){
+  if(RND_IX&&(!RND_W||RND[RND_W]))return;
+  const go=()=>{if(current()==="rnd"){const y=scrollY;render();scrollTo(0,y);}};
+  (RND_IX?Promise.resolve(RND_IX):getJSON("data/rnd/index.json")).then(ix=>{RND_IX=ix;if(!RND_W&&ix.weeks&&ix.weeks.length)RND_W=ix.weeks[0].weekOf;
+    const w=(ix.weeks||[]).find(x=>x.weekOf===RND_W);if(!w)return go();return getJSON(`data/rnd/${w.file}`).then(j=>{RND[RND_W]=j;go();});
+  }).catch(()=>{RND_ERR="The R&D briefing couldn't be loaded. Refresh to try again.";go();});}
+const rndD=s=>{if(!s)return "";const d=new Date(s+"T12:00:00Z");return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"});};
+const rndSrc=i=>`<a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.source)}</a>${i.date?` · ${rndD(i.date)}`:""}`;
+function rndCopy(b){const d=RND[RND_W];if(!d)return;const L=[`Weekly Executive Briefing, week of ${rndD(d.weekOf)}`,"",d.summary,"","TOP STORIES",...d.topStories.map(s=>`- ${s.title} (${s.source}, ${rndD(s.date)}): ${s.summary} Why it matters: ${s.whyItMatters} ${s.url}`),"","EMERGING HEALTHCARE TRENDS",...d.trends.map(t=>`- ${t.title}: ${t.detail}`),"",
+  "MARKETING OPPORTUNITIES",...d.opportunities.marketing.map(x=>`- ${x}`),"","THOUGHT LEADERSHIP OPPORTUNITIES",...d.opportunities.thoughtLeadership.map(x=>`- ${x}`),"","CONTENT OPPORTUNITIES",...d.opportunities.content.map(x=>`- ${x}`),"",
+  "RECOMMENDED CAMPAIGN THEMES",...d.recommend.campaignThemes.map(x=>`- ${x}`),"","RECOMMENDED WEBINAR TOPICS",...d.recommend.webinarTopics.map(x=>`- ${x}`),"","RECOMMENDED ARTICLE TOPICS",...d.recommend.articleTopics.map(x=>`- ${x}`)];
+  const t=L.join("\n"),ok=()=>{b.textContent="Copied";setTimeout(()=>{b.textContent="Copy briefing";},2000);};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,()=>prompt("Copy the briefing:",t));else prompt("Copy the briefing:",t);}
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-rnd-copy],[data-rnd-ind],[data-rnd-mkt]");if(!t)return;
+  if(t.dataset.rndCopy!=null)return rndCopy(t);
+  if(t.dataset.rndInd){RND_IND=t.dataset.rndInd;}if(t.dataset.rndMkt){RND_MKT=t.dataset.rndMkt;}const y=scrollY;render();scrollTo(0,y);});
+document.addEventListener("change",e=>{if(e.target.id==="rnd-week"){RND_W=e.target.value;rndLoad();const y=scrollY;render();scrollTo(0,y);}});
+R.rnd=()=>{
+  let h=head("R&D",`Marketing research and healthcare industry intelligence, refreshed every Monday. Healthcare only.`);
+  if(RND_ERR)return h+`<div class="panel"><p class="note">${esc(RND_ERR)}</p></div>`;
+  const d=RND[RND_W];
+  if(!d){rndLoad();return h+`<div class="panel"><p class="note">Loading this week's briefing…</p></div>`;}
+  const weeks=(RND_IX&&RND_IX.weeks)||[];
+  const list=a=>`<ul class="rnd-ul">${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`;
+  h+=`<div class="panel rnd-brief" id="briefing"><div class="lt-h"><h3>Weekly Executive Briefing</h3><div class="rnd-act">${weeks.length>1?`<label class="adper">Week of <select id="rnd-week">${weeks.map(w=>`<option value="${esc(w.weekOf)}" ${w.weekOf===RND_W?"selected":""}>${rndD(w.weekOf)}</option>`).join("")}</select></label>`:`<span class="note" style="margin:0">Week of ${rndD(d.weekOf)}</span>`}<button type="button" class="btn-sm" data-rnd-copy>Copy briefing</button></div></div>
+    <p class="rnd-sum">${esc(d.summary)}</p>
+    <h4>Top industry stories</h4><div class="rnd-stories">${d.topStories.map(s=>`<article class="rnd-story"><h5><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a></h5><p class="rnd-meta">${rndSrc(s)}</p><p>${esc(s.summary)}</p><p class="rnd-why"><b>Why it matters:</b> ${esc(s.whyItMatters)}</p></article>`).join("")}</div>
+    <h4>Emerging healthcare trends</h4><div class="rnd-trends">${d.trends.map(t=>`<div class="rnd-trend"><b>${esc(t.title)}</b><p>${esc(t.detail)}</p><p class="rnd-meta">${t.sources.map(s=>`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>`).join(" · ")}</p></div>`).join("")}</div>
+    <div class="grid g-3 rnd-opp"><div><h4>Marketing opportunities</h4>${list(d.opportunities.marketing)}</div><div><h4>Thought leadership opportunities</h4>${list(d.opportunities.thoughtLeadership)}</div><div><h4>Content opportunities</h4>${list(d.opportunities.content)}</div></div>
+    <div class="grid g-3 rnd-opp"><div><h4>Recommended campaign themes</h4>${list(d.recommend.campaignThemes)}</div><div><h4>Recommended webinar topics</h4>${list(d.recommend.webinarTopics)}</div><div><h4>Recommended article topics</h4>${list(d.recommend.articleTopics)}</div></div></div>`;
+  const sect=(id,title,sub,groups,key,attr)=>{const areas=groups.map(g=>g.area), sel=areas.includes(key)?key:"all", G=sel==="all"?groups:groups.filter(g=>g.area===sel);
+    return `<div class="panel" id="${id}"><h3>${title}</h3><p class="sub">${sub}</p><div class="rnd-chips"><button type="button" class="chip-btn ${sel==="all"?"on":""}" data-${attr}="all">All</button>${areas.map(a=>`<button type="button" class="chip-btn ${sel===a?"on":""}" data-${attr}="${esc(a)}">${esc(a)}</button>`).join("")}</div>
+      ${G.map(g=>`<h4>${esc(g.area)}</h4>${g.items.map(i=>`<div class="rnd-item"><h5><a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a></h5><p class="rnd-meta">${rndSrc(i)}</p><p>${esc(i.summary)}</p>${i.takeaway?`<p class="rnd-why"><b>For Boldt:</b> ${esc(i.takeaway)}</p>`:""}</div>`).join("")}`).join("")}</div>`;};
+  h+=sect("industry","Healthcare industry intelligence","Health system growth, real estate, consolidation, capital, facilities, regulation and workforce, from Becker's, Modern Healthcare and other trade sources.",d.industry,RND_IND,"rnd-ind");
+  h+=sect("marketing","Marketing best practices","B2B marketing research and benchmarks from sources such as Gartner, Forrester, LinkedIn, HubSpot and the Content Marketing Institute, with what each means for Boldt.",d.marketing,RND_MKT,"rnd-mkt");
+  h+=`<p class="sec-note">Compiled ${rndD(d.generated)} from the linked sources. Summaries are written for Boldt's healthcare real estate audience; open each link for the full story.</p>`;
+  return h;
+};
 /* ---------- Engaged companies, month over month (data/engaged.json from history; this month so far from mtd.json) ---------- */
 let ENGM=null, ENG_ALL=false;
 function engPanel(){
