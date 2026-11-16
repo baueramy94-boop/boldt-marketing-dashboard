@@ -306,5 +306,170 @@
     }
    ]
   }
+ ],
+ "insights": {
+  "asOf": "2026-11-16",
+  "basis": "October 2026 dashboard data, November so far (through Nov. 15) and this week's industry research.",
+  "observations": [
+   {
+    "type": "Engagement behavior",
+    "title": "Engagement jumped 30% in October",
+    "detail": "206 healthcare companies engaged in October, up from 158 in September and well above the 2026 average of 128 a month. New companies rose to 54 from 39. The number of companies clicking LinkedIn ads nearly doubled (68 from 38).",
+    "evidence": "Engaged companies, month over month"
+   },
+   {
+    "type": "High-performing message",
+    "title": "Cost certainty is the strongest LinkedIn message",
+    "detail": "Cost certainty ads earn a 1.86% click-through rate, ahead of market outlook thought leadership (1.58%) and well ahead of financing and ownership models (0.64%) and direct asks to meet or contact Boldt (0.54%).",
+    "evidence": "LinkedIn healthcare creative analysis, 2026"
+   },
+   {
+    "type": "Underused content",
+    "title": "The bonds guide wins organic search with no paid support",
+    "detail": "\"Should my health system issue bonds to raise capital?\" drew 90 of its 172 views from organic search, the most of any post, and it is one of the posts AI assistants send readers to. It has no ads behind it.",
+    "evidence": "Top blog posts by source, January to October"
+   },
+   {
+    "type": "Declining area",
+    "title": "Financing ads underperform, financing content does not",
+    "detail": "Financing and ownership ads have the second-lowest click-through rate, yet financing articles are among the most-read posts. Leaders seem to want financing explained, not pitched.",
+    "evidence": "Creative analysis and blog views by source"
+   },
+   {
+    "type": "Topic gaining momentum",
+    "title": "Site-neutral payment and the 2027 outpatient rule",
+    "detail": "CMS extended site-neutral payment to off-campus imaging and keeps moving procedures to outpatient and ASC settings. Health systems will be rethinking where outpatient services sit, which fits Boldt's development and financing message.",
+    "evidence": "This week's briefing"
+   },
+   {
+    "type": "Emerging audience interest",
+    "title": "Outlook content keeps pulling leaders in",
+    "detail": "The 2026 Healthcare Real Estate Outlook has 6,385 views this year, by far the most of any post, and its ads are the top four LinkedIn ads in October by click-through rate. A 2027 edition has a ready audience.",
+    "evidence": "Top content and top LinkedIn ads"
+   },
+   {
+    "type": "Buying intent",
+    "title": "Four hot MQLs visited the contact page",
+    "detail": "Encompass Health, Columbia University Irving Medical Center, RWJBarnabas Health and Suburban Hospital all viewed the contact page. Goshen Health leads all companies with 99 engagements.",
+    "evidence": "Hot MQLs"
+   },
+   {
+    "type": "ABM opportunity",
+    "title": "75 hot MQLs, 20 new companies so far in November",
+    "detail": "The hot MQL list (15 or more engagements, or a contact page visit) is large enough for a named-account program, and 20 healthcare companies engaged for the first time in the first half of November.",
+    "evidence": "Hot MQLs and New MQLs so far this month"
+   }
+  ],
+  "actions": {
+   "d30": [
+    "Follow up with the four hot MQLs that visited the contact page, using the follow-up task button on the Leads tab.",
+    "Launch Thought Leader Ads from Boldt leaders built on the cost certainty message.",
+    "Publish a one-page explainer on the 2027 outpatient rule and send it to hot MQLs.",
+    "Add an FAQ section and FAQ schema to the bonds guide so search and AI tools can quote it."
+   ],
+   "d60": [
+    "Launch the 2027 Healthcare Real Estate Outlook with LinkedIn ads and an email nurture to engaged companies.",
+    "Host a webinar on the 2027 outpatient rule and phasing capital projects.",
+    "Publish a case study on a phased or financed outpatient project."
+   ],
+   "d90": [
+    "Build a financing content hub (bonds, leasing, ownership options) structured for AI answers.",
+    "Start a named-account program for the top 25 hot MQLs with tailored content.",
+    "Shift financing ad spend toward content offers and measure against the 128 a month engagement baseline."
+   ]
+  }
+ },
+ "contentIdeas": [
+  {
+   "type": "Blog",
+   "title": "What site-neutral imaging payment means for off-campus outpatient real estate",
+   "why": "New 2027 rule, strong search and AI question interest, and it fits Boldt's outpatient development work.",
+   "signals": [
+    "Trending healthcare topic",
+    "AEO opportunity",
+    "Business priority"
+   ]
+  },
+  {
+   "type": "Blog",
+   "title": "Bonds, leases or ownership: how health systems are paying for outpatient growth in 2027",
+   "why": "Builds on the bonds guide, the top organic post, and on CEOs' tighter capital discipline.",
+   "signals": [
+    "High-performing content",
+    "Search demand",
+    "Trending healthcare topic"
+   ]
+  },
+  {
+   "type": "Blog",
+   "title": "How to phase an outpatient campus when reimbursement is uncertain",
+   "why": "Health systems are splitting projects into phases; cost certainty is Boldt's strongest message.",
+   "signals": [
+    "High-performing message",
+    "Trending healthcare topic"
+   ]
+  },
+  {
+   "type": "White paper",
+   "title": "2027 Healthcare Real Estate Outlook",
+   "why": "The 2026 Outlook is the most-read content of the year and its ads lead on click-through rate.",
+   "signals": [
+    "High-performing content",
+    "Engaged audience"
+   ]
+  },
+  {
+   "type": "Case study",
+   "title": "A phased or financed outpatient project that protected a client's capital",
+   "why": "Gives the cost certainty and financing messages first-hand proof (E-E-A-T).",
+   "signals": [
+    "High-performing message",
+    "Competitive gap"
+   ]
+  },
+  {
+   "type": "Webinar",
+   "title": "The 2027 outpatient rule: what changes for your ambulatory footprint",
+   "why": "Timely regulatory change that CFOs and strategy leaders need to plan around.",
+   "signals": [
+    "Trending healthcare topic",
+    "Executive audience"
+   ]
+  },
+  {
+   "type": "LinkedIn",
+   "title": "Thought Leader Ad series: three cost certainty lessons from recent projects",
+   "why": "Cost certainty leads LinkedIn click-through rate; LinkedIn reports buyers trust people over brands.",
+   "signals": [
+    "High-performing message",
+    "LinkedIn trend"
+   ]
+  },
+  {
+   "type": "LinkedIn",
+   "title": "Short post: what the 2027 outpatient rule means in 60 seconds",
+   "why": "Fast, shareable take on this week's biggest story.",
+   "signals": [
+    "Trending healthcare topic"
+   ]
+  },
+  {
+   "type": "Campaign",
+   "title": "Build outpatient capacity without tying up capital",
+   "why": "Pairs the financing story with capital discipline coverage, aimed at CFOs.",
+   "signals": [
+    "Business priority",
+    "Trending healthcare topic"
+   ]
+  },
+  {
+   "type": "Email nurture",
+   "title": "Three-email series for hot MQLs: outlook, outpatient rule, financing options",
+   "why": "75 hot MQLs and 54 new companies in October need a next step after they engage.",
+   "signals": [
+    "CRM engagement",
+    "Engaged audience"
+   ]
+  }
  ]
 }

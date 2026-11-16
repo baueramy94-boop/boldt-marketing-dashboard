@@ -332,6 +332,24 @@ body.jm-open{overflow:hidden}
 .jr-c{display:flex;flex-wrap:wrap;gap:5px}
 .jr-t{font-size:12.5px;color:var(--muted);line-height:1.45}
 /* R&D tab */
+.blog-panel{border-top:4px solid var(--gold)}
+.blog-hero{display:grid;grid-template-columns:1fr minmax(280px,420px);gap:18px;align-items:center}.blog-hero h3{margin:0 0 4px}
+.blog-form{display:flex;gap:8px}.blog-form input{flex:1;min-width:0;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.blog-go{font:inherit;font-weight:800;font-size:15px;padding:11px 18px;border:0;border-radius:10px;background:var(--gold);color:#1b1b1b;cursor:pointer;white-space:nowrap;box-shadow:0 4px 12px rgba(201,151,0,.25)}.blog-go:hover{filter:brightness(1.05)}.blog-go:disabled{opacity:.6;cursor:default}
+.blog-busy{display:flex;gap:12px;align-items:center;margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--soft)}
+.blog-spin{width:22px;height:22px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--navy);animation:bspin 1s linear infinite;flex:none}@keyframes bspin{to{transform:rotate(360deg)}}
+.blog-out{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
+.blog-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.blog-btns{display:flex;gap:8px}.blog-btns a{text-decoration:none}
+.blog-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:12px 0}.blog-meta div{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;display:flex;flex-direction:column;gap:3px}.blog-meta b{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.blog-art{max-width:760px;margin:16px 0;font-size:15px;line-height:1.65}.blog-art h2{font-size:24px;line-height:1.25;margin:0 0 12px}.blog-art h3{font-size:18px;margin:22px 0 8px}.blog-art h4{font-size:15px;margin:14px 0 4px}.blog-art p{margin:0 0 12px}.blog-art ul{margin:0 0 12px;padding-left:20px}
+.blog-promo{margin-top:10px}.blog-code{white-space:pre-wrap;font-size:12px;background:var(--soft);padding:10px;border-radius:8px;overflow:auto;max-height:320px}
+.blog-recent{list-style:none;padding:0;margin:8px 0 0}.blog-recent li{margin:6px 0}.linkish{background:none;border:0;padding:0;font:inherit;color:var(--navy);text-decoration:underline;cursor:pointer;text-align:left}
+.ins-grid,.idea-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.ins-t{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--navy);background:var(--soft);border-radius:999px;padding:2px 8px;margin-bottom:6px}
+.ins b,.idea b{display:block;font-size:14px;line-height:1.35}.ins-act{border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.idea{display:flex;flex-direction:column;gap:4px}.idea .btn-sm{align-self:flex-start;margin-top:auto}.idea-sig{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 8px}.idea-sig span{font-size:11px;border:1px solid var(--line);border-radius:999px;padding:1px 7px;color:var(--muted)}
+@media (max-width:760px){.blog-hero{grid-template-columns:1fr}.blog-form{flex-direction:column}}
+
 .rnd-act{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .rnd-sum{font-size:15px;line-height:1.55;margin:10px 0 4px;color:var(--ink)}
 .rnd-brief h4,#industry h4,#marketing h4{margin:18px 0 8px;font-size:14px}
@@ -707,11 +725,72 @@ function defMqlPanel(){
   h+=orPanel();
   return h;
 }
+/* ---------- Generate Blog (blog-run-background writes, /api/blog reads) ---------- */
+let BLOG={id:"",d:null,t0:0,err:"",recent:null,topic:"",why:""}, BLOG_T=null, RND_SIG=null;
+function blogStart(topic,why){
+  if(BLOG.d&&BLOG.d.status==="running")return;
+  const id=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(36).slice(2)).replace(/[^a-z0-9-]/gi,"").slice(0,36);
+  BLOG={...BLOG,id,d:{status:"running"},t0:Date.now(),err:"",topic:topic||"",why:why||""};blogPaint();
+  const el=document.getElementById("blog-gen");if(el)el.scrollIntoView({block:"start",behavior:"smooth"});
+  fetch("/.netlify/functions/blog-run-background",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id,topic,why})})
+    .then(r=>{if(r.status>=400)throw 0;blogPoll();}).catch(()=>{BLOG.d=null;BLOG.err="The blog generator couldn't be started. Refresh and try again.";blogPaint();});}
+function blogPoll(){clearTimeout(BLOG_T);if(!BLOG.id)return;const id=BLOG.id;
+  fetch(`/api/blog?id=${id}`).then(r=>r.json()).then(j=>{if(BLOG.id!==id)return;const d=j.draft||{};
+    if(d.status==="done"||d.status==="failed"){BLOG.d=d;if(d.status==="failed")BLOG.err=d.error||"The draft couldn't be generated.";BLOG.recent=null;blogRecent();blogPaint();return;}
+    if(Date.now()-BLOG.t0>8*60*1000){BLOG.d=null;BLOG.err="This is taking longer than expected. Check Recent drafts in a few minutes.";blogPaint();return;}
+    blogPaint(true);BLOG_T=setTimeout(blogPoll,4000);}).catch(()=>{BLOG_T=setTimeout(blogPoll,6000);});}
+function blogOpen(id){BLOG={...BLOG,id,d:{status:"running"},t0:Date.now(),err:""};blogPaint();blogPoll();}
+function blogRecent(){if(BLOG.recent)return;fetch("/api/blog").then(r=>r.json()).then(j=>{BLOG.recent=j.items||[];blogPaint();}).catch(()=>{BLOG.recent=[];});}
+function blogText(b){return [b.title,"",...(b.intro||[]),"",...(b.sections||[]).flatMap(s=>[s.h2,"",...(s.paragraphs||[]),...(s.bullets||[]).map(x=>`- ${x}`),""]),"Key takeaways",...(b.keyTakeaways||[]).map(x=>`- ${x}`),"","Frequently asked questions",...(b.faq||[]).flatMap(f=>[f.q,f.a,""]),b.cta||"","","Sources",...(b.sources||[]).map(s=>`- ${s.name}: ${s.url}`)].join("\n");}
+function blogCopy(btn,txt){const ok=()=>{const o=btn.textContent;btn.textContent="Copied";setTimeout(()=>{btn.textContent=o;},2000);};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(ok,()=>prompt("Copy:",txt));else prompt("Copy:",txt);}
+function blogPaint(tick){const el=document.getElementById("blog-gen");if(!el)return;
+  if(tick){const s=el.querySelector(".blog-el");if(s){s.textContent=blogElapsed();return;}}el.innerHTML=blogBody();}
+const blogElapsed=()=>{const s=Math.round((Date.now()-BLOG.t0)/1000);return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;};
+function blogBody(){
+  const busy=BLOG.d&&BLOG.d.status==="running";
+  let h=`<div class="blog-hero"><div><h3>Generate a blog</h3><p class="sub">Writes a complete long-form article for health system leaders from this week's research and the dashboard's data, optimized for search and AI answers, with FAQ, meta details, schema and LinkedIn and email copy. Leave the topic blank and it picks the strongest topic for this week.</p></div>
+    <div class="blog-form"><input type="text" id="blog-topic" maxlength="300" placeholder="Topic (optional)" value="${esc(BLOG.topic)}" ${busy?"disabled":""}><button type="button" class="blog-go" data-blog-go ${busy?"disabled":""}>${busy?"Writing…":"Generate blog"}</button></div></div>`;
+  if(BLOG.err)h+=`<p class="note" style="color:#B5452F;margin-top:10px">${esc(BLOG.err)}</p>`;
+  if(busy)h+=`<div class="blog-busy"><span class="blog-spin" aria-hidden="true"></span><div><b>Writing your draft${BLOG.topic?`: ${esc(BLOG.topic)}`:""}</b><br><span class="note" style="margin:0">Reading this week's research and dashboard data, then writing. This usually takes 1 to 3 minutes. Elapsed <span class="blog-el">${blogElapsed()}</span></span></div></div>`;
+  const d=BLOG.d;
+  if(d&&d.status==="done"&&d.blog){const b=d.blog;
+    h+=`<div class="blog-out"><div class="blog-bar"><div><span class="chip good">Draft ready</span> <span class="note" style="margin:0">${N(d.words||0)} words · ${esc(d.by||"")} · ${d.finished?new Date(d.finished).toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):""}</span></div>
+      <div class="blog-btns"><a class="btn-sm primary" href="/api/blog?id=${esc(d.id)}&format=docx">Download Word</a><button type="button" class="btn-sm" data-blog-copy="article">Copy article</button></div></div>
+      ${b.whyThisTopic?`<p class="rnd-why"><b>Why this topic:</b> ${esc(b.whyThisTopic)}</p>`:""}
+      <div class="blog-meta"><div><b>Meta title</b><span>${esc(b.metaTitle||"")}</span></div><div><b>Meta description</b><span>${esc(b.metaDescription||"")}</span></div><div><b>Slug</b><span>/${esc(b.slug||"")}</span></div><div><b>Keywords</b><span>${esc([b.primaryKeyword,...(b.secondaryKeywords||[])].filter(Boolean).join(", "))}</span></div></div>
+      <article class="blog-art"><h2>${esc(b.title)}</h2>${(b.intro||[]).map(p=>`<p>${esc(p)}</p>`).join("")}
+        ${(b.sections||[]).map(s=>`<h3>${esc(s.h2)}</h3>${(s.paragraphs||[]).map(p=>`<p>${esc(p)}</p>`).join("")}${(s.bullets||[]).length?`<ul>${s.bullets.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}`).join("")}
+        ${(b.keyTakeaways||[]).length?`<h3>Key takeaways</h3><ul>${b.keyTakeaways.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
+        ${(b.faq||[]).length?`<h3>Frequently asked questions</h3>${b.faq.map(f=>`<h4>${esc(f.q)}</h4><p>${esc(f.a)}</p>`).join("")}`:""}
+        ${b.cta?`<p><i>${esc(b.cta)}</i></p>`:""}
+        ${(b.sources||[]).length?`<h3>Sources</h3><ul>${b.sources.map(s=>`<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a></li>`).join("")}</ul>`:""}</article>
+      <div class="grid g-2 blog-promo"><div class="rnd-trend"><div class="lt-h"><b>LinkedIn post</b><button type="button" class="btn-sm" data-blog-copy="linkedin">Copy</button></div><p style="white-space:pre-wrap">${esc((b.linkedin||{}).post||"")}</p>${(b.linkedin||{}).thoughtLeaderAd?`<p class="rnd-meta"><b>Thought Leader Ad intro:</b> ${esc(b.linkedin.thoughtLeaderAd)}</p>`:""}</div>
+        <div class="rnd-trend"><div class="lt-h"><b>Email</b><button type="button" class="btn-sm" data-blog-copy="email">Copy</button></div><p><b>Subject:</b> ${esc((b.email||{}).subject||"")}<br><b>Preview:</b> ${esc((b.email||{}).preview||"")}</p><p style="white-space:pre-wrap">${esc((b.email||{}).body||"")}</p></div></div>
+      ${b.schema?`<details class="or-more" style="margin-top:10px"><summary>Schema markup (${esc(b.schema.recommendation||"Article and FAQPage")})</summary><pre class="blog-code">${esc(typeof b.schema.jsonld==="string"?b.schema.jsonld:JSON.stringify(b.schema.jsonld,null,2))}</pre></details>`:""}
+      <p class="sec-note">AI-written draft from the linked sources and dashboard data. Fill in any [bracketed] Boldt examples and review facts before publishing.</p></div>`;}
+  if(BLOG.recent&&BLOG.recent.length)h+=`<details class="or-more" style="margin-top:12px"><summary>Recent drafts (${BLOG.recent.length})</summary><ul class="blog-recent">${BLOG.recent.map(x=>`<li><button type="button" class="linkish" data-blog-open="${esc(x.id)}">${esc(x.title)}</button> <span class="note" style="margin:0">${esc(x.by||"")} · ${new Date(x.created).toLocaleDateString("en-US",{month:"short",day:"numeric"})}${x.words?` · ${N(x.words)} words`:""}</span></li>`).join("")}</ul></details>`;
+  return h;}
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-blog-go],[data-blog-copy],[data-blog-open],[data-blog-idea]");if(!t)return;
+  if(t.dataset.blogGo!=null){const v=(document.getElementById("blog-topic")||{}).value||"";blogStart(v.trim(),"");}
+  else if(t.dataset.blogIdea!=null){blogStart(t.dataset.blogIdea,t.dataset.why||"");}
+  else if(t.dataset.blogOpen){blogOpen(t.dataset.blogOpen);}
+  else if(t.dataset.blogCopy&&BLOG.d&&BLOG.d.blog){const b=BLOG.d.blog,k=t.dataset.blogCopy;blogCopy(t,k==="article"?blogText(b):k==="linkedin"?(b.linkedin||{}).post||"":`Subject: ${(b.email||{}).subject||""}\n\n${(b.email||{}).body||""}`);}});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="blog-topic"){e.preventDefault();blogStart(e.target.value.trim(),"");}});
+function rndInsights(d){const I=d.insights;if(!I)return "";const sig=RND_SIG;
+  const intent=sig&&sig.buyingIntent?sig.buyingIntent.slice(0,10):[];
+  return `<div class="panel" id="insights"><h3>Strategic insights</h3><p class="sub">${esc(I.basis||"")}</p>
+    <div class="ins-grid">${I.observations.map(o=>`<div class="rnd-trend ins"><span class="ins-t">${esc(o.type)}</span><b>${esc(o.title)}</b><p>${esc(o.detail)}</p>${o.evidence?`<p class="rnd-meta">From: ${esc(o.evidence)}</p>`:""}</div>`).join("")}</div>
+    ${intent.length?`<h4>Companies showing buying intent</h4><div class="tbl-wrap"><table><thead><tr><th class="l">Company</th><th>Engagements</th><th class="l">Signal</th></tr></thead><tbody>${intent.map(c=>`<tr><td class="l">${esc(c.name)} <span class="note" style="margin:0">${esc(c.domain)}</span></td><td>${N(c.engagements)}</td><td class="l">${c.contactPage?'<span class="chip warn">Visited contact page</span> ':""}${c.newThisMonth?'<span class="chip good">New MQL</span>':""}${!c.contactPage&&!c.newThisMonth?'<span class="note" style="margin:0">High engagement</span>':""}</td></tr>`).join("")}</tbody></table></div>`:""}
+    <h4>Recommended actions</h4><div class="grid g-3 rnd-opp">${[["d30","Next 30 days"],["d60","Next 60 days"],["d90","Next 90 days"]].map(([k,n])=>`<div class="ins-act"><b>${n}</b><ul class="rnd-ul">${(I.actions[k]||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`).join("")}</div></div>`;}
+function rndIdeas(d){const C=d.contentIdeas;if(!C||!C.length)return "";
+  return `<div class="panel" id="content-ideas"><h3>Content ideas</h3><p class="sub">Suggested from engaged audiences, trending healthcare topics, search and AI-answer opportunities, CRM engagement, website traffic and past content performance.</p>
+    <div class="idea-grid">${C.map(c=>`<div class="rnd-trend idea"><span class="ins-t">${esc(c.type)}</span><b>${esc(c.title)}</b><p>${esc(c.why)}</p><div class="idea-sig">${(c.signals||[]).map(s=>`<span>${esc(s)}</span>`).join("")}</div>${c.type==="Blog"?`<button type="button" class="btn-sm" data-blog-idea="${esc(c.title)}" data-why="${esc(c.why)}">Generate this blog</button>`:""}</div>`).join("")}</div></div>`;}
 /* ---------- R&D: weekly executive briefing, healthcare industry intelligence, marketing best practices (data/rnd/*.json) ---------- */
 let RND_IX=null, RND={}, RND_W="", RND_ERR="", RND_IND="all", RND_MKT="all";
 function rndLoad(){
   if(RND_IX&&(!RND_W||RND[RND_W]))return;
   const go=()=>{if(current()==="rnd"){const y=scrollY;render();scrollTo(0,y);}};
+  if(!RND_SIG)getJSON("data/rnd/signals.json").then(j=>{RND_SIG=j;go();}).catch(()=>{});
   (RND_IX?Promise.resolve(RND_IX):getJSON("data/rnd/index.json")).then(ix=>{RND_IX=ix;if(!RND_W&&ix.weeks&&ix.weeks.length)RND_W=ix.weeks[0].weekOf;
     const w=(ix.weeks||[]).find(x=>x.weekOf===RND_W);if(!w)return go();return getJSON(`data/rnd/${w.file}`).then(j=>{RND[RND_W]=j;go();});
   }).catch(()=>{RND_ERR="The R&D briefing couldn't be loaded. Refresh to try again.";go();});}
@@ -727,10 +806,11 @@ document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest
   if(t.dataset.rndInd){RND_IND=t.dataset.rndInd;}if(t.dataset.rndMkt){RND_MKT=t.dataset.rndMkt;}const y=scrollY;render();scrollTo(0,y);});
 document.addEventListener("change",e=>{if(e.target.id==="rnd-week"){RND_W=e.target.value;rndLoad();const y=scrollY;render();scrollTo(0,y);}});
 R.rnd=()=>{
-  let h=head("R&D",`Marketing research and healthcare industry intelligence, refreshed every Monday. Healthcare only.`);
+  let h=head("R&D",`Marketing research, healthcare industry intelligence, strategic insights and AI content tools, refreshed every Monday. Healthcare only.`);
   if(RND_ERR)return h+`<div class="panel"><p class="note">${esc(RND_ERR)}</p></div>`;
   const d=RND[RND_W];
   if(!d){rndLoad();return h+`<div class="panel"><p class="note">Loading this week's briefing…</p></div>`;}
+  h+=`<div class="panel blog-panel" id="blog-gen">${blogBody()}</div>`; if(!BLOG.recent)setTimeout(blogRecent,0);
   const weeks=(RND_IX&&RND_IX.weeks)||[];
   const list=a=>`<ul class="rnd-ul">${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`;
   h+=`<div class="panel rnd-brief" id="briefing"><div class="lt-h"><h3>Weekly Executive Briefing</h3><div class="rnd-act">${weeks.length>1?`<label class="adper">Week of <select id="rnd-week">${weeks.map(w=>`<option value="${esc(w.weekOf)}" ${w.weekOf===RND_W?"selected":""}>${rndD(w.weekOf)}</option>`).join("")}</select></label>`:`<span class="note" style="margin:0">Week of ${rndD(d.weekOf)}</span>`}<button type="button" class="btn-sm" data-rnd-copy>Copy briefing</button></div></div>
@@ -739,6 +819,7 @@ R.rnd=()=>{
     <h4>Emerging healthcare trends</h4><div class="rnd-trends">${d.trends.map(t=>`<div class="rnd-trend"><b>${esc(t.title)}</b><p>${esc(t.detail)}</p><p class="rnd-meta">${t.sources.map(s=>`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>`).join(" · ")}</p></div>`).join("")}</div>
     <div class="grid g-3 rnd-opp"><div><h4>Marketing opportunities</h4>${list(d.opportunities.marketing)}</div><div><h4>Thought leadership opportunities</h4>${list(d.opportunities.thoughtLeadership)}</div><div><h4>Content opportunities</h4>${list(d.opportunities.content)}</div></div>
     <div class="grid g-3 rnd-opp"><div><h4>Recommended campaign themes</h4>${list(d.recommend.campaignThemes)}</div><div><h4>Recommended webinar topics</h4>${list(d.recommend.webinarTopics)}</div><div><h4>Recommended article topics</h4>${list(d.recommend.articleTopics)}</div></div></div>`;
+  h+=rndInsights(d)+rndIdeas(d);
   const sect=(id,title,sub,groups,key,attr)=>{const areas=groups.map(g=>g.area), sel=areas.includes(key)?key:"all", G=sel==="all"?groups:groups.filter(g=>g.area===sel);
     return `<div class="panel" id="${id}"><h3>${title}</h3><p class="sub">${sub}</p><div class="rnd-chips"><button type="button" class="chip-btn ${sel==="all"?"on":""}" data-${attr}="all">All</button>${areas.map(a=>`<button type="button" class="chip-btn ${sel===a?"on":""}" data-${attr}="${esc(a)}">${esc(a)}</button>`).join("")}</div>
       ${G.map(g=>`<h4>${esc(g.area)}</h4>${g.items.map(i=>`<div class="rnd-item"><h5><a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a></h5><p class="rnd-meta">${rndSrc(i)}</p><p>${esc(i.summary)}</p>${i.takeaway?`<p class="rnd-why"><b>For Boldt:</b> ${esc(i.takeaway)}</p>`:""}</div>`).join("")}`).join("")}</div>`;};

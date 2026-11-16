@@ -1,0 +1,471 @@
+{
+ "generated": "2026-11-16",
+ "reportMonth": "2026-10",
+ "engagement": {
+  "month": "2026-10",
+  "engaged": 206,
+  "prev": 158,
+  "new": 54,
+  "prevNew": 39,
+  "avgYear": 128,
+  "peak": "2026-08",
+  "channels": {
+   "w": {
+    "now": 139,
+    "prev": 118
+   },
+   "l": {
+    "now": 68,
+    "prev": 38
+   },
+   "e": {
+    "now": 15,
+    "prev": 6
+   },
+   "s": {
+    "now": 75,
+    "prev": 68
+   }
+  },
+  "monthToDate": {
+   "month": "2026-11",
+   "through": "2026-11-15",
+   "engaged": 94,
+   "new": 20
+  }
+ },
+ "topContent": [
+  {
+   "title": "2026 Healthcare Real Estate Outlook",
+   "path": "/blog/2026-healthcare-real-estate-outlook/",
+   "views": 6385,
+   "ai": 24,
+   "organic": 103,
+   "linkedinAds": 5992
+  },
+  {
+   "title": "Should my health system issue bonds to raise capital?",
+   "path": "/blog/should-my-health-system-issue-bonds-to-raise-capital-a-complete-guide/",
+   "views": 172,
+   "ai": 8,
+   "organic": 90,
+   "linkedinAds": 0
+  },
+  {
+   "title": "Top 10 reasons to avoid traditional real estate financing models",
+   "path": "/blog/top-10-reasons-healthcare-executives-should-avoid-traditional-real-estate-financing-models/",
+   "views": 156,
+   "ai": 0,
+   "organic": 7,
+   "linkedinAds": 123
+  },
+  {
+   "title": "Health systems are buying back outpatient real estate",
+   "path": "/blog/health-systems-are-buying-back-outpatient-real-estate-but-is-it-the-right-move/",
+   "views": 137,
+   "ai": 5,
+   "organic": 16,
+   "linkedinAds": 24
+  },
+  {
+   "title": "2025 Year in Review",
+   "path": "/blog/2025-year-in-review/",
+   "views": 121,
+   "ai": 0,
+   "organic": 18,
+   "linkedinAds": 1
+  },
+  {
+   "title": "Location matters: choosing the ideal site for healthcare facilities",
+   "path": "/blog/location-matters-choosing-the-ideal-site-for-healthcare-facilities/",
+   "views": 117,
+   "ai": 1,
+   "organic": 62,
+   "linkedinAds": 0
+  },
+  {
+   "title": "PIH Health Whittier MOB groundbreaking",
+   "path": "/blog/boldt-real-estate-the-boldt-company-and-pih-health-break-ground-on-new-multi-specialty-medical-office-building-on-pih-health-whittier-hospital-campus/",
+   "views": 92,
+   "ai": 0,
+   "organic": 20,
+   "linkedinAds": 0
+  },
+  {
+   "title": "Welcoming our new project executive",
+   "path": "/blog/boldt-real-estate-welcomes-stuart-armstrong-as-project-executive/",
+   "views": 68,
+   "ai": 0,
+   "organic": 29,
+   "linkedinAds": 0
+  },
+  {
+   "title": "5 controversial realities about healthcare real estate",
+   "path": "/blog/5-controversial-realities-about-healthcare-real-estate-and-how-to-navigate-them/",
+   "views": 44,
+   "ai": 0,
+   "organic": 18,
+   "linkedinAds": 0
+  },
+  {
+   "title": "Innovative PFA alternatives unlock health capital",
+   "path": "/blog/innovative-pfa-alternatives-unlock-health-capital/",
+   "views": 37,
+   "ai": 0,
+   "organic": 5,
+   "linkedinAds": 0
+  }
+ ],
+ "topLanding": [
+  {
+   "page": "/boldt-real-estate",
+   "sessions": 39205,
+   "engaged": 10446,
+   "keyEvents": 1128
+  },
+  {
+   "page": "/blog/2026-healthcare-real-estate-outlook",
+   "sessions": 5220,
+   "engaged": 1328,
+   "keyEvents": 850
+  },
+  {
+   "page": "/",
+   "sessions": 3385,
+   "engaged": 1147,
+   "keyEvents": 316
+  },
+  {
+   "page": "/lp-lowest-responsible-cost",
+   "sessions": 2312,
+   "engaged": 304,
+   "keyEvents": 4
+  },
+  {
+   "page": "/the-cost-certainty-imperative-...",
+   "sessions": 893,
+   "engaged": 103,
+   "keyEvents": 1
+  },
+  {
+   "page": "/contact",
+   "sessions": 846,
+   "engaged": 840,
+   "keyEvents": 1585
+  },
+  {
+   "page": "(not set)",
+   "sessions": 672,
+   "engaged": 55,
+   "keyEvents": 60
+  },
+  {
+   "page": "/blog",
+   "sessions": 702,
+   "engaged": 476,
+   "keyEvents": 288
+  },
+  {
+   "page": "/about",
+   "sessions": 472,
+   "engaged": 324,
+   "keyEvents": 276
+  },
+  {
+   "page": "/leadership",
+   "sessions": 261,
+   "engaged": 175,
+   "keyEvents": 70
+  }
+ ],
+ "messagingThemes": [
+  {
+   "theme": "Cost certainty",
+   "impr": 55411,
+   "clicks": 1028,
+   "ctr": 1.86,
+   "ads": 10
+  },
+  {
+   "theme": "Strategic insight (campus, outpatient)",
+   "impr": 8344,
+   "clicks": 149,
+   "ctr": 1.79,
+   "ads": 1
+  },
+  {
+   "theme": "Market outlook (thought leadership)",
+   "impr": 296950,
+   "clicks": 4704,
+   "ctr": 1.58,
+   "ads": 18
+  },
+  {
+   "theme": "Brand promise (Boldt difference, impact)",
+   "impr": 130742,
+   "clicks": 1374,
+   "ctr": 1.05,
+   "ads": 13
+  },
+  {
+   "theme": "Financing and ownership models",
+   "impr": 72569,
+   "clicks": 464,
+   "ctr": 0.64,
+   "ads": 8
+  },
+  {
+   "theme": "Direct ask (meet, read, contact)",
+   "impr": 43234,
+   "clicks": 235,
+   "ctr": 0.54,
+   "ads": 6
+  }
+ ],
+ "topLinkedInAds": [
+  {
+   "title": "View Our 2026 Healthcare Real Estate Outlook",
+   "campaign": "Awareness | Healthcare | Healthcare Real Estate Outlook - Static Ads | 2026",
+   "impr": 12549,
+   "clicks": 248,
+   "ctr": 1.98
+  },
+  {
+   "title": "View Our 2026 Healthcare Real Estate Outlook",
+   "campaign": "Awareness | Healthcare | Healthcare Real Estate Outlook - Static Ads | 2026",
+   "impr": 10423,
+   "clicks": 192,
+   "ctr": 1.84
+  },
+  {
+   "title": "View Our 2026 Healthcare Real Estate Outlook",
+   "campaign": "Awareness | Healthcare | Healthcare Real Estate Outlook - Static Ads | 2026",
+   "impr": 10588,
+   "clicks": 184,
+   "ctr": 1.74
+  },
+  {
+   "title": "View Our 2026 Healthcare Real Estate Outlook",
+   "campaign": "Awareness | Healthcare | Healthcare Real Estate Outlook - Static Ads | 2026",
+   "impr": 7024,
+   "clicks": 111,
+   "ctr": 1.58
+  }
+ ],
+ "searchDemand": {
+  "window": "Sep 1 to Oct 31",
+  "terms": [
+   {
+    "term": "healthcare solution providers",
+    "clicks": 82,
+    "impr": 142
+   },
+   {
+    "term": "healthcare management companies",
+    "clicks": 29,
+    "impr": 47
+   },
+   {
+    "term": "commercial real estate loans",
+    "clicks": 9,
+    "impr": 14
+   },
+   {
+    "term": "healthcare software companies",
+    "clicks": 7,
+    "impr": 12
+   },
+   {
+    "term": "investment options for companies",
+    "clicks": 5,
+    "impr": 5
+   },
+   {
+    "term": "start your own medical practice pdf",
+    "clicks": 5,
+    "impr": 22
+   },
+   {
+    "term": "commercial real estate listings near me",
+    "clicks": 3,
+    "impr": 3
+   }
+  ]
+ },
+ "buyingIntent": [
+  {
+   "name": "Encompass Health",
+   "domain": "encompasshealth.com",
+   "engagements": 80,
+   "contactPage": true,
+   "last": "2026-10-02",
+   "newThisMonth": false
+  },
+  {
+   "name": "Columbia University Irving Medical Center",
+   "domain": "columbia.edu",
+   "engagements": 47,
+   "contactPage": true,
+   "last": "2026-10-30",
+   "newThisMonth": false
+  },
+  {
+   "name": "RWJBarnabas Health",
+   "domain": "rwjbh.org",
+   "engagements": 15,
+   "contactPage": true,
+   "last": "2026-10-16",
+   "newThisMonth": false
+  },
+  {
+   "name": "Suburban Hospital",
+   "domain": "hopkinsmedicine.org",
+   "engagements": 5,
+   "contactPage": true,
+   "last": "2026-10-16",
+   "newThisMonth": false
+  },
+  {
+   "name": "Goshen Health",
+   "domain": "goshenhealth.com",
+   "engagements": 99,
+   "contactPage": false,
+   "last": "2026-09-14",
+   "newThisMonth": false
+  },
+  {
+   "name": "Dorothea Dix Hospital",
+   "domain": "nc.us",
+   "engagements": 70,
+   "contactPage": false,
+   "last": "2026-10-26",
+   "newThisMonth": false
+  },
+  {
+   "name": "HCA Healthcare",
+   "domain": "hcahealthcare.com",
+   "engagements": 59,
+   "contactPage": false,
+   "last": "2026-10-17",
+   "newThisMonth": false
+  },
+  {
+   "name": "WellSpan Health",
+   "domain": "wellspan.org",
+   "engagements": 57,
+   "contactPage": false,
+   "last": "2026-10-01",
+   "newThisMonth": false
+  },
+  {
+   "name": "Weill Cornell Medicine",
+   "domain": "cornell.edu",
+   "engagements": 52,
+   "contactPage": false,
+   "last": "2026-10-31",
+   "newThisMonth": false
+  },
+  {
+   "name": "Mankato Clinic",
+   "domain": "mankatoclinic.com",
+   "engagements": 50,
+   "contactPage": false,
+   "last": "2026-09-30",
+   "newThisMonth": false
+  },
+  {
+   "name": "Putnam County Hospital",
+   "domain": "ga.us",
+   "engagements": 49,
+   "contactPage": false,
+   "last": "2026-10-16",
+   "newThisMonth": false
+  },
+  {
+   "name": "Bradley Hospital",
+   "domain": "brownhealth.org",
+   "engagements": 47,
+   "contactPage": false,
+   "last": "2026-10-23",
+   "newThisMonth": false
+  }
+ ],
+ "newThisMonth": [
+  {
+   "name": "Baptist Health",
+   "domain": "baptisthealthal.com",
+   "channels": [
+    "Website visit"
+   ]
+  },
+  {
+   "name": "Halifax Health",
+   "domain": "halifaxhealth.org",
+   "channels": [
+    "Google ad click",
+    "Website visit"
+   ]
+  },
+  {
+   "name": "Methodist Hospitals",
+   "domain": "methodisthospitals.org",
+   "channels": [
+    "Website visit"
+   ]
+  },
+  {
+   "name": "Signature Healthcare",
+   "domain": "signature-healthcare.org",
+   "channels": [
+    "Google ad click",
+    "Website visit"
+   ]
+  },
+  {
+   "name": "Singing River Health System",
+   "domain": "singingriverhealthsystem.com",
+   "channels": [
+    "Website visit"
+   ]
+  },
+  {
+   "name": "St. Louis Children's Hospital",
+   "domain": "stlouischildrens.org",
+   "channels": [
+    "Google ad click",
+    "Website visit"
+   ]
+  },
+  {
+   "name": "Bothwell Regional Health Center",
+   "domain": "brhc.org",
+   "channels": [
+    "LinkedIn ad click"
+   ]
+  },
+  {
+   "name": "Allegiance Health Management",
+   "domain": "ahmgt.com",
+   "channels": [
+    "Bing ad click",
+    "Website visit"
+   ]
+  },
+  {
+   "name": "Crossover Health",
+   "domain": "crossoverhealth.com",
+   "channels": [
+    "Website visit"
+   ]
+  },
+  {
+   "name": "Mountain View Hospital",
+   "domain": "mtnviewhospital.com",
+   "channels": [
+    "Website visit"
+   ]
+  }
+ ],
+ "hotCount": 75,
+ "notes": "Company names only. Search demand is from paid search terms until Search Console is connected."
+}
