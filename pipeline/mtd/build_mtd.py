@@ -272,6 +272,9 @@ out = {"month": M, "through": THRU, "asOf": dt.date.today().isoformat(), "newCou
        "domainNote": "Parent and child companies that share one website domain, such as a health system and its hospitals, can't always be told apart, so their activity may be combined. We're working through this with Factors.",
        "missingFactors": [c["domain"] for c in companies if c["domain"] not in FA], "companies": companies,
        "cur": cur, "curNote": "This month so far for companies in the last monthly report: [website sessions, LinkedIn ad clicks, email clicks, Google or Bing ad visits]."}
+# Engaged companies by month (counts only) ride along in mtd.json, which the Monday run commits, so the Leads chart stays current.
+sys.path.insert(0, os.path.join(SITE, "scripts")); from engaged_monthly import summary as _eng_summary
+out["engaged"] = _eng_summary(HIST)
 json.dump(out, open(os.path.join(SITE, "public", "data", "mtd.json"), "w"), separators=(",", ":"), ensure_ascii=False)
 if FINAL:
     for r in active:
@@ -282,6 +285,8 @@ if FINAL:
     ORGS.update(roots=sorted(ROOTS), names={k: sorted(v) for k, v in NAMES.items()}, prefix={k: sorted(v) for k, v in PREF.items()})
     json.dump(ORGS, open(S("orgs.json"), "w"), separators=(",", ":"))
 json.dump(lookup, open(os.path.join(HERE, "in", M, "lookup.json"), "w"), indent=1)
+if FINAL:  # keep the Engaged companies month-over-month file in step with history
+    import subprocess; subprocess.run([sys.executable, os.path.join(SITE, "scripts", "engaged_monthly.py")], check=False)
 print(M, "through", THRU, "| engaged", len(active), "| new", len(new), "| listed", len(companies), "| without Factors detail", len(out["missingFactors"]), "| finalized" if FINAL else "")
 if lookup["domains"] or lookup["names"]: print("LOOKUP NEEDED (HubSpot companies):", json.dumps(lookup))
 print("new:", [c["name"] for c in companies])

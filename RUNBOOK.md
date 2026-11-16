@@ -246,3 +246,7 @@ After the marketing report is saved, write the sales write-up for the month just
 3. Add the month to the front of `months` in `public/data/sales-index.json`. Commit both with the marketing data ("Report data for <Month> YYYY").
 4. The same golden rules apply: healthcare only, no setup or data-quality talk, no em dashes, plain wording. Write about the team's activity and follow-up in a constructive way; name reps only with numbers, never with judgments.
 5. Add a "Sales dashboard" part to the data health note: anything in `health`, months where a rep shows no logged activity, and any gap between the write-up figures and the live page.
+
+### Engaged companies, month over month (Leads, top)
+- Healthcare organizations engaged each month (website visit, LinkedIn, Google or Bing ad click, email click), back to November 2024, split into new (no engagement in the prior 12 months, from November 2025 on) and returning, with channel counts on hover and in a table. Last 12 months by default; "All months" shows the full history. The current month so far comes from mtd.json (activeCount, newCount).
+- Data: `scripts/engaged_monthly.py` summarizes `pipeline/mtd/state/history.json` (counts only) into `public/data/engaged.json`. `build_mtd.py` also embeds the same summary in `mtd.json` as `engaged` on every run, so the Monday refresh keeps it current; the page uses whichever is newer.

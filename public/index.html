@@ -165,6 +165,8 @@ tr.future td{color:var(--muted)}
 .gb-m:hover .gb-tip,.gb-m:focus .gb-tip{opacity:1;transform:translateX(0)}
 @media (prefers-reduced-motion:reduce){.gb-bars i{animation:none;transition:none}}
 .sb .gb-bars i{display:none}
+.gb-l small{font-size:10.5px;font-weight:500;opacity:.8}.sb .gb-l{flex-direction:column;line-height:1.1;text-align:center}
+@media (max-width:700px){.gb.dense .sb-v{display:none}.gb.dense .gb-l{font-size:9.5px;letter-spacing:-.02em}.gb.dense .gb-l small{display:none}}
 .sb-avg{position:absolute;left:34px;right:0;border-top:2px dashed var(--gold);z-index:2;pointer-events:none}.sb-avg span{position:absolute;right:0;top:-20px;font-size:11.5px;font-weight:700;color:var(--gold);background:var(--surface);padding:0 4px;border-radius:4px}
 .sb-col{width:min(46px,62%);display:flex;flex-direction:column-reverse;border-radius:5px 5px 0 0;overflow:hidden;transform-origin:bottom;animation:gbGrow .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--k)*45ms);transition:transform .2s,opacity .2s,filter .2s}
 .sb-col b{display:block;transition:filter .2s}
@@ -523,16 +525,18 @@ function gbars({labels,series,h=240,totals=null,totalLabel="Total",note=""}){
     <div class="gb-bars">${series.map(s=>`<i style="height:${((s.values[i]||0)/mx*100).toFixed(2)}%;background:${s.color};--k:${i}"></i>`).join("")}</div><div class="gb-l">${esc(lb)}</div></div>`).join("")}</div></div>`;}
 // One stacked bar per month: height is the month's total, split by each source's share of that month's source counts.
 // The tooltip shows the real counts (a company can count under more than one source, so they can add up to more than the total).
-function sbars({labels,series,totals,h=240,totalLabel="Total",note="",avg=null}){
-  const mx=niceMax(Math.max(1,...totals)*1.12), nt=ticks(mx);
+function sbars({labels,series,totals,h=240,totalLabel="Total",note="",avg=null,hideZero=false,extra=null,faded=null,axis=null}){
+  const raw=Math.max(1,...totals)*1.12; let mx=niceMax(raw);
+  if(mx>raw*1.5){const st=Math.pow(10,Math.floor(Math.log10(raw)))/2;mx=Math.ceil(raw/st)*st;}
+  const nt=ticks(mx);
   const avgL=avg==null?"":`<div class="sb-avg" style="bottom:calc(34px + (100% - 34px) * ${(avg/mx).toFixed(4)})"><span>Average ${N(avg)}</span></div>`;
   const grid=Array.from({length:nt+1},(_,k)=>`<span style="bottom:${(k/nt*100).toFixed(2)}%"><b>${N(mx*k/nt)}</b></span>`).join("");
-  return `<div class="gb sb" style="--h:${h}px"><div class="gb-grid">${grid}</div>${avgL}<div class="gb-cols" style="--n:${labels.length}">${labels.map((lb,i)=>{
+  return `<div class="gb sb${labels.length>12?" dense":""}" style="--h:${h}px"><div class="gb-grid">${grid}</div>${avgL}<div class="gb-cols" style="--n:${labels.length}">${labels.map((lb,i)=>{
     const t=totals[i]||0, sc=sum(series.map(s=>s.values[i]||0)), hp=t/mx*100;
     const segs=series.map(s=>[s,(s.values[i]||0)]).filter(x=>x[1]).map(([s,v])=>`<b style="flex:${v};background:${s.color}" title="${esc(s.name)}: ${N(v)}"></b>`).join("");
     return `<div class="gb-m${i>=labels.length/2?" gb-r":""}" tabindex="0" aria-label="${esc(lb)}: ${totalLabel} ${N(t)}; ${series.map(s=>`${s.name} ${s.values[i]||0}`).join(", ")}">
-    <div class="gb-tip"><b>${esc(lb)} · ${totalLabel} ${N(t)}${avg!=null&&t?`<small style="display:block;font-weight:500;opacity:.8">${t>=avg?`${N(t-avg)} above`:`${N(avg-t)} below`} the ${N(avg)} average</small>`:""}</b>${series.map(s=>`<span><span><i style="background:${s.color}"></i>${esc(s.name)}</span>${N(s.values[i]||0)}</span>`).join("")}${note&&sc>t?`<em>${esc(note)}</em>`:""}</div>
-    <div class="gb-bars" style="position:relative">${t?`<div class="sb-col" style="height:${hp.toFixed(2)}%;--k:${i}">${segs}</div><span class="sb-v" style="bottom:${hp.toFixed(2)}%">${N(t)}</span>`:""}</div><div class="gb-l">${esc(lb)}</div></div>`;}).join("")}</div></div>`;}
+    <div class="gb-tip"><b>${esc(lb)} · ${totalLabel} ${N(t)}${avg!=null&&t?`<small style="display:block;font-weight:500;opacity:.8">${t>=avg?`${N(t-avg)} above`:`${N(avg-t)} below`} the ${N(avg)} average</small>`:""}</b>${series.filter(s=>!hideZero||(s.values[i]||0)).map(s=>`<span><span><i style="background:${s.color}"></i>${esc(s.name)}</span>${N(s.values[i]||0)}</span>`).join("")}${extra?extra(i):""}${note&&sc>t?`<em>${esc(note)}</em>`:""}</div>
+    <div class="gb-bars" style="position:relative">${t?`<div class="sb-col" style="height:${hp.toFixed(2)}%;--k:${i}${faded&&faded[i]?";opacity:.55":""}">${segs}</div><span class="sb-v" style="bottom:${hp.toFixed(2)}%">${N(t)}</span>`:""}</div><div class="gb-l">${axis?axis[i]:esc(lb)}</div></div>`;}).join("")}</div></div>`;}
 const legend=items=>`<div class="legend">${items.map(i=>`<span><i class="${i.box?'box':''} ${i.dash?'dash':''}" style="background:${i.color}${i.dc?`;border-top-color:${i.dc}`:""}"></i>${i.name}</span>`).join("")}</div>`;
 
 /* ---------- report month ---------- */
@@ -687,12 +691,38 @@ function defMqlPanel(){
   h+=orPanel();
   return h;
 }
+/* ---------- Engaged companies, month over month (data/engaged.json from history; this month so far from mtd.json) ---------- */
+let ENGM=null, ENG_ALL=false;
+function engPanel(){
+  if(MTDATA&&MTDATA.engaged&&MTDATA.engaged.months&&(!ENGM||MTDATA.engaged.through>=ENGM.through))ENGM=MTDATA.engaged;
+  if(!ENGM||!ENGM.months||!ENGM.months.length)return "";
+  const R=ENGM.months.map(r=>({...r})), now=MTDATA&&MTDATA.month>R[R.length-1].m&&MTDATA.activeCount!=null;
+  if(now)R.push({m:MTDATA.month,engaged:MTDATA.activeCount,new:MTDATA.newCount,returning:MTDATA.activeCount-MTDATA.newCount,soFar:1});
+  const all=R.length, R2=ENG_ALL?R:R.slice(-13-(now?1:0)); R.length=0; R.push(...R2);
+  const lab=R.map(r=>`${M()[+r.m.slice(5,7)-1]} ${r.m.slice(0,4)}${r.soFar?" (so far)":""}`), ax=R.map((r,i)=>`${M()[+r.m.slice(5,7)-1]}${r.soFar?"*":""}${i===0||r.m.endsWith("-01")?`<br><small>${r.m.slice(0,4)}</small>`:""}`);
+  const last=ENGM.months[ENGM.months.length-1], prev=ENGM.months[ENGM.months.length-2];
+  const yr=last.m.slice(0,4), Y=ENGM.months.filter(r=>r.m.startsWith(yr)), avgY=Y.length?sum(Y.map(r=>r.engaged))/Y.length:null;
+  const chg=prev?last.engaged-prev.engaged:null;
+  const series=[{name:"Returning",color:css("--navy"),values:R.map(r=>r.returning??0)},{name:"New",color:css("--gold"),values:R.map(r=>r.new??0)},{name:"Engaged (before new vs returning is tracked)",color:"#9AA8B0",values:R.map(r=>r.new==null?r.engaged:0)}];
+  const chn=[["w","Website"],["l","LinkedIn ad clicks"],["s","Google or Bing ad visits"],["e","Email clicks"]];
+  const extra=i=>{const r=R[i];if(r.soFar)return `<em>${MONTHS_LONG[+r.m.slice(5,7)-1]} so far, through ${fdShort(MTDATA.through)}</em>`;
+    return `<em style="opacity:1;margin-top:6px">${chn.filter(([k])=>r[k]).map(([k,n])=>`${n}: ${N(r[k])}`).join("<br>")}</em>`;};
+  const rows=[...R].reverse().map(r=>`<tr><td class="l">${esc(mlong(r.m))}${r.soFar?` <span class="note" style="margin:0">(so far)</span>`:""}</td><td><b>${N(r.engaged)}</b></td><td>${r.new==null?"–":N(r.new)}</td><td>${r.returning==null?"–":N(r.returning)}</td>${chn.map(([k])=>`<td>${r.soFar?"–":N(r[k]||0)}</td>`).join("")}</tr>`).join("");
+  return `<div class="panel" id="engaged-companies"><h3>Engaged companies, month over month</h3>
+    <p class="sub">${esc(ENGM.definition)} ${N(last.engaged)} in ${MONTHS_LONG[+last.m.slice(5,7)-1]}${chg!=null?` (${chg>=0?"+":""}${N(chg)} from ${MONTHS_LONG[+prev.m.slice(5,7)-1]})`:""}${avgY!=null?`, an average of ${N(avgY)} a month in ${yr}`:""}. Hover over a month for its channels.</p>
+    ${legend(series.filter(x=>x.values.some(v=>v)).map(x=>({name:x.name,color:x.color,box:1})))}
+    <div class="seg" role="group" aria-label="Months shown" style="margin:6px 0 4px"><button type="button" data-engr="12" class="${ENG_ALL?"":"on"}">Last 12 months</button><button type="button" data-engr="all" class="${ENG_ALL?"on":""}">All months (since ${esc(mlong(ENGM.first))})</button></div>
+    ${sbars({labels:lab,series,totals:R.map(r=>r.engaged),h:260,totalLabel:"Engaged",hideZero:true,extra,faded:R.map(r=>!!r.soFar),axis:ax})}
+    <details class="or-more" style="margin-top:12px"><summary>Month-by-month table</summary><div class="tbl-wrap"><table><thead><tr><th class="l">Month</th><th>Engaged</th><th>New</th><th>Returning</th>${chn.map(([,n])=>`<th>${n}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div></details>
+    <p class="sec-note">${esc(ENGM.newRule)} ${esc(ENGM.coverage)} A company can engage through more than one channel, so the channel counts add up to more than the total.${now?` * ${MONTHS_LONG[+MTDATA.month.slice(5,7)-1]} is month to date.`:""}</p></div>`;
+}
 /* ---------- MQL follow-up: speed to lead and overdue "marketing lead #1" tasks (live from HubSpot, hs-leadtasks) ---------- */
 let LT=null, LT_ERR="", LT_TRY=0;
 function ltPanel(){return `<div class="panel" id="mql-follow-up">${ltBody()}</div>`;}
 function ltCopy(b){const u=`${location.origin}/#leads/mql-follow-up`;const ok=()=>{b.textContent="Link copied";setTimeout(()=>{b.textContent="Copy link";},2000);};
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(ok,()=>prompt("Copy this link:",u));else prompt("Copy this link:",u);}
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest(".lt-link");if(b)ltCopy(b);});
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-engr]");if(!b)return;const v=b.dataset.engr==="all";if(v===ENG_ALL)return;ENG_ALL=v;const el=document.getElementById("engaged-companies");if(el)el.outerHTML=engPanel();});
 function ltLoad(fresh){fetch(`/api/hs-leadtasks${fresh?"?fresh=1":""}`).then(r=>r.json()).then(j=>{
     if(!j.ready){LT_ERR="This turns on when HubSpot is connected.";} else if(!j.ok){LT_ERR=(j.error||"Couldn't read follow-up tasks from HubSpot.")+(j.detail?` (${j.detail})`:"");} else {LT=j;LT_ERR="";}
     if(LT&&LT.scan&&!LT.scan.complete&&LT_TRY<20){LT_TRY++;setTimeout(()=>ltLoad(),2500);}
@@ -1215,6 +1245,7 @@ R.leads=()=>{
   const sqlY=sum(L.sql.filter(x=>x!=null)), sql25=sum(D.sql2025.slice(0,SQLN()));
   let h=head("Leads",`Healthcare MQLs and SQLs, when and where companies engage, the full journey of SQL companies, and healthcare companies on the site from every source. New MQLs follow our engagement definition.`);
   const mqlSql={v:P(sqlY/sum(s.mql.slice(0,SQLN())),1),d:`Year to date. 2025: ${P(D.roiAnnual["2025"].mqlSql,1)}`};
+  h+=engPanel();
   if(D.defMql) h+=defMqlPanel();
   h+=ltPanel();
   if(D.trends) h+=trendsSection();
@@ -1707,6 +1738,7 @@ VIEW.addEventListener("click",async e=>{if(!EDITING)return;const b=e.target.clos
 const getJSON=u=>fetch(u,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json();}).then(j=>{if(j&&j.ok===false)throw 0;return j;});
 /* Monthly snapshots live at /data/YYYY-MM.json with a list in /data/index.json; data.json is the fallback. */
 async function loadMonth(m){try{boot(await getJSON(`data/${m}.json`),m);return true;}catch(e){return false;}}
+getJSON("data/engaged.json").then(j=>{if(!j||!j.months)return;ENGM=j;if(D&&current()==="leads"){const y=scrollY;render();scrollTo(0,y);}}).catch(()=>{});
 getJSON("data/mtd.json").then(j=>{if(!j||!j.month)return;MTDATA=j;if(D&&current()==="leads"){const y=scrollY;render();scrollTo(0,y);}}).catch(()=>{});
 (async()=>{
   let months=[];

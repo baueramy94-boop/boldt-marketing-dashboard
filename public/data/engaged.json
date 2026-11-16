@@ -1,0 +1,249 @@
+{
+"through": "2026-10",
+"first": "2024-11",
+"months": [
+{
+"m": "2024-11",
+"engaged": 13,
+"new": null,
+"returning": null,
+"w": 0,
+"l": 13,
+"e": 0,
+"s": 0
+},
+{
+"m": "2024-12",
+"engaged": 2,
+"new": null,
+"returning": null,
+"w": 0,
+"l": 2,
+"e": 0,
+"s": 0
+},
+{
+"m": "2025-01",
+"engaged": 4,
+"new": null,
+"returning": null,
+"w": 0,
+"l": 4,
+"e": 0,
+"s": 0
+},
+{
+"m": "2025-02",
+"engaged": 2,
+"new": null,
+"returning": null,
+"w": 0,
+"l": 1,
+"e": 1,
+"s": 0
+},
+{
+"m": "2025-03",
+"engaged": 5,
+"new": null,
+"returning": null,
+"w": 0,
+"l": 2,
+"e": 3,
+"s": 0
+},
+{
+"m": "2025-04",
+"engaged": 7,
+"new": null,
+"returning": null,
+"w": 0,
+"l": 4,
+"e": 3,
+"s": 0
+},
+{
+"m": "2025-05",
+"engaged": 12,
+"new": null,
+"returning": null,
+"w": 0,
+"l": 6,
+"e": 6,
+"s": 0
+},
+{
+"m": "2025-06",
+"engaged": 5,
+"new": null,
+"returning": null,
+"w": 0,
+"l": 2,
+"e": 3,
+"s": 0
+},
+{
+"m": "2025-07",
+"engaged": 23,
+"new": null,
+"returning": null,
+"w": 0,
+"l": 13,
+"e": 10,
+"s": 0
+},
+{
+"m": "2025-08",
+"engaged": 31,
+"new": null,
+"returning": null,
+"w": 0,
+"l": 28,
+"e": 3,
+"s": 0
+},
+{
+"m": "2025-09",
+"engaged": 20,
+"new": null,
+"returning": null,
+"w": 0,
+"l": 14,
+"e": 6,
+"s": 0
+},
+{
+"m": "2025-10",
+"engaged": 20,
+"new": null,
+"returning": null,
+"w": 0,
+"l": 4,
+"e": 17,
+"s": 0
+},
+{
+"m": "2025-11",
+"engaged": 3,
+"new": 3,
+"returning": 0,
+"w": 0,
+"l": 0,
+"e": 3,
+"s": 0
+},
+{
+"m": "2025-12",
+"engaged": 13,
+"new": 8,
+"returning": 5,
+"w": 0,
+"l": 0,
+"e": 13,
+"s": 0
+},
+{
+"m": "2026-01",
+"engaged": 31,
+"new": 22,
+"returning": 9,
+"w": 0,
+"l": 10,
+"e": 21,
+"s": 0
+},
+{
+"m": "2026-02",
+"engaged": 11,
+"new": 6,
+"returning": 5,
+"w": 0,
+"l": 4,
+"e": 7,
+"s": 0
+},
+{
+"m": "2026-03",
+"engaged": 86,
+"new": 64,
+"returning": 22,
+"w": 60,
+"l": 14,
+"e": 14,
+"s": 37
+},
+{
+"m": "2026-04",
+"engaged": 107,
+"new": 61,
+"returning": 46,
+"w": 87,
+"l": 4,
+"e": 18,
+"s": 68
+},
+{
+"m": "2026-05",
+"engaged": 125,
+"new": 55,
+"returning": 70,
+"w": 70,
+"l": 39,
+"e": 14,
+"s": 53
+},
+{
+"m": "2026-06",
+"engaged": 140,
+"new": 57,
+"returning": 83,
+"w": 96,
+"l": 49,
+"e": 7,
+"s": 64
+},
+{
+"m": "2026-07",
+"engaged": 175,
+"new": 57,
+"returning": 118,
+"w": 119,
+"l": 67,
+"e": 7,
+"s": 60
+},
+{
+"m": "2026-08",
+"engaged": 238,
+"new": 83,
+"returning": 155,
+"w": 179,
+"l": 62,
+"e": 13,
+"s": 92
+},
+{
+"m": "2026-09",
+"engaged": 158,
+"new": 39,
+"returning": 119,
+"w": 118,
+"l": 38,
+"e": 6,
+"s": 68
+},
+{
+"m": "2026-10",
+"engaged": 206,
+"new": 54,
+"returning": 152,
+"w": 139,
+"l": 68,
+"e": 15,
+"s": 75
+}
+],
+"definition": "Healthcare companies in HubSpot that engaged in the month: a website visit, a LinkedIn, Google or Bing ad click, or an email click. Counted by organization.",
+"newRule": "New = no engagement in the 12 months before. Shown from the first month with a full 12 months of history before it.",
+"coverage": "LinkedIn ad clicks and email clicks go back to November 2024. Website visits and Google ad clicks are counted from March 16, 2026, and Bing ad clicks from their September 2026 launch, so earlier months show fewer companies."
+}
