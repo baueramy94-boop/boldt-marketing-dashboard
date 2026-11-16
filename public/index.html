@@ -607,8 +607,8 @@ function summaryParts(){
     h+=`<div class="panel kpi"><div class="l">MQLs year to date</div><div class="v num">${N(s.ytd)}</div>
       <div class="bar"><i style="width:${Math.min(100,s.ytd/s.goalsYTD.o*100)}%"></i><u style="left:${s.goalsYTD.c/s.goalsYTD.o*100}%"></u><u style="left:${s.goalsYTD.b/s.goalsYTD.o*100}%"></u></div>
       <div class="bar-labels"><span>${P(pc,0)} of conservative goal (${s.goalsYTD.c})</span><span>${s.goalsYTD.o}</span></div></div>`;
-    h+=kpi(`MQLs in ${RM()}${SOFAR()}`,N(s.oct),`Monthly goal ${s.goalMo} (conservative)`);
-    if(D.defMql) h+=kpi(`New MQLs by engagement, ${RM()}`,`${N(D.defMql.newOct)}`,`${D.defMql.ytdNew!=null?N(D.defMql.ytdNew)+" new in "+(D.year||2026)+" · ":""}${N(D.defMql.engagedYtd??D.defMql.total12)} engaged in ${D.year||2026}`);
+    h+=kpi(`New MQLs in ${RM()}${SOFAR()}`,N(s.oct),`Monthly goal ${s.goalMo} (conservative)`);
+    if(D.defMql) h+=kpi(`All Engaged Companies, ${RM()}`,`${N(D.defMql.activeOct??D.defMql.newOct)}`,`${N(D.defMql.newOct)} new by engagement · ${D.defMql.ytdNew!=null?N(D.defMql.ytdNew)+" new in "+(D.year||2026)+" · ":""}${N(D.defMql.engagedYtd??D.defMql.total12)} engaged in ${D.year||2026}`);
     h+=kpi("Cost per MQL, YTD",$(c.all),`2025: ${$(D.roiAnnual["2025"].cpMql)}. Ad spend per MQL ${$(c.ad)}`);
     h+=kpi("SQLs year to date",N(sqlY),`${P(sqlY/D.leads.sqlGoal,0)} of the ${D.leads.sqlGoal} goal. Same months 2025: ${sql25}`);
   }
