@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blog Draft Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap">
+<style>
+/* Blog draft review page (review.html?d=<draft id>): read the draft, comment by section, request or make edits, ask questions,
+   approve. Same password gate and colors as the dashboard. Data: GET/POST /api/blog, blog-ask-background, blog-revise-background. */
+:root{
+  --navy:#033D51; --yellow:#EBBC4E; --gold:#D19000; --olive:#70924C;
+  --bg:#F2F4F5; --surface:#FFFFFF; --ink:#0F1C22; --muted:#5A6870; --line:#DCE1E4; --soft:#E9EDEF; --link:#1F5FAE;
+  --good:#296C51; --warn:#B87A00; --bad:#B23B2A; --good-bg:#E3F0E9; --warn-bg:#FBF0D6; --bad-bg:#F8E3DF; --hl:#FFF6D9;
+  --f-display:"Archivo","Arial Narrow",Arial,sans-serif; --f-body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif; --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A171D; --surface:#102229; --ink:#E7EDF0; --muted:#97A8B0; --line:#22404B; --soft:#16303A; --link:#8AB4F8;
+  --good:#6CC096; --warn:#EBBC4E; --bad:#EE8773; --good-bg:#14352A; --warn-bg:#3A2F12; --bad-bg:#3C1E19; --hl:#3A3112; --navy:#04394B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A171D; --surface:#102229; --ink:#E7EDF0; --muted:#97A8B0; --line:#22404B; --soft:#16303A; --link:#8AB4F8;
+  --good:#6CC096; --warn:#EBBC4E; --bad:#EE8773; --good-bg:#14352A; --warn-bg:#3A2F12; --bad-bg:#3C1E19; --hl:#3A3112; --navy:#04394B; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.mast{background:var(--navy);color:#fff;border-bottom:3px solid var(--yellow);position:sticky;top:0;z-index:5}
+.mast-in{max-width:1320px;margin:0 auto;padding:12px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.brand{font-family:var(--f-display);font-weight:800;letter-spacing:.06em;font-size:15px;display:flex;gap:10px;align-items:center}
+.brand span{font-weight:500;letter-spacing:.02em;opacity:.85}
+.mast a{color:#fff}
+.wrap{max-width:1320px;margin:0 auto;padding:18px 16px 60px;display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:18px;align-items:start}
+@media (max-width:980px){.wrap{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
+.side{display:grid;gap:14px;position:sticky;top:70px;max-height:calc(100vh - 84px);overflow:auto}
+@media (max-width:980px){.side{position:static;max-height:none;overflow:visible}}
+h1,h2,h3{font-family:var(--f-display);line-height:1.2}
+.chip{display:inline-flex;align-items:center;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap;background:var(--soft);color:var(--ink)}
+.chip.good{background:var(--good-bg);color:var(--good)}.chip.warn{background:var(--warn-bg);color:var(--warn)}.chip.bad{background:var(--bad-bg);color:var(--bad)}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 11px;font:inherit;font-size:13px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.btn:hover{border-color:var(--ink)}.btn:disabled{opacity:.55;cursor:default}
+.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}.btn.go{background:var(--gold);border-color:var(--gold);color:#1b1b1b;font-weight:700}
+.btn.ok.on{background:var(--good);border-color:var(--good);color:#fff}.btn.chg.on{background:var(--warn);border-color:var(--warn);color:#1b1b1b}
+.mast .btn{background:transparent;color:#fff;border-color:rgba(255,255,255,.45)}.mast .btn:hover{border-color:#fff}
+.mast .btn.ok.on{background:var(--good);border-color:var(--good)}.mast .btn.chg.on{background:var(--yellow);border-color:var(--yellow);color:#1b1b1b}
+.note{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+.linkbtn{background:none;border:0;padding:0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:space-between;margin:0 0 12px}
+.bar .btns{display:flex;gap:6px;flex-wrap:wrap}
+.art{font-size:16px;line-height:1.7}
+.art h1{font-size:30px;margin:6px 0 14px}.art h2{font-size:21px;margin:26px 0 8px}.art h3{font-size:16px;margin:16px 0 4px}
+.art p{margin:0 0 12px}.art ul{margin:0 0 12px;padding-left:22px}.art a{color:var(--link);text-underline-offset:2px}
+.sec{position:relative;border-radius:8px;transition:background .2s}.sec.focus{background:var(--hl)}
+.sec-h{display:flex;gap:10px;align-items:baseline;justify-content:space-between}
+.cbtn{flex:none;font-size:12px;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:2px 9px;cursor:pointer;font-family:var(--f-body)}
+.cbtn:hover{color:var(--ink);border-color:var(--ink)}.cbtn b{color:var(--ink)}
+.editing [contenteditable]{outline:1px dashed var(--gold);outline-offset:3px;border-radius:3px}
+.editing [contenteditable]:focus{outline:2px solid var(--gold);background:var(--hl)}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:14px 0}
+.meta div{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px}.meta b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.busy{display:flex;gap:10px;align-items:center;background:var(--hl);border-radius:8px;padding:10px 12px;margin:0 0 12px;font-size:14px}
+.spin{width:18px;height:18px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--navy);animation:sp 1s linear infinite;flex:none}@keyframes sp{to{transform:rotate(360deg)}}
+.side h3{margin:0 0 4px;font-size:16px}
+textarea,input[type=text],select{width:100%;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+textarea{min-height:76px;resize:vertical}
+.cform{display:grid;gap:8px;margin:10px 0 4px}.cform .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.kind{display:flex;gap:12px;font-size:13px}.kind label{display:flex;gap:4px;align-items:center;cursor:pointer}
+.cm{border-top:1px solid var(--line);padding:10px 0}.cm:first-child{border-top:0}
+.cm-h{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}.cm-h b{color:var(--ink)}
+.cm p{margin:4px 0 6px;white-space:pre-wrap;font-size:14px}.cm-a{display:flex;gap:10px;flex-wrap:wrap;font-size:12.5px}
+.cm-a button{background:none;border:0;padding:0;color:var(--muted);cursor:pointer;font:inherit;text-decoration:underline}.cm-a button:hover{color:var(--ink)}
+.cm.res{opacity:.65}.reply{margin:6px 0 0 14px;border-left:2px solid var(--line);padding-left:10px}
+.sec-tag{cursor:pointer;text-decoration:underline dotted}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.qa{border-top:1px solid var(--line);padding:10px 0}.qa-a{background:var(--soft);border-radius:8px;padding:8px 12px;margin:6px 0;font-size:14px}.qa-a p{margin:0 0 8px}.qa-a ul{margin:0 0 8px;padding-left:20px}
+.sg{display:flex;gap:8px;justify-content:space-between;align-items:flex-start;border-top:1px solid var(--line);padding:8px 0;font-size:13.5px}.sg p{margin:2px 0 0}.sg-a{display:flex;gap:6px;flex:none}
+.x{border:1px solid var(--line);background:transparent;border-radius:6px;width:28px;height:28px;font-size:17px;line-height:1;color:var(--muted);cursor:pointer}.x:hover{color:var(--bad);border-color:var(--bad)}
+details summary{cursor:pointer;font-size:13px;color:var(--muted)}
+.err{color:var(--bad)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:8px 14px;border-radius:8px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<header class="mast"><div class="mast-in"><div class="brand">BOLDT <span>Blog Draft Review</span></div><div class="btns" id="mbtns"></div></div></header>
+<main class="wrap" id="app"><div class="panel"><p class="note">Loading the draft…</p></div></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+const ID=new URLSearchParams(location.search).get("d")||"";
+const ME=(()=>{try{const m=document.cookie.match(/(?:^|;\s*)bmd_user=([^;]*)/);return m?decodeURIComponent(m[1]):"";}catch(e){return "";}})();
+let S={d:null,qa:[],cm:[],rv:null,edit:false,sec:"General",kind:"comment",busyQ:false}, T_REF=null, T_QA=null, T_REV=null;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const LINK=/\[([^\]]+)\]\((https?:[^)\s]+)\)/g;
+const md=t=>esc(t).replace(LINK,(m,a,u)=>`<a href="${u}" target="_blank" rel="noopener">${a}</a>`);
+const when=s=>s?new Date(s).toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"";
+const rid=()=>(Date.now().toString(36)+Math.random().toString(36).slice(2,8)).slice(0,16);
+function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("on");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("on"),2200);}
+function copy(t){(navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast("Copied"),()=>prompt("Copy:",t));}
+const post=body=>fetch("/api/blog",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id:ID,...body})}).then(r=>r.json());
+function qaMd(t){const L=esc(t||"").replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>").split("\n");let h="",ul=false;
+  L.forEach(l=>{const m=l.match(/^\s*(?:[-*•]|\d+[.)])\s+(.*)/);if(m){if(!ul){h+="<ul>";ul=true;}h+=`<li>${m[1]}</li>`;}else{if(ul){h+="</ul>";ul=false;}if(l.trim())h+=`<p>${l}</p>`;}});return h+(ul?"</ul>":"");}
+
+async function load(quiet){
+  if(!/^[a-z0-9-]{8,40}$/i.test(ID)){$("#app").innerHTML=`<div class="panel"><p>This review link is missing its draft. Ask for a new link.</p></div>`;return;}
+  try{const j=await (await fetch(`/api/blog?id=${encodeURIComponent(ID)}`,{cache:"no-store"})).json();
+    if(!j.ok||!j.draft||j.draft.status!=="done"){$("#app").innerHTML=`<div class="panel"><p>${j.draft&&j.draft.status==="running"?"This draft is still being written. Refresh in a minute.":"This draft couldn't be found."}</p></div>`;return;}
+    S.d=j.draft;S.qa=j.qa||[];S.cm=j.comments||[];S.rv=j.review||null;
+    if(quiet){if(!S.edit)repaintMain();paintSide();paintMast();return;}
+    paint();
+    const rv=S.d.revising;if(rv&&rv.status==="running")revPoll(rv.rid,Date.parse(rv.at));
+    if(S.qa.some(x=>x.status==="running"))qaPoll(Date.now());
+  }catch(e){if(!quiet)$("#app").innerHTML=`<div class="panel"><p class="err">The draft couldn't be loaded. Refresh to try again.</p></div>`;}
+}
+const busyRev=()=>!!(S.d&&S.d.revising&&S.d.revising.status==="running");
+const secs=()=>["General","Title and intro",...S.d.blog.sections.map(s=>s.h2),"Key takeaways","FAQ","Closing call to action","LinkedIn and email"];
+function paintMast(){const R=S.rv||{};document.title=`Review: ${S.d.blog.title}`;
+  $("#mbtns").innerHTML=`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${R.status?`<span class="chip ${R.status==="approved"?"good":"warn"}">${R.status==="approved"?"Approved":"Changes requested"} by ${esc(R.by)}</span>`:""}
+    <button class="btn ok${R.status==="approved"?" on":""}" data-review="approved">${R.status==="approved"?"Approved ✓":"Approve"}</button>
+    <button class="btn chg${R.status==="changes"?" on":""}" data-review="changes">Request changes</button>
+    <a class="btn" href="/api/blog?id=${esc(ID)}&format=docx">Word</a><button class="btn" data-copylink>Copy link</button><a class="btn" href="/#rnd">Dashboard</a></div>`;}
+function counts(sec){return S.cm.filter(c=>!c.parent&&!c.resolved&&c.section===sec).length;}
+function cbtn(sec){const n=counts(sec);return `<button class="cbtn" data-comment-on="${esc(sec)}" title="Comment on this section">${n?`<b>${n}</b> comment${n===1?"":"s"}`:"+ Comment"}</button>`;}
+function paintArticle(){const d=S.d,b=d.blog,E=S.edit?' contenteditable="true"':"",rv=d.revising;
+  let h=`<div class="bar"><div class="note" style="margin:0">${(d.words||0).toLocaleString()} words · drafted by ${esc(d.by)} ${when(d.finished)}${d.revisedAt?` · updated ${when(d.revisedAt)}${d.revisedNote?`: ${esc(d.revisedNote)}`:""}${d.versionCount?` · <button class="linkbtn" data-undo ${busyRev()||S.edit?"disabled":""}>Undo</button>`:""}`:""}</div>
+    <div class="btns">${S.edit?`<button class="btn" data-edit-cancel>Cancel</button><button class="btn primary" data-edit-save>Save edits</button>`:`<button class="btn" data-edit ${busyRev()?"disabled":""}>Edit text</button>`}</div></div>`;
+  if(rv&&rv.status==="running")h+=`<div class="busy"><span class="spin"></span><div><b>Applying changes: ${esc(rv.note||"")}</b><br><span class="note" style="margin:0">Rewriting the draft and checking it against the website. Usually 1 to 2 minutes.</span></div></div>`;
+  else if(rv&&rv.status==="failed")h+=`<p class="err">${esc(rv.error||"The changes couldn't be applied.")}</p>`;
+  if(S.edit)h+=`<p class="note" style="margin:0 0 10px">Click any text to edit it. Links stay as they are. Save keeps the old version so it can be undone.</p>`;
+  if(b.nameCheck&&b.nameCheck.length)h+=`<p><span class="chip warn">Check names: ${esc(b.nameCheck.join(", "))}</span></p>`;
+  h+=`<article class="art${S.edit?" editing":""}">
+    <div class="sec" data-sec="Title and intro"><div class="sec-h"><h1 data-f="title"${E}>${esc(b.title)}</h1>${S.edit?"":cbtn("Title and intro")}</div>${(b.intro||[]).map((p,i)=>`<p data-f="intro.${i}"${E}>${md(p)}</p>`).join("")}</div>
+    ${b.sections.map((s,k)=>`<div class="sec" data-sec="${esc(s.h2)}"><div class="sec-h"><h2 data-f="s.${k}.h2"${E}>${esc(s.h2)}</h2>${S.edit?"":cbtn(s.h2)}</div>${(s.paragraphs||[]).map((p,i)=>`<p data-f="s.${k}.p.${i}"${E}>${md(p)}</p>`).join("")}${(s.bullets||[]).length?`<ul>${s.bullets.map((x,i)=>`<li data-f="s.${k}.b.${i}"${E}>${md(x)}</li>`).join("")}</ul>`:""}</div>`).join("")}
+    ${(b.keyTakeaways||[]).length?`<div class="sec" data-sec="Key takeaways"><div class="sec-h"><h2>Key takeaways</h2>${S.edit?"":cbtn("Key takeaways")}</div><ul>${b.keyTakeaways.map((x,i)=>`<li data-f="kt.${i}"${E}>${md(x)}</li>`).join("")}</ul></div>`:""}
+    ${(b.faq||[]).length?`<div class="sec" data-sec="FAQ"><div class="sec-h"><h2>Frequently asked questions</h2>${S.edit?"":cbtn("FAQ")}</div>${b.faq.map((f,i)=>`<h3 data-f="faq.${i}.q"${E}>${esc(f.q)}</h3><p data-f="faq.${i}.a"${E}>${md(f.a)}</p>`).join("")}</div>`:""}
+    ${b.cta?`<div class="sec" data-sec="Closing call to action"><div class="sec-h"><span></span>${S.edit?"":cbtn("Closing call to action")}</div><p data-f="cta"${E}><i>${md(b.cta)}</i></p></div>`:""}
+    ${(b.sources||[]).length?`<h2>Sources</h2><ul>${b.sources.map(s=>`<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a></li>`).join("")}</ul>`:""}</article>
+    <div class="meta"><div><b>Meta title</b>${esc(b.metaTitle||"")}</div><div><b>Meta description</b>${esc(b.metaDescription||"")}</div><div><b>Slug</b>/${esc(b.slug||"")}</div><div><b>Suggested photo</b>${esc((b.photo||{}).suggestion||"")}</div></div>
+    <details><summary>LinkedIn post and email</summary><div class="sec" data-sec="LinkedIn and email" style="margin-top:8px"><div class="sec-h"><b>LinkedIn post</b>${cbtn("LinkedIn and email")}</div><p style="white-space:pre-wrap">${esc((b.linkedin||{}).post||"")}</p><p><b>Email subject:</b> ${esc((b.email||{}).subject||"")}</p><p style="white-space:pre-wrap">${esc((b.email||{}).body||"")}</p></div></details>
+    ${(b.reviewQuestions||[]).length?`<details open style="margin-top:10px"><summary>Questions to confirm before publishing</summary><ul>${b.reviewQuestions.map(r=>`<li><b>${esc(r.q)}</b>${r.why?` ${esc(r.why)}`:""}</li>`).join("")}</ul></details>`:""}`;
+  return `<div class="panel" id="art">${h}</div>`;}
+function cmItem(c){const kids=S.cm.filter(x=>x.parent===c.cid),mine=c.by===ME;
+  return `<div class="cm${c.resolved?" res":""}" data-cid="${esc(c.cid)}"><div class="cm-h">${c.kind==="edit"?`<span class="chip warn">Edit request</span>`:""}${c.applied?`<span class="chip good">Applied</span>`:""}<b>${esc(c.by)}</b> · ${when(c.at)} · <span class="sec-tag" data-goto="${esc(c.section)}">${esc(c.section)}</span></div>
+    <p>${esc(c.text)}</p>
+    ${kids.map(k=>`<div class="reply"><div class="cm-h"><b>${esc(k.by)}</b> · ${when(k.at)}</div><p>${esc(k.text)}</p></div>`).join("")}
+    <div class="cm-a"><button data-reply="${esc(c.cid)}">Reply</button>${!c.applied&&!c.resolved?`<button data-apply-c="${esc(c.cid)}" ${busyRev()?"disabled":""} title="Rewrite the draft to make this change">Apply to draft</button>`:""}<button data-resolve="${esc(c.cid)}">${c.resolved?"Reopen":"Resolve"}</button>${mine?`<button data-delc="${esc(c.cid)}">Delete</button>`:""}</div>
+    <div class="reply-box" hidden><textarea placeholder="Reply"></textarea><div class="row" style="display:flex;gap:6px;justify-content:flex-end;margin-top:6px"><button class="btn" data-reply-cancel>Cancel</button><button class="btn primary" data-reply-send="${esc(c.cid)}">Reply</button></div></div></div>`;}
+function qaSg(x){const sg=x.suggestions||[];if(!sg.length)return "";const open=sg.filter(g=>!g.state).length,del=sg.filter(g=>g.state==="deleted").length;
+  return `<div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><b style="font-size:13px">Suggested changes</b>${open>1?`<button class="btn primary" data-sg-all="${esc(x.qid)}" ${busyRev()?"disabled":""}>Apply all ${open}</button>`:""}</div>
+    ${sg.map((g,i)=>g.state==="deleted"?"":`<div class="sg"><div><b>${esc(g.title||"Change")}</b><p>${esc(g.change)}</p></div><div class="sg-a">${g.state==="applied"?`<span class="chip good">Applied</span>`:`<button class="btn" data-sg-apply="${esc(x.qid)}:${i}" ${busyRev()?"disabled":""}>Apply</button><button class="x" data-sg-del="${esc(x.qid)}:${i}" title="Delete this suggestion" aria-label="Delete suggestion">×</button>`}</div></div>`).join("")}
+    ${del?`<p class="note">${del} deleted · <button class="linkbtn" data-sg-undel="${esc(x.qid)}">Bring back</button></p>`:""}</div>`;}
+function paintSide(){
+  const open=S.cm.filter(c=>!c.parent&&!c.resolved),res=S.cm.filter(c=>!c.parent&&c.resolved);
+  const keep=id=>{const el=document.getElementById(id);return el?el.value:"";};
+  const draftTxt=keep("c-text"),qTxt=keep("q-text");
+  if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest(".reply-box"))return;   // don't wipe a reply in progress
+  $("#side").innerHTML=`<div class="panel" id="comments"><h3>Comments and edit requests</h3><p class="note" style="margin:0">Comment on a section with its button, or here. An edit request can be applied to the draft with one click.</p>
+    <div class="cform"><select id="c-sec" aria-label="Section">${secs().map(s=>`<option ${s===S.sec?"selected":""}>${esc(s)}</option>`).join("")}</select>
+      <textarea id="c-text" placeholder="Write a comment or describe the edit you want">${esc(draftTxt)}</textarea>
+      <div class="row"><div class="kind"><label><input type="radio" name="kind" value="comment" ${S.kind==="comment"?"checked":""}> Comment</label><label><input type="radio" name="kind" value="edit" ${S.kind==="edit"?"checked":""}> Edit request</label></div><button class="btn primary" data-csend>Post</button></div></div>
+    ${open.length?open.slice().reverse().map(cmItem).join(""):`<p class="note">No open comments.</p>`}
+    ${res.length?`<details style="margin-top:8px"><summary>Resolved (${res.length})</summary>${res.slice().reverse().map(cmItem).join("")}</details>`:""}</div>
+    <div class="panel" id="ask"><h3>Ask about this draft</h3><p class="note" style="margin:0">Answers use the draft, its sources and the text on boldthealthcarerealestate.com.</p>
+      <div class="chips"><button class="btn" data-q="Do you see any red flags in this draft?">Any red flags?</button><button class="btn" data-q="Are there opportunities to sell Boldt more in this draft? Suggest the sentences to add and where.">Sell Boldt more?</button><button class="btn" data-q="What questions should leadership answer before we publish this? For example, things we may or may not do or want to promote.">Questions for leadership</button></div>
+      <div style="display:flex;gap:6px"><input type="text" id="q-text" maxlength="1000" placeholder="Ask anything about this draft" value="${esc(qTxt)}"><button class="btn go" data-qsend>Ask</button></div>
+      ${S.qa.slice().reverse().map(x=>`<div class="qa"><b>${esc(x.q)}</b> <span class="note">${esc(x.by||"")}</span>${x.status==="running"?`<p class="note" style="display:flex;gap:8px;align-items:center"><span class="spin" style="width:14px;height:14px;border-width:2px"></span> Thinking. Usually under a minute.</p>`:x.status==="failed"?`<p class="err">${esc(x.error||"That question couldn't be answered.")}</p>`:`<div class="qa-a">${qaMd(x.a)}</div>${qaSg(x)}`}</div>`).join("")}</div>`;}
+function paint(){$("#app").innerHTML=`<div id="main">${paintArticle()}</div><aside class="side" id="side"></aside>`;paintMast();paintSide();}
+function repaintMain(){$("#main").innerHTML=paintArticle();}
+
+/* direct text edits: read the editable elements back into a patch (links become [text](url) again) */
+function toMd(el){let out="";el.childNodes.forEach(n=>{if(n.nodeType===3)out+=n.textContent;else if(n.nodeName==="A")out+=`[${n.textContent}](${n.getAttribute("href")})`;else if(n.nodeName==="BR")out+=" ";else out+=toMd(n);});return out;}
+function collect(){const b=JSON.parse(JSON.stringify(S.d.blog)),v=f=>{const el=document.querySelector(`[data-f="${f}"]`);return el?toMd(el).replace(/\s+/g," ").trim():null;};
+  const t=v("title");if(t)b.title=t;
+  b.intro=(b.intro||[]).map((p,i)=>v(`intro.${i}`)??p);
+  b.sections=b.sections.map((s,k)=>({h2:v(`s.${k}.h2`)||s.h2,paragraphs:(s.paragraphs||[]).map((p,i)=>v(`s.${k}.p.${i}`)??p).filter(Boolean),bullets:(s.bullets||[]).map((x,i)=>v(`s.${k}.b.${i}`)??x).filter(Boolean)}));
+  b.keyTakeaways=(b.keyTakeaways||[]).map((x,i)=>v(`kt.${i}`)??x).filter(Boolean);
+  b.faq=(b.faq||[]).map((f,i)=>({q:v(`faq.${i}.q`)||f.q,a:v(`faq.${i}.a`)||f.a}));
+  if(b.cta)b.cta=v("cta")||b.cta;
+  return {title:b.title,intro:b.intro,sections:b.sections,keyTakeaways:b.keyTakeaways,faq:b.faq,cta:b.cta};}
+
+/* apply changes (suggestions or edit requests) */
+function revise(changes){if(!changes.length||busyRev())return;const r=rid();
+  S.d.revising={rid:r,status:"running",at:new Date().toISOString(),note:changes.length===1?(changes[0].title||"1 change"):`${changes.length} changes`};repaintMain();paintSide();
+  fetch("/.netlify/functions/blog-revise-background",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id:ID,rid:r,changes})})
+    .then(x=>{if(x.status>=400)throw 0;setTimeout(()=>revPoll(r,Date.now()),5000);}).catch(()=>{S.d.revising={status:"failed",error:"The changes couldn't be sent. Try again."};repaintMain();paintSide();});}
+function revPoll(r,t0){clearTimeout(T_REV);fetch(`/api/blog?id=${encodeURIComponent(ID)}`,{cache:"no-store"}).then(x=>x.json()).then(j=>{const rv=(j.draft||{}).revising;
+    if(rv&&rv.rid===r&&rv.status!=="running"){S.d=j.draft;S.qa=j.qa||[];S.cm=j.comments||[];S.rv=j.review||null;paint();toast(rv.status==="done"?"Draft updated":"The changes couldn't be applied");return;}
+    if(Date.now()-t0>6*60*1000){S.d.revising={status:"failed",error:"This is taking longer than expected. Refresh in a few minutes."};repaintMain();return;}
+    T_REV=setTimeout(()=>revPoll(r,t0),4000);}).catch(()=>{T_REV=setTimeout(()=>revPoll(r,t0),6000);});}
+function ask(q){q=(q||"").trim();if(!q)return;const qid=rid();S.qa.push({qid,q,status:"running",by:ME,at:new Date().toISOString()});const el=$("#q-text");if(el)el.value="";paintSide();
+  fetch("/.netlify/functions/blog-ask-background",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({draftId:ID,qid,question:q})})
+    .then(x=>{if(x.status>=400)throw 0;setTimeout(()=>qaPoll(Date.now()),4000);}).catch(()=>{const x=S.qa.find(y=>y.qid===qid);x.status="failed";x.error="The question couldn't be sent.";paintSide();});}
+function qaPoll(t0){clearTimeout(T_QA);fetch(`/api/blog?id=${encodeURIComponent(ID)}`,{cache:"no-store"}).then(x=>x.json()).then(j=>{const srv=j.qa||[],have=new Set(srv.map(x=>x.qid));
+    S.qa=[...srv,...S.qa.filter(x=>!have.has(x.qid)&&x.status==="running"&&Date.now()-Date.parse(x.at)<20000)];
+    if(S.qa.some(x=>x.status==="running")&&Date.now()-t0<5*60*1000)T_QA=setTimeout(()=>qaPoll(t0),3500);paintSide();}).catch(()=>{T_QA=setTimeout(()=>qaPoll(t0),6000);});}
+
+document.addEventListener("click",async e=>{const t=e.target.closest("button,[data-goto]");if(!t)return;const ds=t.dataset;
+  if(ds.review){const st=(S.rv&&S.rv.status===ds.review)?"":ds.review;S.rv={status:st,by:ME,at:new Date().toISOString()};paintMast();const j=await post({action:"review",status:st});if(!j.ok)toast("That couldn't be saved");else toast(st==="approved"?"Approved":st==="changes"?"Marked as needing changes":"Cleared");if(st==="changes"){const ta=$("#c-text");if(ta){ta.focus();toast("Add a comment with the changes you want");}}}
+  else if(ds.copylink!=null)copy(location.href);
+  else if(ds.commentOn){S.sec=ds.commentOn;S.kind="comment";paintSide();const ta=$("#c-text");ta.focus();ta.scrollIntoView({block:"center",behavior:"smooth"});}
+  else if(ds.goto!==undefined){const el=[...document.querySelectorAll(".sec")].find(x=>x.dataset.sec===ds.goto);if(el){el.scrollIntoView({block:"start",behavior:"smooth"});el.classList.add("focus");setTimeout(()=>el.classList.remove("focus"),1600);}}
+  else if(ds.csend!=null){const text=$("#c-text").value.trim();if(!text)return;t.disabled=true;S.sec=$("#c-sec").value;S.kind=document.querySelector('input[name=kind]:checked').value;
+    const j=await post({action:"comment",text,section:S.sec,kind:S.kind});t.disabled=false;if(!j.ok){toast("That comment couldn't be saved");return;}$("#c-text").value="";S.cm.push(j.comment);repaintMain();paintSide();toast(S.kind==="edit"?"Edit request posted":"Comment posted");}
+  else if(ds.reply){const box=t.closest(".cm").querySelector(".reply-box");box.hidden=false;box.querySelector("textarea").focus();}
+  else if(ds.replyCancel!=null){t.closest(".reply-box").hidden=true;}
+  else if(ds.replySend){const ta=t.closest(".reply-box").querySelector("textarea"),text=ta.value.trim();if(!text)return;t.disabled=true;const j=await post({action:"comment",text,parent:ds.replySend,section:(S.cm.find(c=>c.cid===ds.replySend)||{}).section});if(j.ok){S.cm.push(j.comment);ta.blur();paintSide();}else{t.disabled=false;toast("That reply couldn't be saved");}}
+  else if(ds.resolve){const c=S.cm.find(x=>x.cid===ds.resolve);c.resolved=!c.resolved;repaintMain();paintSide();post({action:"resolve",cid:c.cid,resolved:c.resolved});}
+  else if(ds.delc){S.cm=S.cm.filter(x=>x.cid!==ds.delc&&x.parent!==ds.delc);repaintMain();paintSide();post({action:"delcomment",cid:ds.delc});}
+  else if(ds.applyC){const c=S.cm.find(x=>x.cid===ds.applyC);const kids=S.cm.filter(x=>x.parent===c.cid).map(x=>`${x.by}: ${x.text}`);
+    revise([{text:`${c.section!=="General"?`In "${c.section}": `:""}${c.text}${kids.length?` (Replies: ${kids.join(" / ")})`:""}`,title:c.text.slice(0,60),cid:c.cid}]);}
+  else if(ds.sgApply||ds.sgDel){const [qid,i]=(ds.sgApply||ds.sgDel).split(":"),x=S.qa.find(y=>y.qid===qid),g=x&&x.suggestions[+i];if(!g)return;
+    if(ds.sgApply)revise([{text:`${g.title}: ${g.change}`,title:g.title,qid,idx:+i}]);else{g.state="deleted";paintSide();post({action:"dismiss",qid,idx:+i});}}
+  else if(ds.sgAll){const x=S.qa.find(y=>y.qid===ds.sgAll);if(x)revise(x.suggestions.map((g,i)=>[g,i]).filter(([g])=>!g.state).map(([g,i])=>({text:`${g.title}: ${g.change}`,title:g.title,qid:x.qid,idx:i})));}
+  else if(ds.sgUndel){const x=S.qa.find(y=>y.qid===ds.sgUndel);x.suggestions.forEach((g,i)=>{if(g.state==="deleted"){delete g.state;post({action:"undismiss",qid:x.qid,idx:i});}});paintSide();}
+  else if(ds.q){ask(ds.q);}
+  else if(ds.qsend!=null){ask($("#q-text").value);}
+  else if(ds.edit!=null){S.edit=true;repaintMain();const f=document.querySelector("[contenteditable]");if(f)f.focus();}
+  else if(ds.editCancel!=null){S.edit=false;repaintMain();}
+  else if(ds.editSave!=null){t.disabled=true;const j=await post({action:"edit",patch:collect()});if(!j.ok){t.disabled=false;toast(j.error||"Those edits couldn't be saved");return;}S.edit=false;await load();toast("Edits saved");}
+  else if(ds.undo!=null){t.disabled=true;const j=await post({action:"restore"});if(!j.ok){toast(j.error||"That couldn't be undone");t.disabled=false;return;}await load();toast("Last change undone");}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="q-text"){e.preventDefault();ask(e.target.value);}
+  if(S.edit&&e.key==="Enter"&&e.target.isContentEditable){e.preventDefault();}});
+document.addEventListener("paste",e=>{if(e.target.isContentEditable||(e.target.closest&&e.target.closest("[contenteditable]"))){e.preventDefault();document.execCommand("insertText",false,(e.clipboardData||window.clipboardData).getData("text/plain"));}});
+document.addEventListener("change",e=>{if(e.target.name==="kind")S.kind=e.target.value;if(e.target.id==="c-sec")S.sec=e.target.value;});
+// keep comments current while the page is open (skipped while editing or typing)
+setInterval(()=>{if(document.hidden||S.edit||busyRev())return;const a=document.activeElement;if(a&&(a.tagName==="TEXTAREA"||(a.tagName==="INPUT"&&a.value)))return;load(true);},30000);
+load();
+</script>
+</body>
+</html>
