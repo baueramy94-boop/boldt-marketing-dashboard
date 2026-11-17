@@ -208,6 +208,12 @@ tr.future td{color:var(--muted)}
 @media print{.mast,.tabs,footer,.btn-print,.narr{display:none!important}body{background:#fff}.panel{break-inside:avoid;border-color:#ccc}main .wrap{padding:0}}
 .recs li{border-top:1px solid var(--line);padding-top:12px}
 .recs li:first-child{border-top:0;padding-top:0}
+.rc-list li.rc-i{display:grid;grid-template-columns:auto 1fr auto;gap:10px 12px;align-items:start}.rc-chk{padding-top:2px;cursor:pointer}.rc-chk input{width:18px;height:18px;accent-color:var(--good);cursor:pointer}
+.rc-body p{margin:6px 0 4px}.rc-meta{display:block;margin:4px 0 0}.rc-i.done .rc-body b,.rc-i.done .rc-body p{color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(0,0,0,.25)}.rc-i.del{opacity:.6}
+.rc-act{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.rc-x{border:1px solid var(--line);background:transparent;border-radius:6px;width:28px;height:28px;font-size:17px;line-height:1;color:var(--muted);cursor:pointer}.rc-x:hover{color:var(--bad);border-color:var(--bad)}
+.rc-in{color:var(--good);border-color:var(--good)}.rc-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px}.rc-f{flex-wrap:wrap}
+.linkbtn{background:none;border:0;padding:0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
+@media (max-width:640px){.rc-list li.rc-i{grid-template-columns:auto 1fr}.rc-act{grid-column:2;justify-content:flex-start}}
 .rec-h{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .recs p{margin:4px 0 2px;color:var(--ink)}
 .q-pick{font:inherit;font-size:13px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
@@ -761,7 +767,7 @@ function blogBody(){
   if(busy)h+=`<div class="blog-busy"><span class="blog-spin" aria-hidden="true"></span><div><b>Writing your draft${BLOG.topic?`: ${esc(BLOG.topic)}`:""}</b><br><span class="note" style="margin:0">Reading this week's research and dashboard data, then writing. This usually takes 1 to 3 minutes. Elapsed <span class="blog-el">${blogElapsed()}</span></span></div></div>`;
   const d=BLOG.d;
   if(d&&d.status==="done"&&d.blog){const b=d.blog;
-    h+=`<div class="blog-out"><div class="blog-bar"><div><span class="chip good">Draft ready</span> <span class="note" style="margin:0">${N(d.words||0)} words${d.links?` · ${d.links} links`:""} · ${esc(d.by||"")} · ${d.finished?new Date(d.finished).toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):""}</span></div>
+    h+=`<div class="blog-out"><div class="blog-bar"><div><span class="chip good">Draft ready</span> ${b.nameCheck&&b.nameCheck.length?`<span class="chip warn" title="Competitors or health systems that aren't Boldt projects were found. Edit these before publishing.">Check names: ${esc(b.nameCheck.join(", "))}</span> `:""}<span class="note" style="margin:0">${N(d.words||0)} words${d.links?` · ${d.links} links`:""} · ${esc(d.by||"")} · ${d.finished?new Date(d.finished).toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):""}</span></div>
       <div class="blog-btns"><a class="btn-sm primary" href="/api/blog?id=${esc(d.id)}&format=docx">Download Word</a><button type="button" class="btn-sm" data-blog-copy="article">Copy article</button><button type="button" class="btn-sm" data-blog-copy="html" title="HTML with links, for pasting into the website editor">Copy HTML</button></div></div>
       ${b.whyThisTopic?`<p class="rnd-why"><b>Why this topic:</b> ${esc(b.whyThisTopic)}</p>`:""}
       <div class="blog-meta"><div><b>Meta title</b><span>${esc(b.metaTitle||"")}</span></div><div><b>Meta description</b><span>${esc(b.metaDescription||"")}</span></div><div><b>Slug</b><span>/${esc(b.slug||"")}</span></div><div><b>Keywords</b><span>${esc([b.primaryKeyword,...(b.secondaryKeywords||[])].filter(Boolean).join(", "))}</span></div></div>
@@ -788,16 +794,12 @@ function rndInsights(d){const I=d.insights;if(!I)return "";const sig=RND_SIG;
   const intent=sig&&sig.buyingIntent?sig.buyingIntent.slice(0,10):[];
   return `<div class="panel" id="insights"><h3>Strategic insights</h3><p class="sub">${esc(I.basis||"")}</p>
     <div class="ins-grid">${I.observations.map(o=>`<div class="rnd-trend ins"><span class="ins-t">${esc(o.type)}</span><b>${esc(o.title)}</b><p>${esc(o.detail)}</p>${o.evidence?`<p class="rnd-meta">From: ${esc(o.evidence)}</p>`:""}</div>`).join("")}</div>
-    ${intent.length?`<h4>Companies showing buying intent</h4><div class="tbl-wrap"><table><thead><tr><th class="l">Company</th><th>Engagements</th><th class="l">Signal</th></tr></thead><tbody>${intent.map(c=>`<tr><td class="l">${esc(c.name)} <span class="note" style="margin:0">${esc(c.domain)}</span></td><td>${N(c.engagements)}</td><td class="l">${c.contactPage?'<span class="chip warn">Visited contact page</span> ':""}${c.newThisMonth?'<span class="chip good">New MQL</span>':""}${!c.contactPage&&!c.newThisMonth?'<span class="note" style="margin:0">High engagement</span>':""}</td></tr>`).join("")}</tbody></table></div>`:""}
-    <h4>Recommended actions</h4><div class="grid g-3 rnd-opp">${[["d30","Next 30 days"],["d60","Next 60 days"],["d90","Next 90 days"]].map(([k,n])=>`<div class="ins-act"><b>${n}</b><ul class="rnd-ul">${(I.actions[k]||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`).join("")}</div></div>`;}
-function rndIdeas(d){const C=d.contentIdeas;if(!C||!C.length)return "";
-  return `<div class="panel" id="content-ideas"><h3>Content ideas</h3><p class="sub">Suggested from engaged audiences, trending healthcare topics, search and AI-answer opportunities, CRM engagement, website traffic and past content performance.</p>
-    <div class="idea-grid">${C.map(c=>`<div class="rnd-trend idea"><span class="ins-t">${esc(c.type)}</span><b>${esc(c.title)}</b><p>${esc(c.why)}</p><div class="idea-sig">${(c.signals||[]).map(s=>`<span>${esc(s)}</span>`).join("")}</div>${c.type==="Blog"?`<button type="button" class="btn-sm" data-blog-idea="${esc(c.title)}" data-why="${esc(c.why)}">Generate this blog</button>`:""}</div>`).join("")}</div></div>`;}
+    ${intent.length?`<h4>Companies showing buying intent</h4><div class="tbl-wrap"><table><thead><tr><th class="l">Company</th><th>Engagements</th><th class="l">Signal</th></tr></thead><tbody>${intent.map(c=>`<tr><td class="l">${esc(c.name)} <span class="note" style="margin:0">${esc(c.domain)}</span></td><td>${N(c.engagements)}</td><td class="l">${c.contactPage?'<span class="chip warn">Visited contact page</span> ':""}${c.newThisMonth?'<span class="chip good">New MQL</span>':""}${!c.contactPage&&!c.newThisMonth?'<span class="note" style="margin:0">High engagement</span>':""}</td></tr>`).join("")}</tbody></table></div>`:""}</div>`;}
 /* ---------- R&D: weekly executive briefing, healthcare industry intelligence, marketing best practices (data/rnd/*.json) ---------- */
 let RND_IX=null, RND={}, RND_W="", RND_ERR="", RND_IND="all", RND_MKT="all";
 function rndLoad(){
   if(RND_IX&&(!RND_W||RND[RND_W]))return;
-  const go=()=>{if(current()==="rnd"){const y=scrollY;render();scrollTo(0,y);}};
+  const go=()=>{if(current()==="rnd"||current()==="recs"){const y=scrollY;render();scrollTo(0,y);}};
   if(!RND_SIG)getJSON("data/rnd/signals.json").then(j=>{RND_SIG=j;go();}).catch(()=>{});
   (RND_IX?Promise.resolve(RND_IX):getJSON("data/rnd/index.json")).then(ix=>{RND_IX=ix;if(!RND_W&&ix.weeks&&ix.weeks.length)RND_W=ix.weeks[0].weekOf;
     const w=(ix.weeks||[]).find(x=>x.weekOf===RND_W);if(!w)return go();return getJSON(`data/rnd/${w.file}`).then(j=>{RND[RND_W]=j;go();});
@@ -825,9 +827,8 @@ R.rnd=()=>{
     <p class="rnd-sum">${esc(d.summary)}</p>
     <h4>Top industry stories</h4><div class="rnd-stories">${d.topStories.map(s=>`<article class="rnd-story"><h5><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a></h5><p class="rnd-meta">${rndSrc(s)}</p><p>${esc(s.summary)}</p><p class="rnd-why"><b>Why it matters:</b> ${esc(s.whyItMatters)}</p></article>`).join("")}</div>
     <h4>Emerging healthcare trends</h4><div class="rnd-trends">${d.trends.map(t=>`<div class="rnd-trend"><b>${esc(t.title)}</b><p>${esc(t.detail)}</p><p class="rnd-meta">${t.sources.map(s=>`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>`).join(" · ")}</p></div>`).join("")}</div>
-    <div class="grid g-3 rnd-opp"><div><h4>Marketing opportunities</h4>${list(d.opportunities.marketing)}</div><div><h4>Thought leadership opportunities</h4>${list(d.opportunities.thoughtLeadership)}</div><div><h4>Content opportunities</h4>${list(d.opportunities.content)}</div></div>
-    <div class="grid g-3 rnd-opp"><div><h4>Recommended campaign themes</h4>${list(d.recommend.campaignThemes)}</div><div><h4>Recommended webinar topics</h4>${list(d.recommend.webinarTopics)}</div><div><h4>Recommended article topics</h4>${list(d.recommend.articleTopics)}</div></div></div>`;
-  h+=rndInsights(d)+rndIdeas(d);
+    <p class="sec-note">This week's opportunities, campaign, webinar and article topics, recommended actions and content ideas are on the <a href="#recs">Recommendations</a> tab.</p></div>`;
+  h+=rndInsights(d);
   const sect=(id,title,sub,groups,key,attr)=>{const areas=groups.map(g=>g.area), sel=areas.includes(key)?key:"all", G=sel==="all"?groups:groups.filter(g=>g.area===sel);
     return `<div class="panel" id="${id}"><h3>${title}</h3><p class="sub">${sub}</p><div class="rnd-chips"><button type="button" class="chip-btn ${sel==="all"?"on":""}" data-${attr}="all">All</button>${areas.map(a=>`<button type="button" class="chip-btn ${sel===a?"on":""}" data-${attr}="${esc(a)}">${esc(a)}</button>`).join("")}</div>
       ${G.map(g=>`<h4>${esc(g.area)}</h4>${g.items.map(i=>`<div class="rnd-item"><h5><a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a></h5><p class="rnd-meta">${rndSrc(i)}</p><p>${esc(i.summary)}</p>${i.takeaway?`<p class="rnd-why"><b>For Boldt:</b> ${esc(i.takeaway)}</p>`:""}</div>`).join("")}`).join("")}</div>`;};
@@ -1700,21 +1701,85 @@ R.quarter=()=>{
 };
 
 /* ---------- recommendations ---------- */
+/* Every recommendation, opportunity and content idea in one place: the month's report, the quarterly review, and the latest
+   R&D week (recommended actions, briefing opportunities, campaign/webinar/article topics, content ideas). Complete, delete and
+   "Add to tracker" are shared through /api/recs (Netlify Blobs store "recs"). Ids come from the source and the text. */
+let RECS_ST=null, RECS_ERR="", RECS_F="open";
+function recsLoad(){if(RECS_ST)return;RECS_ST={};fetch("/api/recs",{cache:"no-store"}).then(r=>r.json()).then(j=>{if(!j.ok)throw j;RECS_ST=j.state||{};RECS_ERR="";recsRe();}).catch(()=>{RECS_ERR="Saved progress couldn't be loaded, so complete and delete won't save right now.";recsRe();});}
+function recsRe(){if(current()==="recs"){const y=scrollY;render();scrollTo(0,y);}}
+const rcHash=t=>{let a=5381,b=52711;for(let i=0;i<t.length;i++){const c=t.charCodeAt(i);a=(a*33)^c;b=(b*31)^c;}return (a>>>0).toString(36)+(b>>>0).toString(36);};
+const rcId=(src,t)=>"k"+rcHash(src+"|"+String(t||"").toLowerCase().replace(/\s+/g," ").trim());
+function rcWs(t){t=t.toLowerCase();return /\b(email|nurture|newsletter)\b/.test(t)?"Email & Mail":/\b(landing page|website|web page|seo|search console|aeo|ai search)\b/.test(t)?"Web & Landing Pages":/\b(linkedin|ads?|campaign|retarget|thought leader ad|google)\b/.test(t)?"Advertising":/\b(blog|article|white paper|case study|webinar|content|post|guide|video|podcast)\b/.test(t)?"Content & Social":/\b(dashboard|tracking|data|analytics|report|hubspot|factors)\b/.test(t)?"AI & Analytics":"Operations";}
+function recsItems(){
+  const out=[], RC=D.recs||[], Z=D.qbr, qn=Z?Z.quarter.slice(5):"", W=RND_IX&&RND_IX.weeks&&RND_IX.weeks[0]?RND[RND_IX.weeks[0].weekOf]:null;
+  const pri=v=>`<span class="chip ${v==="High"?"bad":v==="Medium"?"warn":""}">${esc(v||"Medium")}</span>`;
+  const tag=t=>t==="quick"?'<span class="chip good">Quick win</span>':'<span class="chip warn">Strategic</span>';
+  const add=(sec,src,o)=>out.push({sec,src,id:rcId(src,o.title),ws:rcWs(o.title+" "+(o.detail||"")),...o});
+  RC.forEach((r,i)=>{if(DELS.has("recs."+i))return;add("month",`${RM()} report`,{title:r.title,detail:r.detail,owner:r.owner,chips:pri(r.pri)});});
+  if(Z){(Z.recs||[]).forEach((r,i)=>{if(DELS.has("qbr.recs."+i))return;add("qbr",`${qn} review`,{title:r.title,detail:`${r.why||""}${r.action?` Next step: ${r.action}`:""}`.trim(),chips:tag(r.type)});});
+    (Z.expansion||[]).forEach((r,i)=>{if(DELS.has("qbr.expansion."+i))return;add("qbr",`${qn} review`,{title:r.title,detail:`${r.why||""}${r.action?` Next step: ${r.action}`:""}`.trim(),chips:tag(r.type)+(r.when?`<span class="chip">${esc(r.when)}</span>`:"")});});}
+  if(W){const wk=`R&D, week of ${rndD(W.weekOf)}`;
+    if(W.insights&&W.insights.actions)[["d30","Next 30 days"],["d60","Next 60 days"],["d90","Next 90 days"]].forEach(([k,n])=>(W.insights.actions[k]||[]).forEach(x=>add("actions",wk,{title:x,chips:`<span class="chip ${k==="d30"?"bad":k==="d60"?"warn":""}">${n}</span>`})));
+    const o=W.opportunities||{},rr=W.recommend||{};
+    [["marketing","Marketing"],["thoughtLeadership","Thought leadership"],["content","Content"]].forEach(([k,n])=>(o[k]||[]).forEach(x=>add("opps",wk,{title:x,chips:`<span class="chip">${n}</span>`})));
+    [["campaignThemes","Campaign theme"],["webinarTopics","Webinar"],["articleTopics","Article"]].forEach(([k,n])=>(rr[k]||[]).forEach(x=>add("opps",wk,{title:x,chips:`<span class="chip">${n}</span>`,blog:k==="articleTopics"?{t:x,w:""}:null})));
+    (W.contentIdeas||[]).forEach(c=>add("ideas",wk,{title:c.title,detail:c.why,chips:`<span class="chip good">${esc(c.type)}</span>`,sig:c.signals||[],blog:c.type==="Blog"?{t:c.title,w:c.why}:null,ws:rcWs(c.type+" "+c.title)}));}
+  return {out,W};
+}
+function rcRow(it){const st=(RECS_ST||{})[it.id]||{},tr=st.tracker;
+  return `<li class="rc-i${st.done?" done":""}${st.deleted?" del":""}" data-rid="${it.id}">
+    <label class="rc-chk" title="${st.done?"Mark as not complete":"Mark complete"}"><input type="checkbox" data-rc-done ${st.done?"checked":""} ${st.deleted?"disabled":""} aria-label="Complete: ${esc(it.title)}"></label>
+    <div class="rc-body"><div class="rec-h">${it.chips||""}<b>${esc(it.title)}</b></div>${it.detail?`<p>${esc(it.detail)}</p>`:""}
+      ${it.sig&&it.sig.length?`<div class="idea-sig">${it.sig.map(x=>`<span>${esc(x)}</span>`).join("")}</div>`:""}
+      <span class="note rc-meta">${esc(it.src)}${it.owner?` · Owner: ${esc(it.owner)}`:""}${st.done?` · Completed by ${esc(st.doneBy||"")}, ${new Date(st.doneAt).toLocaleDateString("en-US",{month:"short",day:"numeric"})}`:""}${st.deleted?` · Deleted by ${esc(st.deletedBy||"")}`:""}</span></div>
+    <div class="rc-act">${st.deleted?`<button type="button" class="btn-sm" data-rc-restore>Restore</button>`:`${it.blog?`<button type="button" class="btn-sm" data-rc-blog>Generate blog</button>`:""}${tr?`<a class="btn-sm rc-in" href="tracker.html" title="Added by ${esc(tr.by||"")}">In tracker ✓</a>`:`<button type="button" class="btn-sm" data-rc-tracker>Add to tracker</button>`}<button type="button" class="rc-x" data-rc-del title="Delete" aria-label="Delete: ${esc(it.title)}">×</button>`}</div></li>`;}
 R.recs=()=>{
   const RC=D.recs||[], Z=D.qbr, qn=Z?Z.quarter.slice(5):"";
-  const tag=t=>t==="quick"?'<span class="chip good">Quick win</span>':'<span class="chip warn">Strategic</span>';
-  let h=head("Recommendations",`Healthcare. What to do next, from ${RM()}'s results${Z?` and the ${qn} quarterly review`:""}.${CAL?` Track the work on the <a href="tracker.html">project calendar</a>.`:""}`);
-  const pri=(p,v)=>EDITING?`<button type="button" class="chip ed-pri ${v==="High"?"bad":v==="Medium"?"warn":""}" data-pri="${p}" title="Change priority">${esc(v||"Medium")}</button>`:`<span class="chip ${v==="High"?"bad":v==="Medium"?"warn":""}">${esc(v||"Medium")}</span>`;
-  if(RC.length||EDITING) h+=`<div class="panel"><h3>For ${NM()}</h3><p class="sub">From ${RM()}'s results, with priority and owner</p><ol class="recs">
+  let h=head("Recommendations",`Healthcare. Every recommendation, opportunity and content idea in one place: ${RM()}'s results${Z?`, the ${qn} quarterly review`:""} and this week's R&D research. Check items off when they're done, or add them to the <a href="tracker.html">project tracker</a>.`);
+  if(EDITING){   // edit mode keeps the report's own editable lists
+    const tag=t=>t==="quick"?'<span class="chip good">Quick win</span>':'<span class="chip warn">Strategic</span>';
+    const pri=(p,v)=>`<button type="button" class="chip ed-pri ${v==="High"?"bad":v==="Medium"?"warn":""}" data-pri="${p}" title="Change priority">${esc(v||"Medium")}</button>`;
+    h+=`<div class="panel"><h3>For ${NM()}</h3><p class="sub">From ${RM()}'s results, with priority and owner</p><ol class="recs">
     ${live("recs",RC).map(([r,i])=>`<li class="${gone("recs."+i).trim()}"><div class="rec-h">${pri(`recs.${i}.pri`,r.pri)}${E(`recs.${i}.title`,"b")}</div>${E(`recs.${i}.detail`,"p")}<span class="note">Owner: ${E(`recs.${i}.owner`)}</span>${delBtn("recs."+i)}</li>`).join("")}</ol>${addBtn("recs","rec","Add recommendation")}</div>`;
-  if(Z&&Z.recs&&Z.recs.length) h+=`<div class="panel"><h3>From the ${qn} review</h3><p class="sub">Improvements to the programs already running</p><ol class="recs">
+    if(Z&&Z.recs&&Z.recs.length) h+=`<div class="panel"><h3>From the ${qn} review</h3><ol class="recs">
     ${live("qbr.recs",Z.recs).map(([r,i])=>`<li class="${gone("qbr.recs."+i).trim()}"><div class="rec-h">${tag(r.type)}${E(`qbr.recs.${i}.title`,"b")}</div>${E(`qbr.recs.${i}.why`,"p")}<p class="rec-act"><b>Next step:</b> ${E(`qbr.recs.${i}.action`)}</p>${delBtn("qbr.recs."+i)}</li>`).join("")}</ol>${addBtn("qbr.recs","qrec")}</div>`;
-  if(Z&&Z.expansion&&Z.expansion.length) h+=`<div class="panel"><h3>New channels and the rebrand</h3><p class="sub">In the order to run them</p><ol class="recs">
-    ${live("qbr.expansion",Z.expansion).map(([r,i])=>`<li class="${gone("qbr.expansion."+i).trim()}"><div class="rec-h">${tag(r.type)}<span class="chip">${E(`qbr.expansion.${i}.when`)}</span>${E(`qbr.expansion.${i}.title`,"b")}</div>${E(`qbr.expansion.${i}.why`,"p")}<p class="rec-act"><b>Next step:</b> ${E(`qbr.expansion.${i}.action`)}</p>${delBtn("qbr.expansion."+i)}</li>`).join("")}</ol>${addBtn("qbr.expansion","qexp")}
-    ${Z.note||EDITING?E("qbr.note","p","sec-note"):""}</div>`;
-  if(!RC.length&&!Z) h+=`<div class="panel"><p>Recommendations for this month are not available.</p></div>`;
+    if(Z&&Z.expansion&&Z.expansion.length) h+=`<div class="panel"><h3>New channels and the rebrand</h3><ol class="recs">
+    ${live("qbr.expansion",Z.expansion).map(([r,i])=>`<li class="${gone("qbr.expansion."+i).trim()}"><div class="rec-h">${tag(r.type)}<span class="chip">${E(`qbr.expansion.${i}.when`)}</span>${E(`qbr.expansion.${i}.title`,"b")}</div>${E(`qbr.expansion.${i}.why`,"p")}<p class="rec-act"><b>Next step:</b> ${E(`qbr.expansion.${i}.action`)}</p>${delBtn("qbr.expansion."+i)}</li>`).join("")}</ol>${addBtn("qbr.expansion","qexp")}${E("qbr.note","p","sec-note")}</div>`;
+    return h+`<p class="note">The R&D recommendations, complete checkboxes and tracker buttons show when you leave edit mode.</p>`;
+  }
+  recsLoad(); rndLoad();
+  const {out,W}=recsItems(), S=RECS_ST||{};
+  const isDone=it=>S[it.id]&&S[it.id].done, isDel=it=>S[it.id]&&S[it.id].deleted;
+  const n={open:out.filter(i=>!isDone(i)&&!isDel(i)).length,done:out.filter(i=>isDone(i)&&!isDel(i)).length,del:out.filter(isDel).length,tr:out.filter(i=>S[i.id]&&S[i.id].tracker&&!isDel(i)).length};
+  const show=it=>RECS_F==="del"?isDel(it):isDel(it)?false:RECS_F==="open"?!isDone(it):RECS_F==="done"?isDone(it):true;
+  h+=`<div class="panel rc-bar"><div class="seg rc-f" role="group" aria-label="Show">${[["open",`Open (${n.open})`],["done",`Completed (${n.done})`],["all",`All (${n.open+n.done})`],["del",`Deleted (${n.del})`]].map(([k,l])=>`<button type="button" class="${RECS_F===k?" on":""}" data-rc-f="${k}" aria-pressed="${RECS_F===k}">${l}</button>`).join("")}</div>
+    <span class="note" style="margin:0">${n.tr} in the project tracker${W?` · R&D from the week of ${rndD(W.weekOf)}`:""}</span></div>`;
+  if(RECS_ERR) h+=`<p class="note" style="color:#B5452F">${esc(RECS_ERR)}</p>`;
+  const SECS=[["month",`For ${NM()}`,`From ${RM()}'s results, with priority and owner`],["qbr",`From the ${qn} review`,"Improvements to the programs already running, plus new channels and the rebrand"],
+    ["actions","Recommended actions","From this week's strategic insights, by timeframe"],["opps","Opportunities","Marketing, thought leadership and content opportunities, campaign themes, webinars and article topics from this week's industry research"],
+    ["ideas","Content ideas","Suggested from engaged audiences, trending healthcare topics, search and AI-answer opportunities, CRM engagement, website traffic and past content performance"]];
+  let any=false;
+  SECS.forEach(([k,t,sub])=>{const L=out.filter(i=>i.sec===k&&show(i));if(!L.length)return;any=true;
+    h+=`<div class="panel" id="rc-${k}"><h3>${t}</h3><p class="sub">${sub}</p><ol class="recs rc-list">${L.map(rcRow).join("")}</ol></div>`;});
+  if(!any) h+=`<div class="panel"><p class="note" style="margin:0">${!W&&!RC.length?"Loading recommendations…":RECS_F==="open"?"Everything here is complete. Nice work.":RECS_F==="del"?"Nothing has been deleted.":"Nothing to show."}</p></div>`;
+  if(n.done&&RECS_F==="open") h+=`<p class="note"><button type="button" class="linkbtn" data-rc-f="done">Show ${n.done} completed</button></p>`;
   return h;
 };
+function rcPost(id,body,undo){fetch("/api/recs",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id,...body})}).then(r=>r.json()).then(j=>{if(!j.ok)throw j;RECS_ST=j.state||RECS_ST;RECS_ERR="";recsRe();})
+  .catch(e=>{undo&&undo();RECS_ERR=(e&&e.error)||"That change couldn't be saved. Try again.";recsRe();});}
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-rc-f],[data-rc-del],[data-rc-restore],[data-rc-tracker],[data-rc-blog]");if(!t)return;
+  if(t.dataset.rcF){RECS_F=t.dataset.rcF;recsRe();return;}
+  const li=t.closest("[data-rid]");if(!li)return;const id=li.dataset.rid,it=recsItems().out.find(x=>x.id===id);if(!it)return;
+  RECS_ST=RECS_ST||{};const prev=RECS_ST[id]?{...RECS_ST[id]}:undefined,undo=()=>{if(prev)RECS_ST[id]=prev;else delete RECS_ST[id];};
+  if(t.dataset.rcDel!=null){RECS_ST[id]={...(prev||{}),deleted:true,deletedBy:"you"};recsRe();rcPost(id,{action:"delete"},undo);}
+  else if(t.dataset.rcRestore!=null){const c={...(prev||{})};delete c.deleted;RECS_ST[id]=c;recsRe();rcPost(id,{action:"restore"},undo);}
+  else if(t.dataset.rcBlog!=null){blogStart(it.blog.t,it.blog.w||"");location.hash="#rnd";}
+  else if(t.dataset.rcTracker!=null){t.disabled=true;t.textContent="Adding…";
+    rcPost(id,{action:"tracker",title:it.title.length>120?it.title.slice(0,117).replace(/\s+\S*$/,"")+"…":it.title,detail:[it.title.length>120?it.title:"",it.detail||""].filter(Boolean).join("\n\n"),owner:it.owner||"",ws:it.ws,source:it.src},null);}});
+document.addEventListener("change",e=>{const t=e.target;if(!t.matches||!t.matches("[data-rc-done]"))return;const li=t.closest("[data-rid]");if(!li)return;const id=li.dataset.rid;
+  RECS_ST=RECS_ST||{};const prev=RECS_ST[id]?{...RECS_ST[id]}:undefined,undo=()=>{if(prev)RECS_ST[id]=prev;else delete RECS_ST[id];};
+  if(t.checked)RECS_ST[id]={...(prev||{}),done:true,doneBy:"you",doneAt:new Date().toISOString()};else{const c={...(prev||{})};delete c.done;RECS_ST[id]=c;}
+  li.classList.toggle("done",t.checked);setTimeout(recsRe,RECS_F==="all"?0:450);rcPost(id,{action:t.checked?"done":"undone"},undo);});
 
 R.plan=()=>{
   const T=trackerLists(), RC=D.recs||[];

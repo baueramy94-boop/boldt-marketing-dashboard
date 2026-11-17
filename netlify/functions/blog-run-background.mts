@@ -32,6 +32,8 @@ Rules:
 - E-E-A-T: show experience (placeholders for Boldt examples), expertise (practical detail), authority (cited sources) and trust (balanced, no hype).
 - SEO and AEO: a clear H1, question-style H2s where natural, a short direct answer at the start of each section, scannable bullets, and an FAQ of 5 to 6 questions with 2 to 4 sentence answers written so AI search tools can quote them.
 - Plain, confident American English. No em dashes. Avoid these words and phrases: delve, landscape, navigate, in today's, ever-evolving, game-changer, unlock, leverage (as a verb), robust, seamless, tapestry, realm, pivotal, crucial, "it's not just X, it's Y", "in conclusion".
+- Never name competitors (other healthcare real estate developers, investors, REITs or builders). Say "some developers" or "traditional developers" instead.
+- Never name a health system, hospital or clinic. Describe it instead ("a large Midwest health system", "an academic medical center"). The only exception is a Boldt Real Estate project or case study listed in boldtProjects, which you may name when describing that project. This applies everywhere: headings, body, FAQ, anchor text, LinkedIn post, email and source names (use the publication's name, such as "Becker's Hospital Review", not an article title).
 - 1,400 to 1,900 words in the article body.
 - Links: write links inline as [anchor text](https://url) inside paragraphs, bullets and FAQ answers. Use descriptive anchor text, never "click here".
   - Internal: 3 to 6 links to Boldt pages, using only URLs from dashboardSignals.internalLinks. Link related Boldt blog posts where the topic overlaps.
@@ -40,6 +42,34 @@ Rules:
 - Photo: suggest one hero photo. Prefer an authentic Boldt project photo (a completed outpatient building, medical office building or construction progress) over stock; describe the shot, give alt text that includes the primary keyword, and avoid anything that looks AI-generated or shows frail patients.
 
 Call the save_blog tool once with the finished article. Do not write anything else.`;
+
+// Boldt projects and case studies a draft may name (with the client's name). Add more here as case studies are published.
+const BOLDT_PROJECTS = [
+  { project: "Multi-specialty medical office building on the PIH Health Whittier Hospital campus (Boldt Real Estate with The Boldt Company)", client: "PIH Health", url: "https://www.boldthealthcarerealestate.com/blog/boldt-real-estate-the-boldt-company-and-pih-health-break-ground-on-new-multi-specialty-medical-office-building-on-pih-health-whittier-hospital-campus/" },
+];
+const ALLOWED_NAMES = ["PIH Health", "PIH Health Whittier", "PIH Health Whittier Hospital", "Boldt Healthcare", "Boldt Health"];
+// Competitors tracked in HubSpot AEO plus other national healthcare real estate developers and investors.
+const COMPETITORS = ["NexCore", "Rendina", "Anchor Health Properties", "Remedy Medical Properties", "Catalyst Healthcare Real Estate", "Welltower", "Healthcare Realty", "Ventas", "Physicians Realty", "Medical Properties Trust",
+  "Hammes", "Ryan Companies", "Mortenson", "Montecito Medical", "Harrison Street", "Trammell Crow", "Lillibridge", "Flagship Healthcare Properties", "Duke Realty", "Global Medical REIT", "MedCraft", "Stonemont", "Seavest", "Kayne Anderson", "Healthpeak", "Sabra", "Omega Healthcare", "Big Sky Medical"];
+// Health systems that don't end in Health, Hospital, Clinic and so on.
+const SYSTEMS = ["CommonSpirit", "Ascension", "Kaiser Permanente", "Tenet", "Intermountain", "Mass General Brigham", "UPMC", "Geisinger", "Baylor Scott & White", "Novant", "AdventHealth", "Ochsner", "Northwell", "NYU Langone", "Johns Hopkins",
+  "Corewell", "Allina", "Froedtert", "Bon Secours", "Jefferson Health", "Penn Medicine", "Hackensack Meridian", "RWJBarnabas", "Memorial Hermann", "Houston Methodist", "LifePoint", "Ardent", "Steward", "Providence", "Advocate Aurora", "Mayo", "Sutter", "Atrium", "Sanford", "Prisma"];
+const PUBS = /^(Becker's|Modern Healthcare|Fierce Healthcare|Healthcare Dive|Health Affairs|American Hospital|Healthcare Finance|Revcycle|Boldt)/i;
+const STOP = new Set("The A An Your Our Their Its This That These Those Each Every Many Most Some Any Rural Urban Suburban Academic Community Nonprofit Not-for-profit For-profit Regional Large Larger Small Smaller Mid-size Midsize Independent Public Private When How What Why Which Where Who If For In At On With As And But Or So Home Global National Outpatient Inpatient Ambulatory Behavioral Specialty Acute Critical Access Primary Digital Population Value-based Traditional Modern Why US U.S. American Local State Federal Integrated Safety-net Teaching Veterans New Top Leading Major Multi-site Two Three One Hospital Health Healthcare Medical".split(" "));
+function findNames(b: any): string[] {
+  const txt = JSON.stringify([b.title, b.metaTitle, b.metaDescription, b.intro, b.sections, b.keyTakeaways, b.faq, b.cta, b.linkedin, b.email, (b.sources || []).map((s: any) => s.name), b.photo]);
+  const found = new Set<string>();
+  const re = /((?:[A-Z][A-Za-z'&.-]*\s+){1,4})(Health Systems?|Healthcare|Health|Hospitals?|Medical Centers?|Clinic|Health Network|Medicine|Children's)\b/g; let m;
+  while ((m = re.exec(txt))) {
+    const words = m[1].trim().split(/\s+/); while (words.length && STOP.has(words[0])) words.shift();
+    if (!words.length) continue;
+    const name = `${words.join(" ")} ${m[2]}`;
+    if (PUBS.test(name) || ALLOWED_NAMES.some((a) => name.startsWith(a))) continue;
+    found.add(name);
+  }
+  for (const n of [...COMPETITORS, ...SYSTEMS]) if (new RegExp(`\\b${n.replace(/[.&]/g, "\\$&")}\\b`).test(txt)) found.add(n);
+  return [...found];
+}
 
 const STR = { type: "string" }, ARR = { type: "array", items: { type: "string" } };
 const TOOL = { name: "save_blog", description: "Save the finished blog article.", input_schema: { type: "object", required: ["title", "metaTitle", "metaDescription", "slug", "primaryKeyword", "intro", "sections", "keyTakeaways", "faq", "cta", "linkedin", "email", "sources", "photo"],
@@ -82,24 +112,37 @@ export default async (req: Request, context: Context) => {
     const signals: any = await site("/data/rnd/signals.json").catch(() => ({}));
     const recent: any = (await store.get("index", { type: "json" }).catch(() => null)) || { items: [] };
     const ctx = { briefing: { weekOf: week.weekOf, summary: week.summary, topStories: week.topStories, trends: week.trends, industry: week.industry, marketing: week.marketing, recommend: week.recommend, contentIdeas: week.contentIdeas },
-      dashboardSignals: signals, recentlyGeneratedTitles: recent.items.slice(0, 10).map((x: any) => x.title) };
+      boldtProjects: BOLDT_PROJECTS, dashboardSignals: signals, recentlyGeneratedTitles: recent.items.slice(0, 10).map((x: any) => x.title) };
     const ask = b.topic
       ? `Write the article on this topic: "${String(b.topic).slice(0, 300)}".${b.why ? ` Why it was suggested: ${String(b.why).slice(0, 400)}` : ""}`
       : "Choose the single best topic for this week: it should align with Boldt's business (outpatient development, capital and financing options, sites of care), connect to a story or trend in the briefing, answer a question health system executives are asking, and build on what already performs (top content, strongest messaging themes, companies showing intent). Do not repeat a recently generated title. Then write the article.";
     const client = claude();
     if (!client) throw new Error("AI connection is not set up for the dashboard");
-    let input: any = null, lastErr: any = null;
+    let input: any = null, lastErr: any = null, used = "";
     for (const model of MODELS()) {
       try {
         const res: any = await client.messages.create({ model, max_tokens: 12000, system: SYSTEM, tools: [TOOL as any], tool_choice: { type: "tool", name: "save_blog" } as any,
           messages: [{ role: "user", content: `CONTEXT (JSON):\n${JSON.stringify(ctx)}\n\n${ask}` }] });
         const t = (res.content || []).find((c: any) => c.type === "tool_use");
-        if (t && t.input) { input = t.input; break; }
+        if (t && t.input) { input = t.input; used = model; break; }
         lastErr = new Error(`no article returned (stop: ${res.stop_reason})`);
       } catch (e) { lastErr = e; }
     }
     if (!input) throw lastErr || new Error("no response");
+    // Names check: competitors and health systems that aren't Boldt projects get rewritten out in a second pass.
+    let flagged = findNames(input);
+    if (flagged.length) {
+      console.log(`blog-run names id=${id}: ${flagged.join(", ")}`);
+      try {
+        const res: any = await client.messages.create({ model: used, max_tokens: 12000, system: SYSTEM, tools: [TOOL as any], tool_choice: { type: "tool", name: "save_blog" } as any,
+          messages: [{ role: "user", content: `boldtProjects (the only health systems you may name): ${JSON.stringify(BOLDT_PROJECTS)}\n\nARTICLE (JSON):\n${JSON.stringify(input)}\n\nThis article names competitors or health systems that are not Boldt projects: ${flagged.join(", ")}. Rewrite only the sentences, headings, anchor text, FAQ answers, LinkedIn post, email and source names that contain them, describing each one generically instead (for example "a large health system in the Southeast" or "some developers"). Keep everything else exactly the same, including every link URL, and call save_blog with the full article.` }] });
+        const t = (res.content || []).find((c: any) => c.type === "tool_use");
+        if (t && t.input && t.input.title && Array.isArray(t.input.sections)) input = t.input;
+      } catch (e: any) { console.log(`blog-run names rewrite failed id=${id}: ${e?.message || e}`); }
+      flagged = findNames(input);
+    }
     const blog = clean(input);
+    if (flagged.length) blog.nameCheck = flagged;
     // Keep only links to Boldt pages we know exist and to sources in the context; anything else becomes plain text.
     const allowed = new Set<string>([...(signals.internalLinks || []).map((l: any) => l.url), ...JSON.stringify(week).match(/https:\/\/[^"\s)]+/g) || []]);
     const norm = (u: string) => u.replace(/[.,;]+$/, "");
