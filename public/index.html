@@ -341,7 +341,7 @@ body.jm-open{overflow:hidden}
 .blog-out{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
 .blog-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.blog-btns{display:flex;gap:8px}.blog-btns a{text-decoration:none}
 .blog-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:12px 0}.blog-meta div{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;display:flex;flex-direction:column;gap:3px}.blog-meta b{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-.blog-art{max-width:760px;margin:16px 0;font-size:15px;line-height:1.65}.blog-art h2{font-size:24px;line-height:1.25;margin:0 0 12px}.blog-art h3{font-size:18px;margin:22px 0 8px}.blog-art h4{font-size:15px;margin:14px 0 4px}.blog-art p{margin:0 0 12px}.blog-art ul{margin:0 0 12px;padding-left:20px}
+.blog-art{max-width:none;margin:16px 0;font-size:15px;line-height:1.65}.blog-art h2{font-size:24px;line-height:1.25;margin:0 0 12px}.blog-art h3{font-size:18px;margin:22px 0 8px}.blog-art h4{font-size:15px;margin:14px 0 4px}.blog-art p{margin:0 0 12px}.blog-art ul{margin:0 0 12px;padding-left:20px}
 .blog-promo{margin-top:10px}.blog-code{white-space:pre-wrap;font-size:12px;background:var(--soft);padding:10px;border-radius:8px;overflow:auto;max-height:320px}
 .blog-recent{list-style:none;padding:0;margin:8px 0 0}.blog-recent li{margin:6px 0}.linkish{background:none;border:0;padding:0;font:inherit;color:var(--navy);text-decoration:underline;cursor:pointer;text-align:left}
 .ins-grid,.idea-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
@@ -359,7 +359,7 @@ body.jm-open{overflow:hidden}
 .rnd-story h5,.rnd-item h5{margin:0 0 4px;font-size:14px;line-height:1.35}.rnd-story h5 a,.rnd-item h5 a{color:var(--ink);text-decoration:none}.rnd-story h5 a:hover,.rnd-item h5 a:hover{text-decoration:underline}
 .rnd-story p,.rnd-trend p,.rnd-item p{margin:6px 0 0;font-size:13px;line-height:1.5}
 .rnd-meta{color:var(--muted);font-size:12px!important}.rnd-meta a{color:inherit}
-.rnd-why{background:var(--soft);border-radius:6px;padding:6px 8px}
+.rnd-why{background:var(--soft);border-radius:6px;padding:6px 8px}.blog-art a{color:var(--accent,#1F5FAE);text-decoration:underline;text-underline-offset:2px}.blog-photo{border:1px dashed var(--line);border-radius:8px;padding:10px 12px;margin:12px 0;font-size:13px;line-height:1.5}.blog-photo b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}.blog-photo p{margin:4px 0}
 .rnd-trends{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
 .rnd-opp{margin-top:6px}.rnd-ul{margin:0;padding-left:18px;font-size:13px;line-height:1.5}.rnd-ul li{margin:4px 0}
 .rnd-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
@@ -741,7 +741,14 @@ function blogPoll(){clearTimeout(BLOG_T);if(!BLOG.id)return;const id=BLOG.id;
     blogPaint(true);BLOG_T=setTimeout(blogPoll,4000);}).catch(()=>{BLOG_T=setTimeout(blogPoll,6000);});}
 function blogOpen(id){BLOG={...BLOG,id,d:{status:"running"},t0:Date.now(),err:""};blogPaint();blogPoll();}
 function blogRecent(){if(BLOG.recent)return;fetch("/api/blog").then(r=>r.json()).then(j=>{BLOG.recent=j.items||[];blogPaint();}).catch(()=>{BLOG.recent=[];});}
-function blogText(b){return [b.title,"",...(b.intro||[]),"",...(b.sections||[]).flatMap(s=>[s.h2,"",...(s.paragraphs||[]),...(s.bullets||[]).map(x=>`- ${x}`),""]),"Key takeaways",...(b.keyTakeaways||[]).map(x=>`- ${x}`),"","Frequently asked questions",...(b.faq||[]).flatMap(f=>[f.q,f.a,""]),b.cta||"","","Sources",...(b.sources||[]).map(s=>`- ${s.name}: ${s.url}`)].join("\n");}
+const BLOG_LINK=/\[([^\]]+)\]\((https?:[^)\s]+)\)/g;
+function bmd(t){return esc(t||"").replace(BLOG_LINK,(m,a,u)=>`<a href="${u}" target="_blank" rel="noopener">${a}</a>`);}
+const bplain=t=>String(t||"").replace(BLOG_LINK,(m,a,u)=>`${a} (${u})`);
+function blogHtml(b){const p=t=>`<p>${bmd(t)}</p>`,ul=a=>a&&a.length?`<ul>\n${a.map(x=>`  <li>${bmd(x)}</li>`).join("\n")}\n</ul>`:"";
+  return [`<h1>${esc(b.title)}</h1>`,...(b.intro||[]).map(p),...(b.sections||[]).flatMap(s=>[`<h2>${esc(s.h2)}</h2>`,...(s.paragraphs||[]).map(p),ul(s.bullets)]),
+    (b.keyTakeaways||[]).length?`<h2>Key takeaways</h2>\n${ul(b.keyTakeaways)}`:"",(b.faq||[]).length?`<h2>Frequently asked questions</h2>\n${b.faq.map(f=>`<h3>${esc(f.q)}</h3>\n${p(f.a)}`).join("\n")}`:"",
+    b.cta?`<p><em>${bmd(b.cta)}</em></p>`:"",(b.sources||[]).length?`<h2>Sources</h2>\n<ul>\n${b.sources.map(s=>`  <li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a></li>`).join("\n")}\n</ul>`:""].filter(Boolean).join("\n");}
+function blogText(b){return bplain([b.title,"",...(b.intro||[]),"",...(b.sections||[]).flatMap(s=>[s.h2,"",...(s.paragraphs||[]),...(s.bullets||[]).map(x=>`- ${x}`),""]),"Key takeaways",...(b.keyTakeaways||[]).map(x=>`- ${x}`),"","Frequently asked questions",...(b.faq||[]).flatMap(f=>[f.q,f.a,""]),b.cta||"","","Sources",...(b.sources||[]).map(s=>`- ${s.name}: ${s.url}`)].join("\n"));}
 function blogCopy(btn,txt){const ok=()=>{const o=btn.textContent;btn.textContent="Copied";setTimeout(()=>{btn.textContent=o;},2000);};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(ok,()=>prompt("Copy:",txt));else prompt("Copy:",txt);}
 function blogPaint(tick){const el=document.getElementById("blog-gen");if(!el)return;
   if(tick){const s=el.querySelector(".blog-el");if(s){s.textContent=blogElapsed();return;}}el.innerHTML=blogBody();}
@@ -754,15 +761,16 @@ function blogBody(){
   if(busy)h+=`<div class="blog-busy"><span class="blog-spin" aria-hidden="true"></span><div><b>Writing your draft${BLOG.topic?`: ${esc(BLOG.topic)}`:""}</b><br><span class="note" style="margin:0">Reading this week's research and dashboard data, then writing. This usually takes 1 to 3 minutes. Elapsed <span class="blog-el">${blogElapsed()}</span></span></div></div>`;
   const d=BLOG.d;
   if(d&&d.status==="done"&&d.blog){const b=d.blog;
-    h+=`<div class="blog-out"><div class="blog-bar"><div><span class="chip good">Draft ready</span> <span class="note" style="margin:0">${N(d.words||0)} words · ${esc(d.by||"")} · ${d.finished?new Date(d.finished).toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):""}</span></div>
-      <div class="blog-btns"><a class="btn-sm primary" href="/api/blog?id=${esc(d.id)}&format=docx">Download Word</a><button type="button" class="btn-sm" data-blog-copy="article">Copy article</button></div></div>
+    h+=`<div class="blog-out"><div class="blog-bar"><div><span class="chip good">Draft ready</span> <span class="note" style="margin:0">${N(d.words||0)} words${d.links?` · ${d.links} links`:""} · ${esc(d.by||"")} · ${d.finished?new Date(d.finished).toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):""}</span></div>
+      <div class="blog-btns"><a class="btn-sm primary" href="/api/blog?id=${esc(d.id)}&format=docx">Download Word</a><button type="button" class="btn-sm" data-blog-copy="article">Copy article</button><button type="button" class="btn-sm" data-blog-copy="html" title="HTML with links, for pasting into the website editor">Copy HTML</button></div></div>
       ${b.whyThisTopic?`<p class="rnd-why"><b>Why this topic:</b> ${esc(b.whyThisTopic)}</p>`:""}
       <div class="blog-meta"><div><b>Meta title</b><span>${esc(b.metaTitle||"")}</span></div><div><b>Meta description</b><span>${esc(b.metaDescription||"")}</span></div><div><b>Slug</b><span>/${esc(b.slug||"")}</span></div><div><b>Keywords</b><span>${esc([b.primaryKeyword,...(b.secondaryKeywords||[])].filter(Boolean).join(", "))}</span></div></div>
-      <article class="blog-art"><h2>${esc(b.title)}</h2>${(b.intro||[]).map(p=>`<p>${esc(p)}</p>`).join("")}
-        ${(b.sections||[]).map(s=>`<h3>${esc(s.h2)}</h3>${(s.paragraphs||[]).map(p=>`<p>${esc(p)}</p>`).join("")}${(s.bullets||[]).length?`<ul>${s.bullets.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}`).join("")}
-        ${(b.keyTakeaways||[]).length?`<h3>Key takeaways</h3><ul>${b.keyTakeaways.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
-        ${(b.faq||[]).length?`<h3>Frequently asked questions</h3>${b.faq.map(f=>`<h4>${esc(f.q)}</h4><p>${esc(f.a)}</p>`).join("")}`:""}
-        ${b.cta?`<p><i>${esc(b.cta)}</i></p>`:""}
+      ${b.photo?`<div class="blog-photo"><b>Suggested photo</b><p>${esc(b.photo.suggestion||"")}</p>${b.photo.altText?`<p><b style="display:inline;text-transform:none;font-size:12.5px;letter-spacing:0">Alt text:</b> ${esc(b.photo.altText)}</p>`:""}${b.photo.caption?`<p><b style="display:inline;text-transform:none;font-size:12.5px;letter-spacing:0">Caption:</b> ${esc(b.photo.caption)}</p>`:""}${b.photo.stockSearch?`<p><b style="display:inline;text-transform:none;font-size:12.5px;letter-spacing:0">If no Boldt photo fits, search:</b> ${esc(b.photo.stockSearch)}</p>`:""}${b.photo.avoid?`<p><b style="display:inline;text-transform:none;font-size:12.5px;letter-spacing:0">Avoid:</b> ${esc(b.photo.avoid)}</p>`:""}</div>`:""}
+      <article class="blog-art"><h2>${esc(b.title)}</h2>${(b.intro||[]).map(p=>`<p>${bmd(p)}</p>`).join("")}
+        ${(b.sections||[]).map(s=>`<h3>${esc(s.h2)}</h3>${(s.paragraphs||[]).map(p=>`<p>${bmd(p)}</p>`).join("")}${(s.bullets||[]).length?`<ul>${s.bullets.map(x=>`<li>${bmd(x)}</li>`).join("")}</ul>`:""}`).join("")}
+        ${(b.keyTakeaways||[]).length?`<h3>Key takeaways</h3><ul>${b.keyTakeaways.map(x=>`<li>${bmd(x)}</li>`).join("")}</ul>`:""}
+        ${(b.faq||[]).length?`<h3>Frequently asked questions</h3>${b.faq.map(f=>`<h4>${esc(f.q)}</h4><p>${bmd(f.a)}</p>`).join("")}`:""}
+        ${b.cta?`<p><i>${bmd(b.cta)}</i></p>`:""}
         ${(b.sources||[]).length?`<h3>Sources</h3><ul>${b.sources.map(s=>`<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a></li>`).join("")}</ul>`:""}</article>
       <div class="grid g-2 blog-promo"><div class="rnd-trend"><div class="lt-h"><b>LinkedIn post</b><button type="button" class="btn-sm" data-blog-copy="linkedin">Copy</button></div><p style="white-space:pre-wrap">${esc((b.linkedin||{}).post||"")}</p>${(b.linkedin||{}).thoughtLeaderAd?`<p class="rnd-meta"><b>Thought Leader Ad intro:</b> ${esc(b.linkedin.thoughtLeaderAd)}</p>`:""}</div>
         <div class="rnd-trend"><div class="lt-h"><b>Email</b><button type="button" class="btn-sm" data-blog-copy="email">Copy</button></div><p><b>Subject:</b> ${esc((b.email||{}).subject||"")}<br><b>Preview:</b> ${esc((b.email||{}).preview||"")}</p><p style="white-space:pre-wrap">${esc((b.email||{}).body||"")}</p></div></div>
@@ -774,7 +782,7 @@ document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest
   if(t.dataset.blogGo!=null){const v=(document.getElementById("blog-topic")||{}).value||"";blogStart(v.trim(),"");}
   else if(t.dataset.blogIdea!=null){blogStart(t.dataset.blogIdea,t.dataset.why||"");}
   else if(t.dataset.blogOpen){blogOpen(t.dataset.blogOpen);}
-  else if(t.dataset.blogCopy&&BLOG.d&&BLOG.d.blog){const b=BLOG.d.blog,k=t.dataset.blogCopy;blogCopy(t,k==="article"?blogText(b):k==="linkedin"?(b.linkedin||{}).post||"":`Subject: ${(b.email||{}).subject||""}\n\n${(b.email||{}).body||""}`);}});
+  else if(t.dataset.blogCopy&&BLOG.d&&BLOG.d.blog){const b=BLOG.d.blog,k=t.dataset.blogCopy;blogCopy(t,k==="article"?blogText(b):k==="html"?blogHtml(b):k==="linkedin"?(b.linkedin||{}).post||"":`Subject: ${(b.email||{}).subject||""}\n\n${(b.email||{}).body||""}`);}});
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="blog-topic"){e.preventDefault();blogStart(e.target.value.trim(),"");}});
 function rndInsights(d){const I=d.insights;if(!I)return "";const sig=RND_SIG;
   const intent=sig&&sig.buyingIntent?sig.buyingIntent.slice(0,10):[];

@@ -41,9 +41,15 @@ hot = sorted(X.get("hot", []), key=lambda h: (-(1 if h.get("contact") else 0), -
 intent = [{"name": h["name"], "domain": h["domain"], "engagements": h["total"], "contactPage": bool(h.get("contact")), "last": h.get("last"),
            "newThisMonth": bool(h.get("newOct"))} for h in hot[:12]]
 mtdNew = [{"name": c["name"], "domain": c["domain"], "channels": c.get("channels", [])} for c in (MT.get("companies") or [])][:10]
+# internal links for Generate Blog: real pages on the Boldt site (core pages plus blog posts with traffic this year)
+SITE_URL = "https://www.boldthealthcarerealestate.com"
+core = [("/", "Boldt Healthcare Real Estate home"), ("/about/", "About Boldt Real Estate"), ("/leadership/", "Boldt Real Estate leadership team"),
+        ("/contact/", "Contact Boldt (start a conversation)"), ("/blog/", "Boldt healthcare real estate blog"), ("/lp-lowest-responsible-cost/", "Lowest responsible cost and cost certainty")]
+links = [{"title": t, "url": SITE_URL + u} for u, t in core]
+links += [{"title": p["title"], "url": SITE_URL + p["path"]} for p in posts if "/blog/" in p["path"] and "welcomes" not in p["path"]]
 out = {"generated": __import__("datetime").date.today().isoformat(), "reportMonth": M, "engagement": eng, "topContent": posts, "topLanding": landing,
        "messagingThemes": themes, "topLinkedInAds": ads[:8], "searchDemand": {"window": D.get("searchTermsWindow"), "terms": terms},
-       "buyingIntent": intent, "newThisMonth": mtdNew, "hotCount": len(X.get("hot", [])),
+       "buyingIntent": intent, "newThisMonth": mtdNew, "internalLinks": links, "hotCount": len(X.get("hot", [])),
        "notes": "Company names only. Search demand is from paid search terms until Search Console is connected."}
 json.dump(out, open(os.path.join(B, "rnd", "signals.json"), "w"), indent=1, ensure_ascii=False)
 print("signals", M, "| engaged", eng["engaged"], "vs", eng["prev"], "| posts", len(posts), "| themes", len(themes), "| ads", len(ads), "| terms", len(terms), "| intent", len(intent))

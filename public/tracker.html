@@ -526,7 +526,12 @@ const isMeeting = it => it.kind === "meeting";
 const PRI_ORDER = { High:0, Medium:1, Low:2 };
 
 // ---------- state ----------
-let state = { basedOn: SEED.savedAt, editedAt: null, items: SEED.items, archive: SEED.archive || [], archiveIgnore: SEED.archiveIgnore || [] };
+// Start from the last copy this browser loaded from the Sheet, so the page opens on recent data instead of the
+// built-in copy; the live Sheet data replaces it a moment later. The built-in copy is only used if neither is available.
+const CACHE = "boldt-tracker-live-v1";
+let CACHED = null; try { const c = JSON.parse(localStorage.getItem(CACHE) || "null"); if (c && Array.isArray(c.items) && c.items.length) CACHED = c; } catch(e) {}
+const START = CACHED || SEED;
+let state = { basedOn: SEED.savedAt, editedAt: null, items: START.items, archive: START.archive || [], archiveIgnore: START.archiveIgnore || [] };
 let localDirty = false, storageFull = false;
 /* ---------- shared storage (Google Sheet through /api/tracker) ---------- */
 const API = "/api/tracker";
@@ -563,6 +568,7 @@ async function pushChanges(){
     const r = await fetch(API, { method:"POST", headers:{ "content-type":"application/json" }, body: JSON.stringify({ upserts: up, deletes: del, archiveIgnore: ign ? state.archiveIgnore : undefined }) });
     const j = await r.json(); if (!j.ok) throw j;
     synced = s; lastSave = j.savedAt;
+    try { localStorage.setItem(CACHE, JSON.stringify({ lastSave: j.savedAt, items: state.items, archive: state.archive || [], archiveIgnore: state.archiveIgnore || [] })); } catch(e) {}
     setSync("ok", "Saved " + new Date(j.savedAt).toLocaleTimeString([], { hour:"numeric", minute:"2-digit" }));
   } catch(e) {
     setSync("err", "Couldn't save. Retrying…"); setTimeout(pushChanges, 15000);
@@ -582,6 +588,7 @@ async function pull(first){
   const r = await fetch(API, { cache:"no-store" }); const j = await r.json();
   if (!j.ok) throw j;
   if (!first && j.lastSave === lastSave) return;
+  if (!first && j.lastSave && lastSave && j.lastSave < lastSave) return;   // an older copy than the one on screen
   if (!j.items.length && first) {           // empty sheet: load the built-in calendar into it
     online = true; syncArchive(); renderAll(); pushChanges(); return;
   }
@@ -590,11 +597,12 @@ async function pull(first){
   if (syncArchive()) pushChanges();
   renderAll();
   setSync("ok", "Up to date");
+  try { localStorage.setItem(CACHE, JSON.stringify({ lastSave: j.lastSave, items: j.items, archive: j.archive || [], archiveIgnore: j.archiveIgnore || [] })); } catch(e) {}
 }
 async function boot(){
-  setSync("busy", "Loading…");
+  setSync("busy", CACHED ? "Updating…" : "Loading…");
   try { await pull(true); }
-  catch(e) { online = false; setSync("err", "Showing the built-in copy. Sign in again or check the connection."); }
+  catch(e) { online = false; setSync("err", CACHED ? "Showing your last loaded copy. Sign in again or check the connection." : "Showing the built-in copy. Sign in again or check the connection."); }
   setInterval(() => {
     const busy = saving || mSaveT && view === "meetings" || document.querySelector("#drawer.open, #aDrawer.open") || (view === "meetings" && document.activeElement && document.activeElement.closest && document.activeElement.closest("#v-meetings"));
     if (online && !busy) pull(false).catch(() => {});

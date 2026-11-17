@@ -33,11 +33,16 @@ Rules:
 - SEO and AEO: a clear H1, question-style H2s where natural, a short direct answer at the start of each section, scannable bullets, and an FAQ of 5 to 6 questions with 2 to 4 sentence answers written so AI search tools can quote them.
 - Plain, confident American English. No em dashes. Avoid these words and phrases: delve, landscape, navigate, in today's, ever-evolving, game-changer, unlock, leverage (as a verb), robust, seamless, tapestry, realm, pivotal, crucial, "it's not just X, it's Y", "in conclusion".
 - 1,400 to 1,900 words in the article body.
+- Links: write links inline as [anchor text](https://url) inside paragraphs, bullets and FAQ answers. Use descriptive anchor text, never "click here".
+  - Internal: 3 to 6 links to Boldt pages, using only URLs from dashboardSignals.internalLinks. Link related Boldt blog posts where the topic overlaps.
+  - External: 2 to 4 links to the CONTEXT sources the article cites, using only URLs that appear in the CONTEXT.
+- Boldt CTAs: weave 2 to 3 subtle, helpful calls to action into the body (for example one sentence after a practical point, linking to the contact page or a related Boldt post). Low-key and specific to the point being made, never salesy or repeated.
+- Photo: suggest one hero photo. Prefer an authentic Boldt project photo (a completed outpatient building, medical office building or construction progress) over stock; describe the shot, give alt text that includes the primary keyword, and avoid anything that looks AI-generated or shows frail patients.
 
 Call the save_blog tool once with the finished article. Do not write anything else.`;
 
 const STR = { type: "string" }, ARR = { type: "array", items: { type: "string" } };
-const TOOL = { name: "save_blog", description: "Save the finished blog article.", input_schema: { type: "object", required: ["title", "metaTitle", "metaDescription", "slug", "primaryKeyword", "intro", "sections", "keyTakeaways", "faq", "cta", "linkedin", "email", "sources"],
+const TOOL = { name: "save_blog", description: "Save the finished blog article.", input_schema: { type: "object", required: ["title", "metaTitle", "metaDescription", "slug", "primaryKeyword", "intro", "sections", "keyTakeaways", "faq", "cta", "linkedin", "email", "sources", "photo"],
   properties: {
     title: { type: "string", description: "H1" }, metaTitle: { type: "string", description: "under 60 characters" }, metaDescription: { type: "string", description: "140 to 155 characters" },
     slug: STR, primaryKeyword: STR, secondaryKeywords: ARR, whyThisTopic: { type: "string", description: "1 to 2 sentences on why this topic now, citing the signals" },
@@ -49,6 +54,7 @@ const TOOL = { name: "save_blog", description: "Save the finished blog article."
     schemaRecommendation: { type: "string", description: "one sentence on which schema types to add and why" },
     linkedin: { type: "object", required: ["post"], properties: { post: { type: "string", description: "120 to 200 words" }, thoughtLeaderAd: { type: "string", description: "1 to 2 sentence intro for a Thought Leader Ad" } } },
     email: { type: "object", required: ["subject", "body"], properties: { subject: STR, preview: STR, body: { type: "string", description: "100 to 150 words for health system leaders" } } },
+    photo: { type: "object", required: ["suggestion", "altText"], properties: { suggestion: { type: "string", description: "the hero photo to use and why, preferring a real Boldt project photo" }, altText: { type: "string", description: "alt text with the primary keyword" }, caption: STR, stockSearch: { type: "string", description: "search terms if no Boldt photo fits" }, avoid: STR } },
     sources: { type: "array", description: "only CONTEXT sources the article uses", items: { type: "object", required: ["name", "url"], properties: { name: STR, url: STR } } } } } };
 
 // Article and FAQPage JSON-LD, built here from the article (more reliable than asking the model for nested JSON).
@@ -94,11 +100,18 @@ export default async (req: Request, context: Context) => {
     }
     if (!input) throw lastErr || new Error("no response");
     const blog = clean(input);
+    // Keep only links to Boldt pages we know exist and to sources in the context; anything else becomes plain text.
+    const allowed = new Set<string>([...(signals.internalLinks || []).map((l: any) => l.url), ...JSON.stringify(week).match(/https:\/\/[^"\s)]+/g) || []]);
+    const norm = (u: string) => u.replace(/[.,;]+$/, "");
+    const fix = (v: any): any => typeof v === "string" ? v.replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, (m: string, t: string, u: string) => (allowed.has(norm(u)) || /^https:\/\/www\.boldthealthcarerealestate\.com\/(contact|about|leadership|blog)\/?$/.test(norm(u)) ? `[${t}](${norm(u)})` : t))
+      : Array.isArray(v) ? v.map(fix) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, k === "sources" || k === "photo" ? x : fix(x)])) : v;
+    Object.assign(blog, fix(blog));
+    const linkCount = (JSON.stringify([blog.intro, blog.sections, blog.faq]).match(/\]\(https/g) || []).length;
     blog.schema = { recommendation: blog.schemaRecommendation || "Add Article and FAQPage schema so search engines and AI tools can read the article and its FAQ.", jsonld: jsonld(blog) };
     if (!blog.title || !Array.isArray(blog.sections)) throw new Error("the draft came back incomplete");
     blog.sources = (blog.sources || []).filter((s: any) => /^https:\/\//.test(s.url || ""));
     const words = [...(blog.intro || []), ...blog.sections.flatMap((s: any) => [...(s.paragraphs || []), ...(s.bullets || [])])].join(" ").split(/\s+/).length;
-    await save({ status: "done", finished: new Date().toISOString(), weekOf: week.weekOf, words, blog });
+    await save({ status: "done", finished: new Date().toISOString(), weekOf: week.weekOf, words, links: linkCount, blog });
     recent.items = [{ id, title: blog.title, by: user, created: started, words }, ...recent.items.filter((x: any) => x.id !== id)].slice(0, 25);
     await store.setJSON("index", recent);
     console.log(`blog-run done id=${id} words=${words}`);

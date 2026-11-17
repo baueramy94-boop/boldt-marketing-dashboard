@@ -11,12 +11,18 @@ import { Document, Packer, Paragraph, HeadingLevel, TextRun, ExternalHyperlink }
 const json = (o: unknown, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
 
 function docx(b: any): Document {
-  const P = (t: string, o: any = {}) => new Paragraph({ children: [new TextRun({ text: t, ...o })], spacing: { after: 160 } });
+  // Text with [anchor](url) links becomes runs with real hyperlinks.
+  const runs = (t: string, o: any = {}) => { const out: any[] = []; let last = 0; const re = /\[([^\]]+)\]\((https?:[^)\s]+)\)/g; let m;
+    while ((m = re.exec(t || ""))) { if (m.index > last) out.push(new TextRun({ text: t.slice(last, m.index), ...o }));
+      out.push(new ExternalHyperlink({ link: m[2], children: [new TextRun({ text: m[1], style: "Hyperlink", ...o })] })); last = m.index + m[0].length; }
+    if (last < (t || "").length) out.push(new TextRun({ text: t.slice(last), ...o })); return out; };
+  const P = (t: string, o: any = {}) => new Paragraph({ children: runs(t, o), spacing: { after: 160 } });
   const H = (t: string, level: any) => new Paragraph({ text: t, heading: level, spacing: { before: 280, after: 120 } });
-  const bullet = (t: string) => new Paragraph({ text: t, bullet: { level: 0 } });
+  const bullet = (t: string) => new Paragraph({ children: runs(t), bullet: { level: 0 } });
   const label = (k: string, v: string) => new Paragraph({ children: [new TextRun({ text: `${k}: `, bold: true }), new TextRun(v || "")], spacing: { after: 80 } });
   const c: Paragraph[] = [];
   c.push(H(b.title, HeadingLevel.TITLE));
+  if (b.photo) { c.push(label("Suggested photo", b.photo.suggestion)); if (b.photo.altText) c.push(label("Alt text", b.photo.altText)); if (b.photo.caption) c.push(label("Caption", b.photo.caption)); if (b.photo.stockSearch) c.push(label("If no Boldt photo fits, search", b.photo.stockSearch)); if (b.photo.avoid) c.push(label("Avoid", b.photo.avoid)); }
   (b.intro || []).forEach((t: string) => c.push(P(t)));
   for (const s of b.sections || []) {
     c.push(H(s.h2, HeadingLevel.HEADING_1));
