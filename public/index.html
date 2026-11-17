@@ -212,7 +212,7 @@ tr.future td{color:var(--muted)}
 .rc-list li.rc-i{display:grid;grid-template-columns:auto 1fr auto;gap:10px 12px;align-items:start}.rc-chk{padding-top:2px;cursor:pointer}.rc-chk input{width:18px;height:18px;accent-color:var(--good);cursor:pointer}
 .rc-body p{margin:6px 0 4px}.rc-meta{display:block;margin:4px 0 0}.rc-i.done .rc-body b,.rc-i.done .rc-body p{color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(0,0,0,.25)}.rc-i.del{opacity:.6}
 .rc-act{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.rc-x{border:1px solid var(--line);background:transparent;border-radius:6px;width:28px;height:28px;font-size:17px;line-height:1;color:var(--muted);cursor:pointer}.rc-x:hover{color:var(--bad);border-color:var(--bad)}
-.rc-in{color:var(--good);border-color:var(--good)}.rc-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px}.rc-f{flex-wrap:wrap}
+.rc-in{color:var(--good);border-color:var(--good)}.rc-when{font:inherit;font-size:12.5px;padding:5px 6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}.rc-prog{height:6px;border-radius:99px;background:var(--soft);margin:2px 0 12px;overflow:hidden}.rc-prog i{display:block;height:100%;background:var(--good);border-radius:99px}.rc-plan .lt-h h3{margin:0}.rc-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px}.rc-f{flex-wrap:wrap}
 .linkbtn{background:none;border:0;padding:0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
 @media (max-width:640px){.rc-list li.rc-i{grid-template-columns:auto 1fr}.rc-act{grid-column:2;justify-content:flex-start}}
 .rec-h{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -500,7 +500,7 @@ body.editing .ed-mod{background:color-mix(in srgb,var(--yellow) 16%,transparent)
 (function(){
 /* On the live site, opening the dashboard without a page link shows the Marketing / Sales chooser once per browser session. */
 try{if(/netlify\.app$|boldt/i.test(location.hostname)&&!location.hash&&!sessionStorage.getItem("bmd_dash")){location.replace("start.html");return;}sessionStorage.setItem("bmd_dash","marketing");}catch(e){}
-const PAGES=[["exec","Executive Summary"],["trends","Month Over Month"],["paid","Paid Media"],["creative","Ads & Creative"],["website","Website"],["leads","Leads"],["roi","ROI & Variables"],["budget","Budget"],["recs","Recommendations"],["rnd","R&D"]];
+const PAGES=[["exec","Executive Summary"],["trends","Month Over Month"],["paid","Paid Media"],["creative","Ads & Creative"],["website","Website"],["leads","Leads"],["roi","ROI & Variables"],["budget","Budget"],["recs","Recommendations"],["rnd","R&D"],["blog","Blog Generator"]];
 let D=null; const DIV="HC";
 /* LinkedIn image links expire about a week after each pull; on the live site /api/img serves a saved copy. */
 const LIVE_IMG=/netlify\.app$|boldt/i.test(location.hostname)&&location.protocol==="https:";
@@ -896,12 +896,17 @@ document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest
   if(t.dataset.rndCopy!=null)return rndCopy(t);
   if(t.dataset.rndInd){RND_IND=t.dataset.rndInd;}if(t.dataset.rndMkt){RND_MKT=t.dataset.rndMkt;}const y=scrollY;render();scrollTo(0,y);});
 document.addEventListener("change",e=>{if(e.target.id==="rnd-week"){RND_W=e.target.value;rndLoad();const y=scrollY;render();scrollTo(0,y);}});
+R.blog=()=>{
+  let h=head("Blog Generator",`Long-form healthcare articles written from this week's R&D research, the dashboard's data and the text on boldthealthcarerealestate.com. Ask questions about a draft, apply or delete suggested changes, and share it for review.`);
+  h+=`<div class="panel blog-panel" id="blog-gen">${blogBody()}</div>`; if(!BLOG.recent)setTimeout(blogRecent,0);
+  return h;
+};
 R.rnd=()=>{
-  let h=head("R&D",`Marketing research, healthcare industry intelligence, strategic insights and AI content tools, refreshed every Monday. Healthcare only.`);
+  let h=head("R&D",`Marketing research, healthcare industry intelligence and strategic insights, refreshed every Monday. Healthcare only.`);
   if(RND_ERR)return h+`<div class="panel"><p class="note">${esc(RND_ERR)}</p></div>`;
   const d=RND[RND_W];
   if(!d){rndLoad();return h+`<div class="panel"><p class="note">Loading this week's briefing…</p></div>`;}
-  h+=`<div class="panel blog-panel" id="blog-gen">${blogBody()}</div>`; if(!BLOG.recent)setTimeout(blogRecent,0);
+  h+=`<p class="sec-note" style="margin:0 0 12px">Write a blog from this week's research on the <a href="#blog">Blog Generator</a> tab.</p>`;
   const weeks=(RND_IX&&RND_IX.weeks)||[];
   const list=a=>`<ul class="rnd-ul">${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`;
   h+=`<div class="panel rnd-brief" id="briefing"><div class="lt-h"><h3>Weekly Executive Briefing</h3><div class="rnd-act">${weeks.length>1?`<label class="adper">Week of <select id="rnd-week">${weeks.map(w=>`<option value="${esc(w.weekOf)}" ${w.weekOf===RND_W?"selected":""}>${rndD(w.weekOf)}</option>`).join("")}</select></label>`:`<span class="note" style="margin:0">Week of ${rndD(d.weekOf)}</span>`}<button type="button" class="btn-sm" data-rnd-copy>Copy briefing</button></div></div>
@@ -1794,16 +1799,21 @@ function recsItems(){
   const out=[], RC=D.recs||[], Z=D.qbr, qn=Z?Z.quarter.slice(5):"", W=RND_IX&&RND_IX.weeks&&RND_IX.weeks[0]?RND[RND_IX.weeks[0].weekOf]:null;
   const pri=v=>`<span class="chip ${v==="High"?"bad":v==="Medium"?"warn":""}">${esc(v||"Medium")}</span>`;
   const tag=t=>t==="quick"?'<span class="chip good">Quick win</span>':'<span class="chip warn">Strategic</span>';
-  const add=(sec,src,o)=>out.push({sec,src,id:rcId(src,o.title),ws:rcWs(o.title+" "+(o.detail||"")),...o});
-  RC.forEach((r,i)=>{if(DELS.has("recs."+i))return;add("month",`${RM()} report`,{title:r.title,detail:r.detail,owner:r.owner,chips:pri(r.pri)});});
-  if(Z){(Z.recs||[]).forEach((r,i)=>{if(DELS.has("qbr.recs."+i))return;add("qbr",`${qn} review`,{title:r.title,detail:`${r.why||""}${r.action?` Next step: ${r.action}`:""}`.trim(),chips:tag(r.type)});});
-    (Z.expansion||[]).forEach((r,i)=>{if(DELS.has("qbr.expansion."+i))return;add("qbr",`${qn} review`,{title:r.title,detail:`${r.why||""}${r.action?` Next step: ${r.action}`:""}`.trim(),chips:tag(r.type)+(r.when?`<span class="chip">${esc(r.when)}</span>`:"")});});}
+  // d = default timeframe (30, 60 or 90 days); anyone can move an item, saved as "when" in /api/recs.
+  const add=(sec,src,d,o)=>out.push({sec,src,d,id:rcId(src,o.title),ws:rcWs(o.title+" "+(o.detail||"")),...o});
+  const whenD=w=>/now|this month|30/i.test(w||"")?30:/60|next month|q4/i.test(w||"")?60:90;
+  RC.forEach((r,i)=>{if(DELS.has("recs."+i))return;add("month",`${RM()} report`,r.pri==="Low"?60:30,{title:r.title,detail:r.detail,owner:r.owner,chips:pri(r.pri),rank:r.pri==="High"?0:r.pri==="Medium"?1:2});});
+  if(Z){(Z.recs||[]).forEach((r,i)=>{if(DELS.has("qbr.recs."+i))return;add("qbr",`${qn} review`,r.type==="quick"?30:60,{title:r.title,detail:`${r.why||""}${r.action?` Next step: ${r.action}`:""}`.trim(),chips:tag(r.type)});});
+    (Z.expansion||[]).forEach((r,i)=>{if(DELS.has("qbr.expansion."+i))return;add("qbr",`${qn} review`,whenD(r.when),{title:r.title,detail:`${r.why||""}${r.action?` Next step: ${r.action}`:""}`.trim(),chips:tag(r.type)+(r.when?`<span class="chip">${esc(r.when)}</span>`:"")});});}
   if(W){const wk=`R&D, week of ${rndD(W.weekOf)}`;
-    if(W.insights&&W.insights.actions)[["d30","Next 30 days"],["d60","Next 60 days"],["d90","Next 90 days"]].forEach(([k,n])=>(W.insights.actions[k]||[]).forEach(x=>add("actions",wk,{title:x,chips:`<span class="chip ${k==="d30"?"bad":k==="d60"?"warn":""}">${n}</span>`})));
+    if(W.insights&&W.insights.actions)[["d30",30],["d60",60],["d90",90]].forEach(([k,n])=>(W.insights.actions[k]||[]).forEach(x=>add("actions",`Strategic insights, week of ${rndD(W.weekOf)}`,n,{title:x,chips:`<span class="chip">Action</span>`})));
     const o=W.opportunities||{},rr=W.recommend||{};
-    [["marketing","Marketing"],["thoughtLeadership","Thought leadership"],["content","Content"]].forEach(([k,n])=>(o[k]||[]).forEach(x=>add("opps",wk,{title:x,chips:`<span class="chip">${n}</span>`})));
-    [["campaignThemes","Campaign theme"],["webinarTopics","Webinar"],["articleTopics","Article"]].forEach(([k,n])=>(rr[k]||[]).forEach(x=>add("opps",wk,{title:x,chips:`<span class="chip">${n}</span>`,blog:k==="articleTopics"?{t:x,w:""}:null})));
-    (W.contentIdeas||[]).forEach(c=>add("ideas",wk,{title:c.title,detail:c.why,chips:`<span class="chip good">${esc(c.type)}</span>`,sig:c.signals||[],blog:c.type==="Blog"?{t:c.title,w:c.why}:null,ws:rcWs(c.type+" "+c.title)}));}
+    [["marketing","Marketing",60],["thoughtLeadership","Thought leadership",60],["content","Content",30]].forEach(([k,n,dd])=>(o[k]||[]).forEach(x=>add("opps",wk,dd,{title:x,chips:`<span class="chip">${n}</span>`})));
+    [["campaignThemes","Campaign theme",60],["webinarTopics","Webinar",90],["articleTopics","Article",30]].forEach(([k,n,dd])=>(rr[k]||[]).forEach(x=>add("opps",wk,dd,{title:x,chips:`<span class="chip">${n}</span>`,blog:k==="articleTopics"?{t:x,w:""}:null})));
+    (W.contentIdeas||[]).forEach(c=>add("ideas",`Content idea, week of ${rndD(W.weekOf)}`,/^(Blog|LinkedIn|Email)/i.test(c.type)?30:/Campaign/i.test(c.type)?60:90,{title:c.title,detail:c.why,chips:`<span class="chip good">${esc(c.type)}</span>`,sig:c.signals||[],blog:c.type==="Blog"?{t:c.title,w:c.why}:null,ws:rcWs(c.type+" "+c.title)}));}
+  const S=RECS_ST||{},ORD={month:0,qbr:1,actions:2,ideas:3,opps:4};
+  out.forEach(it=>{const w=+((S[it.id]||{}).when);it.when=[30,60,90].includes(w)?w:it.d;});
+  out.sort((a,b)=>(ORD[a.sec]-ORD[b.sec])||((a.rank??1)-(b.rank??1)));
   return {out,W};
 }
 function rcRow(it){const st=(RECS_ST||{})[it.id]||{},tr=st.tracker;
@@ -1812,10 +1822,10 @@ function rcRow(it){const st=(RECS_ST||{})[it.id]||{},tr=st.tracker;
     <div class="rc-body"><div class="rec-h">${it.chips||""}<b>${esc(it.title)}</b></div>${it.detail?`<p>${esc(it.detail)}</p>`:""}
       ${it.sig&&it.sig.length?`<div class="idea-sig">${it.sig.map(x=>`<span>${esc(x)}</span>`).join("")}</div>`:""}
       <span class="note rc-meta">${esc(it.src)}${it.owner?` · Owner: ${esc(it.owner)}`:""}${st.done?` · Completed by ${esc(st.doneBy||"")}, ${new Date(st.doneAt).toLocaleDateString("en-US",{month:"short",day:"numeric"})}`:""}${st.deleted?` · Deleted by ${esc(st.deletedBy||"")}`:""}</span></div>
-    <div class="rc-act">${st.deleted?`<button type="button" class="btn-sm" data-rc-restore>Restore</button>`:`${it.blog?`<button type="button" class="btn-sm" data-rc-blog>Generate blog</button>`:""}${tr?`<a class="btn-sm rc-in" href="tracker.html" title="Added by ${esc(tr.by||"")}">In tracker ✓</a>`:`<button type="button" class="btn-sm" data-rc-tracker>Add to tracker</button>`}<button type="button" class="rc-x" data-rc-del title="Delete" aria-label="Delete: ${esc(it.title)}">×</button>`}</div></li>`;}
+    <div class="rc-act">${st.deleted?`<button type="button" class="btn-sm" data-rc-restore>Restore</button>`:`<select class="rc-when" data-rc-when aria-label="Timeframe for: ${esc(it.title)}" title="Move to another timeframe">${[30,60,90].map(w=>`<option value="${w}" ${it.when===w?"selected":""}>${w} days</option>`).join("")}</select>${it.blog?`<button type="button" class="btn-sm" data-rc-blog>Generate blog</button>`:""}${tr?`<a class="btn-sm rc-in" href="tracker.html" title="Added by ${esc(tr.by||"")}">In tracker ✓</a>`:`<button type="button" class="btn-sm" data-rc-tracker>Add to tracker</button>`}<button type="button" class="rc-x" data-rc-del title="Delete" aria-label="Delete: ${esc(it.title)}">×</button>`}</div></li>`;}
 R.recs=()=>{
   const RC=D.recs||[], Z=D.qbr, qn=Z?Z.quarter.slice(5):"";
-  let h=head("Recommendations",`Healthcare. Every recommendation, opportunity and content idea in one place: ${RM()}'s results${Z?`, the ${qn} quarterly review`:""} and this week's R&D research. Check items off when they're done, or add them to the <a href="tracker.html">project tracker</a>.`);
+  let h=head("Recommendations",`Healthcare. A 30-60-90 day plan built from ${RM()}'s results${Z?`, the ${qn} quarterly review`:""} and this week's R&D research. Check items off when they're done, move them to another timeframe, or add them to the <a href="tracker.html">project tracker</a>.`);
   if(EDITING){   // edit mode keeps the report's own editable lists
     const tag=t=>t==="quick"?'<span class="chip good">Quick win</span>':'<span class="chip warn">Strategic</span>';
     const pri=(p,v)=>`<button type="button" class="chip ed-pri ${v==="High"?"bad":v==="Medium"?"warn":""}" data-pri="${p}" title="Change priority">${esc(v||"Medium")}</button>`;
@@ -1835,13 +1845,13 @@ R.recs=()=>{
   h+=`<div class="panel rc-bar"><div class="seg rc-f" role="group" aria-label="Show">${[["open",`Open (${n.open})`],["done",`Completed (${n.done})`],["all",`All (${n.open+n.done})`],["del",`Deleted (${n.del})`]].map(([k,l])=>`<button type="button" class="${RECS_F===k?" on":""}" data-rc-f="${k}" aria-pressed="${RECS_F===k}">${l}</button>`).join("")}</div>
     <span class="note" style="margin:0">${n.tr} in the project tracker${W?` · R&D from the week of ${rndD(W.weekOf)}`:""}</span></div>`;
   if(RECS_ERR) h+=`<p class="note" style="color:#B5452F">${esc(RECS_ERR)}</p>`;
-  const SECS=[["month",`For ${NM()}`,`From ${RM()}'s results, with priority and owner`],["qbr",`From the ${qn} review`,"Improvements to the programs already running, plus new channels and the rebrand"],
-    ["actions","Recommended actions","From this week's strategic insights, by timeframe"],["opps","Opportunities","Marketing, thought leadership and content opportunities, campaign themes, webinars and article topics from this week's industry research"],
-    ["ideas","Content ideas","Suggested from engaged audiences, trending healthcare topics, search and AI-answer opportunities, CRM engagement, website traffic and past content performance"]];
+  const day=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.toLocaleDateString("en-US",{month:"short",day:"numeric"});};
+  const PLAN=[[30,"Next 30 days",`Today to ${day(30)}. Quick wins, this month's report recommendations, and content to publish now.`],[60,"Days 31 to 60",`${day(31)} to ${day(60)}. Campaigns, thought leadership and strategic fixes.`],[90,"Days 61 to 90",`${day(61)} to ${day(90)}. Bigger content pieces, new channels and longer-term tests.`]];
   let any=false;
-  SECS.forEach(([k,t,sub])=>{const L=out.filter(i=>i.sec===k&&show(i));if(!L.length)return;any=true;
-    h+=`<div class="panel" id="rc-${k}"><h3>${t}</h3><p class="sub">${sub}</p><ol class="recs rc-list">${L.map(rcRow).join("")}</ol></div>`;});
-  if(!any) h+=`<div class="panel"><p class="note" style="margin:0">${!W&&!RC.length?"Loading recommendations…":RECS_F==="open"?"Everything here is complete. Nice work.":RECS_F==="del"?"Nothing has been deleted.":"Nothing to show."}</p></div>`;
+  PLAN.forEach(([w,t,sub])=>{const L=out.filter(i=>i.when===w&&show(i)),all=out.filter(i=>i.when===w&&!isDel(i)),dn=all.filter(isDone).length;if(!L.length&&RECS_F!=="open")return;any=any||L.length>0;
+    h+=`<div class="panel rc-plan" id="rc-${w}"><div class="lt-h"><h3>${t}</h3><span class="note" style="margin:0">${dn} of ${all.length} complete</span></div><p class="sub">${sub}</p><div class="rc-prog" aria-hidden="true"><i style="width:${all.length?Math.round(dn/all.length*100):0}%"></i></div>
+      ${L.length?`<ol class="recs rc-list">${L.map(rcRow).join("")}</ol>`:`<p class="note">${all.length?"Everything in this timeframe is complete.":"Nothing planned here yet. Move an item here with its timeframe menu."}</p>`}</div>`;});
+  if(!any&&RECS_F!=="open") h+=`<div class="panel"><p class="note" style="margin:0">${RECS_F==="del"?"Nothing has been deleted.":"Nothing to show."}</p></div>`;
   if(n.done&&RECS_F==="open") h+=`<p class="note"><button type="button" class="linkbtn" data-rc-f="done">Show ${n.done} completed</button></p>`;
   return h;
 };
@@ -1853,9 +1863,12 @@ document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest
   RECS_ST=RECS_ST||{};const prev=RECS_ST[id]?{...RECS_ST[id]}:undefined,undo=()=>{if(prev)RECS_ST[id]=prev;else delete RECS_ST[id];};
   if(t.dataset.rcDel!=null){RECS_ST[id]={...(prev||{}),deleted:true,deletedBy:"you"};recsRe();rcPost(id,{action:"delete"},undo);}
   else if(t.dataset.rcRestore!=null){const c={...(prev||{})};delete c.deleted;RECS_ST[id]=c;recsRe();rcPost(id,{action:"restore"},undo);}
-  else if(t.dataset.rcBlog!=null){blogStart(it.blog.t,it.blog.w||"");location.hash="#rnd";}
+  else if(t.dataset.rcBlog!=null){blogStart(it.blog.t,it.blog.w||"");location.hash="#blog";}
   else if(t.dataset.rcTracker!=null){t.disabled=true;t.textContent="Adding…";
     rcPost(id,{action:"tracker",title:it.title.length>120?it.title.slice(0,117).replace(/\s+\S*$/,"")+"…":it.title,detail:[it.title.length>120?it.title:"",it.detail||""].filter(Boolean).join("\n\n"),owner:it.owner||"",ws:it.ws,source:it.src},null);}});
+document.addEventListener("change",e=>{const t=e.target;if(!t.matches||!t.matches("[data-rc-when]"))return;const li=t.closest("[data-rid]");if(!li)return;const id=li.dataset.rid,w=+t.value;
+  RECS_ST=RECS_ST||{};const prev=RECS_ST[id]?{...RECS_ST[id]}:undefined;RECS_ST[id]={...(prev||{}),when:w};recsRe();
+  rcPost(id,{action:"move",when:w},()=>{if(prev)RECS_ST[id]=prev;else delete RECS_ST[id];});});
 document.addEventListener("change",e=>{const t=e.target;if(!t.matches||!t.matches("[data-rc-done]"))return;const li=t.closest("[data-rid]");if(!li)return;const id=li.dataset.rid;
   RECS_ST=RECS_ST||{};const prev=RECS_ST[id]?{...RECS_ST[id]}:undefined,undo=()=>{if(prev)RECS_ST[id]=prev;else delete RECS_ST[id];};
   if(t.checked)RECS_ST[id]={...(prev||{}),done:true,doneBy:"you",doneAt:new Date().toISOString()};else{const c={...(prev||{})};delete c.done;RECS_ST[id]=c;}

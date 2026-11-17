@@ -117,7 +117,7 @@ function paintMast(){const R=S.rv||{};document.title=`Review: ${S.d.blog.title}`
   $("#mbtns").innerHTML=`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${R.status?`<span class="chip ${R.status==="approved"?"good":"warn"}">${R.status==="approved"?"Approved":"Changes requested"} by ${esc(R.by)}</span>`:""}
     <button class="btn ok${R.status==="approved"?" on":""}" data-review="approved">${R.status==="approved"?"Approved ✓":"Approve"}</button>
     <button class="btn chg${R.status==="changes"?" on":""}" data-review="changes">Request changes</button>
-    <a class="btn" href="/api/blog?id=${esc(ID)}&format=docx">Word</a><button class="btn" data-copylink>Copy link</button><a class="btn" href="/#rnd">Dashboard</a></div>`;}
+    <a class="btn" href="/api/blog?id=${esc(ID)}&format=docx">Word</a><button class="btn" data-copylink>Copy link</button><a class="btn" href="/#blog">Dashboard</a></div>`;}
 function counts(sec){return S.cm.filter(c=>!c.parent&&!c.resolved&&c.section===sec).length;}
 function cbtn(sec){const n=counts(sec);return `<button class="cbtn" data-comment-on="${esc(sec)}" title="Comment on this section">${n?`<b>${n}</b> comment${n===1?"":"s"}`:"+ Comment"}</button>`;}
 function paintArticle(){const d=S.d,b=d.blog,E=S.edit?' contenteditable="true"':"",rv=d.revising;

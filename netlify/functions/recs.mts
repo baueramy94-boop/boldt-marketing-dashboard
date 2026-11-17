@@ -4,7 +4,7 @@ import { getStore } from "@netlify/blobs";
 // Recommendations tab: shared complete / delete state for every recommendation, and "Add to tracker".
 // State lives in Netlify Blobs store "recs" (key "state"): { "<rec id>": { done?, deleted?, tracker?, by, at } }
 // GET  /api/recs                                   -> { ok, state }
-// POST /api/recs { id, action: done|undone|delete|restore }            -> { ok, state }
+// POST /api/recs { id, action: done|undone|delete|restore }  or  { id, action: move, when: 30|60|90 }  (30-60-90 day plan)            -> { ok, state }
 // POST /api/recs { id, action: tracker, title, detail, owner?, ws?, source } -> creates a project in the tracker Sheet
 //   (same Apps Script as /api/tracker), then { ok, state, itemId }
 // Rec ids are made in the page from the source and the text, so the same recommendation keeps its state.
@@ -32,6 +32,7 @@ export default async (req: Request, context: Context) => {
     if (action === "done") state[id] = { ...cur, done: true, doneBy: user, doneAt: now };
     else if (action === "undone") { const { done, doneBy, doneAt, ...rest } = cur; state[id] = rest; }
     else if (action === "delete") state[id] = { ...cur, deleted: true, deletedBy: user, deletedAt: now };
+    else if (action === "move") { const w = +b.when; if (![30, 60, 90].includes(w)) return json({ ok: false, error: "bad request" }, 400); state[id] = { ...cur, when: w, movedBy: user, movedAt: now }; }
     else if (action === "restore") { const { deleted, deletedBy, deletedAt, ...rest } = cur; state[id] = rest; }
     else if (action === "tracker") {
       if (cur.tracker) return json({ ok: true, state, itemId: cur.tracker.itemId });
