@@ -10,6 +10,8 @@ import { clean, jsonld } from "../lib/blog-common.mts";
 // GET /api/blog?id=<id> also returns qa (Ask about this draft), comments (review page) and review ({ status, by, at }).
 // POST /api/blog { action, id, ... }:
 //   dismiss / undismiss { qid, idx }       delete or bring back a suggestion from an answer
+//   qaitem { qid, kind: suggestions | questions, idx, op: edit | delete | undelete, title?, change?, q?, why? }
+//   rq { items: [{ q, why }] }             edit the draft's questions to confirm before publishing
 //   comment { text, section?, kind: comment | edit, parent? }    review comments and edit requests
 //   resolve { cid, resolved }   delcomment { cid }
 //   review { status: approved | changes | "" }
@@ -86,6 +88,28 @@ async function post(req: Request, context: Context, store: any) {
     if (act === "dismiss") { sg.state = "deleted"; sg.by = user; } else delete sg.state;
     await store.setJSON(k, x);
     return json({ ok: true });
+  }
+  if (act === "qaitem") {   // edit, delete or bring back one suggestion or question in an answer
+    const kind = b.kind === "questions" ? "questions" : "suggestions";
+    if (!okId(b.qid)) return json({ ok: false, error: "bad request" }, 400);
+    const k = `qa/${id}/${b.qid}`, x: any = await store.get(k, { type: "json" }).catch(() => null);
+    const it = x && Array.isArray(x[kind]) ? x[kind][+b.idx] : null;
+    if (!it) return json({ ok: false, error: "not found" }, 404);
+    if (b.op === "delete") { it.state = "deleted"; it.by = user; }
+    else if (b.op === "undelete") delete it.state;
+    else if (b.op === "edit") {
+      if (kind === "questions") { const q = String(b.q || "").trim(); if (!q) return json({ ok: false, error: "empty" }, 400); it.q = q.slice(0, 500); it.why = String(b.why || "").slice(0, 500); }
+      else { const c = String(b.change || "").trim(); if (!c) return json({ ok: false, error: "empty" }, 400); it.change = c.slice(0, 1500); it.title = String(b.title || it.title || "").slice(0, 120); }
+      it.editedBy = user;
+    } else return json({ ok: false, error: "bad request" }, 400);
+    await store.setJSON(k, x);
+    return json({ ok: true, item: it });
+  }
+  if (act === "rq") {       // replace the draft's "Questions to confirm before publishing"
+    if (d.revising && d.revising.status === "running" && Date.now() - Date.parse(d.revising.at) < 10 * 60 * 1000) return json({ ok: false, error: "Changes are being applied right now. Try again in a minute." }, 409);
+    const items = (Array.isArray(b.items) ? b.items : []).filter((x: any) => x && String(x.q || "").trim()).slice(0, 20).map((x: any) => ({ q: String(x.q).trim().slice(0, 500), why: String(x.why || "").trim().slice(0, 500) }));
+    await store.setJSON(id, { ...d, blog: { ...d.blog, reviewQuestions: items } });
+    return json({ ok: true, items });
   }
   if (act === "comment") {
     const text = String(b.text || "").trim().slice(0, 4000);
