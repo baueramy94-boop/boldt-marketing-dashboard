@@ -350,7 +350,7 @@ body.jm-open{overflow:hidden}
 .blog-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:12px 0}.blog-meta div{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;display:flex;flex-direction:column;gap:3px}.blog-meta b{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
 .blog-art{max-width:none;margin:16px 0;font-size:15px;line-height:1.65}.blog-art h2{font-size:24px;line-height:1.25;margin:0 0 12px}.blog-art h3{font-size:18px;margin:22px 0 8px}.blog-art h4{font-size:15px;margin:14px 0 4px}.blog-art p{margin:0 0 12px}.blog-art ul{margin:0 0 12px;padding-left:20px}
 .blog-promo{margin-top:10px}.blog-code{white-space:pre-wrap;font-size:12px;background:var(--soft);padding:10px;border-radius:8px;overflow:auto;max-height:320px}
-.blog-recent{list-style:none;padding:0;margin:8px 0 0}.blog-recent li{margin:6px 0}.linkish{background:none;border:0;padding:0;font:inherit;color:var(--navy);text-decoration:underline;cursor:pointer;text-align:left}
+.blog-recent{list-style:none;padding:0;margin:8px 0 0}.blog-recent li{margin:6px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.bd-x{width:24px;height:24px;font-size:15px}.bd-ask{display:inline-flex;gap:6px;align-items:center;font-size:13px;color:var(--bad)}.btn-sm.bd-yes{background:var(--bad);border-color:var(--bad);color:#fff}.linkish{background:none;border:0;padding:0;font:inherit;color:var(--navy);text-decoration:underline;cursor:pointer;text-align:left}
 .ins-grid,.idea-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
 .ins-t{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--navy);background:var(--soft);border-radius:999px;padding:2px 8px;margin-bottom:6px}
 .ins b,.idea b{display:block;font-size:14px;line-height:1.35}.ins-act{border:1px solid var(--line);border-radius:10px;padding:12px 14px}
@@ -855,13 +855,21 @@ function blogBody(){
         <div id="blog-qa-list">${qaList()}</div></div>
       ${b.schema?`<details class="or-more" style="margin-top:10px"><summary>Schema markup (${esc(b.schema.recommendation||"Article and FAQPage")})</summary><pre class="blog-code">${esc(typeof b.schema.jsonld==="string"?b.schema.jsonld:JSON.stringify(b.schema.jsonld,null,2))}</pre></details>`:""}
       <p class="sec-note">AI-written draft from the linked sources and dashboard data. Fill in any [bracketed] Boldt examples and review facts before publishing.</p></div>`;}
-  if(BLOG.recent&&BLOG.recent.length)h+=`<details class="or-more" style="margin-top:12px"><summary>Recent drafts (${BLOG.recent.length})</summary><ul class="blog-recent">${BLOG.recent.map(x=>`<li><button type="button" class="linkish" data-blog-open="${esc(x.id)}">${esc(x.title)}</button> <span class="note" style="margin:0">${esc(x.by||"")} · ${new Date(x.created).toLocaleDateString("en-US",{month:"short",day:"numeric"})}${x.words?` · ${N(x.words)} words`:""}</span></li>`).join("")}</ul></details>`;
+  if(BLOG.recent&&BLOG.recent.length)h+=`<details class="or-more blog-rd" style="margin-top:12px"><summary>Recent drafts (${BLOG.recent.length})</summary><ul class="blog-recent">${BLOG.recent.map(x=>`<li><button type="button" class="linkish" data-blog-open="${esc(x.id)}">${esc(x.title)}</button> <span class="note" style="margin:0">${esc(x.by||"")} · ${new Date(x.created).toLocaleDateString("en-US",{month:"short",day:"numeric"})}${x.words?` · ${N(x.words)} words`:""}</span>${BLOG.delAsk===x.id?` <span class="bd-ask">Delete this draft and its comments? <button type="button" class="btn-sm bd-yes" data-bd-yes="${esc(x.id)}">Delete</button><button type="button" class="btn-sm" data-bd-no>Keep</button></span>`:` <button type="button" class="rc-x bd-x" data-bd-del="${esc(x.id)}" title="Delete draft" aria-label="Delete draft: ${esc(x.title)}">×</button>`}</li>`).join("")}</ul></details>`;
   return h;}
 document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-blog-go],[data-blog-copy],[data-blog-open],[data-blog-idea]");if(!t)return;
   if(t.dataset.blogGo!=null){const v=(document.getElementById("blog-topic")||{}).value||"";blogStart(v.trim(),"");}
   else if(t.dataset.blogIdea!=null){blogStart(t.dataset.blogIdea,t.dataset.why||"");}
   else if(t.dataset.blogOpen){blogOpen(t.dataset.blogOpen);}
   else if(t.dataset.blogCopy&&BLOG.d&&BLOG.d.blog){const b=BLOG.d.blog,k=t.dataset.blogCopy;blogCopy(t,k==="article"?blogText(b):k==="html"?blogHtml(b):k==="rq"?["Questions to confirm before publishing: "+b.title,"",...(b.reviewQuestions||[]).map(r=>`- ${r.q}${r.why?` ${r.why}`:""}`)].join("\n"):k==="linkedin"?(b.linkedin||{}).post||"":`Subject: ${(b.email||{}).subject||""}\n\n${(b.email||{}).body||""}`);}});
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-bd-del],[data-bd-yes],[data-bd-no]");if(!t)return;
+  const keepOpen=()=>{const dt=document.querySelector("#blog-gen details.blog-rd");if(dt)dt.open=true;};
+  if(t.dataset.bdDel){BLOG.delAsk=t.dataset.bdDel;blogPaint();keepOpen();}
+  else if(t.dataset.bdNo!=null){BLOG.delAsk="";blogPaint();keepOpen();}
+  else if(t.dataset.bdYes){const id=t.dataset.bdYes;t.disabled=true;t.textContent="Deleting…";
+    fetch("/api/blog",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"deletedraft",id})}).then(r=>r.json()).then(j=>{if(!j.ok)throw j;
+      BLOG.recent=j.items||BLOG.recent.filter(x=>x.id!==id);BLOG.delAsk="";if(BLOG.id===id){BLOG.id="";BLOG.d=null;BLOG.qa=[];BLOG.share=false;}blogPaint();keepOpen();})
+    .catch(()=>{BLOG.delAsk="";BLOG.err="That draft couldn't be deleted. Try again.";blogPaint();keepOpen();});}});
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="blog-topic"){e.preventDefault();blogStart(e.target.value.trim(),"");}});
 function rndInsights(d){const I=d.insights;if(!I)return "";const sig=RND_SIG;
   const intent=sig&&sig.buyingIntent?sig.buyingIntent.slice(0,10):[];

@@ -14,6 +14,7 @@ import { clean, jsonld } from "../lib/blog-common.mts";
 //   resolve { cid, resolved }   delcomment { cid }
 //   review { status: approved | changes | "" }
 //   edit { patch: { title?, intro?, sections?, keyTakeaways?, faq?, cta? } }   direct text edits (keeps the old version)
+//   deletedraft                            delete the draft (Recent drafts), with its questions, comments and review status
 //   restore                                undo the last change (applied suggestion, edit request or text edit)
 // The edge gate has already checked the site password.
 
@@ -66,6 +67,15 @@ async function post(req: Request, context: Context, store: any) {
   if (!/^[a-z0-9-]{8,40}$/i.test(id)) return json({ ok: false, error: "bad id" }, 400);
   const user = decodeURIComponent(context.cookies.get("bmd_user") || "") || "Someone";
   const now = new Date().toISOString();
+  if (act === "deletedraft") {   // remove from Recent drafts and delete the draft with its questions, comments and review status
+    const ix: any = (await store.get("index", { type: "json" }).catch(() => null)) || { items: [] };
+    ix.items = (ix.items || []).filter((x: any) => x.id !== id);
+    await store.setJSON("index", ix);
+    for (const pre of [`qa/${id}/`, `cm/${id}/`]) { const { blobs } = await store.list({ prefix: pre }).catch(() => ({ blobs: [] as any[] })); for (const k of blobs) await store.delete(k.key).catch(() => {}); }
+    await store.delete(`rv/${id}`).catch(() => {}); await store.delete(id).catch(() => {});
+    console.log(`blog draft deleted id=${id} by=${user}`);
+    return json({ ok: true, items: ix.items });
+  }
   const d: any = await store.get(id, { type: "json" }).catch(() => null);
   if (!d || d.status !== "done") return json({ ok: false, error: "draft not found" }, 404);
   if (act === "dismiss" || act === "undismiss") {
