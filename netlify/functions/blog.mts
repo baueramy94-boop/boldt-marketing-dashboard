@@ -43,6 +43,7 @@ function docx(b: any): Document {
   c.push(H("Promotion", HeadingLevel.HEADING_1));
   if (b.linkedin) { c.push(H("LinkedIn post", HeadingLevel.HEADING_2)); c.push(P(b.linkedin.post || "")); if (b.linkedin.thoughtLeaderAd) c.push(label("Thought Leader Ad intro", b.linkedin.thoughtLeaderAd)); }
   if (b.email) { c.push(H("Email", HeadingLevel.HEADING_2)); c.push(label("Subject", b.email.subject)); c.push(label("Preview text", b.email.preview)); c.push(P(b.email.body || "")); }
+  if ((b.reviewQuestions || []).length) { c.push(H("Questions to confirm before publishing", HeadingLevel.HEADING_2)); for (const r of b.reviewQuestions) c.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: r.q, bold: true }), new TextRun(r.why ? ` ${r.why}` : "")] })); }
   if (b.whyThisTopic) { c.push(H("Why this topic", HeadingLevel.HEADING_2)); c.push(P(b.whyThisTopic)); }
   return new Document({ creator: "Boldt Marketing Dashboard", title: b.title, styles: { default: { document: { run: { font: "Calibri", size: 22 } } } }, sections: [{ children: c }] });
 }
@@ -60,7 +61,14 @@ export default async (req: Request) => {
     const name = (d.blog.slug || "boldt-blog-draft").replace(/[^a-z0-9-]/gi, "").slice(0, 60) || "boldt-blog-draft";
     return new Response(buf, { headers: { "content-type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "content-disposition": `attachment; filename="${name}.docx"`, "cache-control": "no-store" } });
   }
-  return json({ ok: true, draft: d });
+  // Questions asked about this draft ("Ask about this draft"), oldest first.
+  const qa: any[] = [];
+  if (d.status === "done") {
+    const { blobs } = await store.list({ prefix: `qa/${id}/` }).catch(() => ({ blobs: [] as any[] }));
+    for (const k of blobs) { const x: any = await store.get(k.key, { type: "json" }).catch(() => null); if (x) qa.push(x); }
+    qa.sort((x, y) => String(x.at).localeCompare(String(y.at)));
+  }
+  return json({ ok: true, draft: d, qa });
 };
 
 export const config: Config = { path: "/api/blog", method: ["GET"] };

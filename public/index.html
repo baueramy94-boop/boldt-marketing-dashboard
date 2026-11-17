@@ -365,7 +365,7 @@ body.jm-open{overflow:hidden}
 .rnd-story h5,.rnd-item h5{margin:0 0 4px;font-size:14px;line-height:1.35}.rnd-story h5 a,.rnd-item h5 a{color:var(--ink);text-decoration:none}.rnd-story h5 a:hover,.rnd-item h5 a:hover{text-decoration:underline}
 .rnd-story p,.rnd-trend p,.rnd-item p{margin:6px 0 0;font-size:13px;line-height:1.5}
 .rnd-meta{color:var(--muted);font-size:12px!important}.rnd-meta a{color:inherit}
-.rnd-why{background:var(--soft);border-radius:6px;padding:6px 8px}.blog-art a{color:var(--accent,#1F5FAE);text-decoration:underline;text-underline-offset:2px}.blog-photo{border:1px dashed var(--line);border-radius:8px;padding:10px 12px;margin:12px 0;font-size:13px;line-height:1.5}.blog-photo b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}.blog-photo p{margin:4px 0}
+.rnd-why{background:var(--soft);border-radius:6px;padding:6px 8px}.blog-art a{color:var(--accent,#1F5FAE);text-decoration:underline;text-underline-offset:2px}.blog-rq{margin-top:12px}.blog-rq ul{margin:6px 0 0;padding-left:20px}.blog-rq li{margin:0 0 6px}.blog-ask{margin-top:14px;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;background:var(--soft)}.qa-chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.blog-ask .blog-form{margin:0 0 8px}.qa-i{border-top:1px solid var(--line);padding:10px 0 4px}.qa-q{margin:0 0 6px}.qa-a{background:var(--surface);border-radius:8px;padding:8px 12px;margin:0 0 8px;font-size:14px;line-height:1.55}.qa-a p{margin:0 0 8px}.qa-a ul{margin:0 0 8px;padding-left:20px}.qa-wait{display:flex;gap:8px;align-items:center}.qa-wait .blog-spin{width:16px;height:16px;border-width:2px}.blog-photo{border:1px dashed var(--line);border-radius:8px;padding:10px 12px;margin:12px 0;font-size:13px;line-height:1.5}.blog-photo b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}.blog-photo p{margin:4px 0}
 .rnd-trends{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
 .rnd-opp{margin-top:6px}.rnd-ul{margin:0;padding-left:18px;font-size:13px;line-height:1.5}.rnd-ul li{margin:4px 0}
 .rnd-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
@@ -732,7 +732,31 @@ function defMqlPanel(){
   return h;
 }
 /* ---------- Generate Blog (blog-run-background writes, /api/blog reads) ---------- */
-let BLOG={id:"",d:null,t0:0,err:"",recent:null,topic:"",why:""}, BLOG_T=null, RND_SIG=null;
+let BLOG={qa:[],id:"",d:null,t0:0,err:"",recent:null,topic:"",why:""}, BLOG_T=null, RND_SIG=null;
+/* "Ask about this draft": questions go to blog-ask-background; answers come back in GET /api/blog?id= as qa. */
+const QA_QUICK=[["flags","Any red flags?","Do you see any red flags in this draft?"],["sell","Where can we sell Boldt more?","Are there opportunities to sell Boldt more in this draft? Suggest the sentences to add and where."],
+  ["site","Does it match our website?","Does this draft match the existing messaging on our website? What matches, what's missing, and what goes beyond what the website says we do?"],["boss","Questions for my boss","What questions should I ask my boss before we publish this? For example, things we may or may not do or want to promote."]];
+let QA_T=null,QA_T0=0;
+function qaMd(t){const L=esc(t||"").replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>").split("\n");let h="",ul=false;
+  L.forEach(l=>{const m=l.match(/^\s*(?:[-*•]|\d+[.)])\s+(.*)/);if(m){if(!ul){h+="<ul>";ul=true;}h+=`<li>${m[1]}</li>`;}else{if(ul){h+="</ul>";ul=false;}if(l.trim())h+=`<p>${l}</p>`;}});return h+(ul?"</ul>":"");}
+function qaList(){const Q=(BLOG.qa||[]).slice().reverse();if(!Q.length)return `<p class="note" style="margin:6px 0 0">Answers use this draft, its sources and the messaging on boldthealthcarerealestate.com. Follow-up questions remember the earlier answers.</p>`;
+  return Q.map(x=>`<div class="qa-i"><p class="qa-q"><b>${esc(x.q)}</b> <span class="note" style="margin:0">${esc(x.by||"")}</span></p>${x.status==="running"?`<p class="note qa-wait"><span class="blog-spin" aria-hidden="true"></span> Reading the draft and the website. Usually under a minute.</p>`:x.status==="failed"?`<p class="note" style="color:var(--bad)">${esc(x.error||"That question couldn't be answered.")} <button type="button" class="linkbtn" data-qa-retry="${esc(x.q)}">Ask again</button></p>`:`<div class="qa-a">${qaMd(x.a)}</div><button type="button" class="btn-sm" data-qa-copy="${esc(x.qid)}">Copy answer</button>`}</div>`).join("");}
+function qaPaint(){const el=document.getElementById("blog-qa-list");if(el)el.innerHTML=qaList();}
+function qaAsk(q){q=(q||"").trim();if(!q||!BLOG.d||BLOG.d.status!=="done")return;const qid=(Date.now().toString(36)+Math.random().toString(36).slice(2,8)).slice(0,16);
+  BLOG.qa=[...(BLOG.qa||[]),{qid,q,status:"running",by:"",at:new Date().toISOString()}];qaPaint();const inp=document.getElementById("blog-q");if(inp)inp.value="";
+  fetch("/.netlify/functions/blog-ask-background",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({draftId:BLOG.id,qid,question:q})})
+    .then(r=>{if(r.status>=400)throw 0;QA_T0=Date.now();clearTimeout(QA_T);QA_T=setTimeout(qaPoll,4000);}).catch(()=>{const x=BLOG.qa.find(y=>y.qid===qid);if(x){x.status="failed";x.error="The question couldn't be sent. Try again.";}qaPaint();});}
+function qaPoll(){clearTimeout(QA_T);const id=BLOG.id;if(!id)return;
+  fetch(`/api/blog?id=${id}`).then(r=>r.json()).then(j=>{if(BLOG.id!==id)return;const srv=j.qa||[],have=new Set(srv.map(x=>x.qid));
+    BLOG.qa=[...srv,...(BLOG.qa||[]).filter(x=>!have.has(x.qid)&&x.status==="running"&&Date.now()-Date.parse(x.at)<20000)];
+    if(BLOG.qa.some(x=>x.status==="running")){if(Date.now()-QA_T0>5*60*1000){BLOG.qa.forEach(x=>{if(x.status==="running"){x.status="failed";x.error="This is taking longer than expected.";}});}else QA_T=setTimeout(qaPoll,3500);}
+    qaPaint();}).catch(()=>{QA_T=setTimeout(qaPoll,6000);});}
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-qa-quick],[data-qa-go],[data-qa-copy],[data-qa-retry]");if(!t)return;
+  if(t.dataset.qaQuick){const x=QA_QUICK.find(y=>y[0]===t.dataset.qaQuick);if(x)qaAsk(x[2]);}
+  else if(t.dataset.qaGo!=null)qaAsk((document.getElementById("blog-q")||{}).value);
+  else if(t.dataset.qaRetry)qaAsk(t.dataset.qaRetry);
+  else if(t.dataset.qaCopy){const x=(BLOG.qa||[]).find(y=>y.qid===t.dataset.qaCopy);if(x)blogCopy(t,`${x.q}\n\n${x.a}`);}});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="blog-q"){e.preventDefault();qaAsk(e.target.value);}});
 function blogStart(topic,why){
   if(BLOG.d&&BLOG.d.status==="running")return;
   const id=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(36).slice(2)).replace(/[^a-z0-9-]/gi,"").slice(0,36);
@@ -742,10 +766,10 @@ function blogStart(topic,why){
     .then(r=>{if(r.status>=400)throw 0;blogPoll();}).catch(()=>{BLOG.d=null;BLOG.err="The blog generator couldn't be started. Refresh and try again.";blogPaint();});}
 function blogPoll(){clearTimeout(BLOG_T);if(!BLOG.id)return;const id=BLOG.id;
   fetch(`/api/blog?id=${id}`).then(r=>r.json()).then(j=>{if(BLOG.id!==id)return;const d=j.draft||{};
-    if(d.status==="done"||d.status==="failed"){BLOG.d=d;if(d.status==="failed")BLOG.err=d.error||"The draft couldn't be generated.";BLOG.recent=null;blogRecent();blogPaint();return;}
+    if(d.status==="done"||d.status==="failed"){BLOG.d=d;BLOG.qa=j.qa||[];if(BLOG.qa.some(x=>x.status==="running"))setTimeout(qaPoll,3500);if(d.status==="failed")BLOG.err=d.error||"The draft couldn't be generated.";BLOG.recent=null;blogRecent();blogPaint();return;}
     if(Date.now()-BLOG.t0>8*60*1000){BLOG.d=null;BLOG.err="This is taking longer than expected. Check Recent drafts in a few minutes.";blogPaint();return;}
     blogPaint(true);BLOG_T=setTimeout(blogPoll,4000);}).catch(()=>{BLOG_T=setTimeout(blogPoll,6000);});}
-function blogOpen(id){BLOG={...BLOG,id,d:{status:"running"},t0:Date.now(),err:""};blogPaint();blogPoll();}
+function blogOpen(id){BLOG={...BLOG,qa:[],id,d:{status:"running"},t0:Date.now(),err:""};blogPaint();blogPoll();}
 function blogRecent(){if(BLOG.recent)return;fetch("/api/blog").then(r=>r.json()).then(j=>{BLOG.recent=j.items||[];blogPaint();}).catch(()=>{BLOG.recent=[];});}
 const BLOG_LINK=/\[([^\]]+)\]\((https?:[^)\s]+)\)/g;
 function bmd(t){return esc(t||"").replace(BLOG_LINK,(m,a,u)=>`<a href="${u}" target="_blank" rel="noopener">${a}</a>`);}
@@ -780,6 +804,11 @@ function blogBody(){
         ${(b.sources||[]).length?`<h3>Sources</h3><ul>${b.sources.map(s=>`<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a></li>`).join("")}</ul>`:""}</article>
       <div class="grid g-2 blog-promo"><div class="rnd-trend"><div class="lt-h"><b>LinkedIn post</b><button type="button" class="btn-sm" data-blog-copy="linkedin">Copy</button></div><p style="white-space:pre-wrap">${esc((b.linkedin||{}).post||"")}</p>${(b.linkedin||{}).thoughtLeaderAd?`<p class="rnd-meta"><b>Thought Leader Ad intro:</b> ${esc(b.linkedin.thoughtLeaderAd)}</p>`:""}</div>
         <div class="rnd-trend"><div class="lt-h"><b>Email</b><button type="button" class="btn-sm" data-blog-copy="email">Copy</button></div><p><b>Subject:</b> ${esc((b.email||{}).subject||"")}<br><b>Preview:</b> ${esc((b.email||{}).preview||"")}</p><p style="white-space:pre-wrap">${esc((b.email||{}).body||"")}</p></div></div>
+      ${(b.reviewQuestions||[]).length?`<div class="rnd-trend blog-rq"><div class="lt-h"><b>Questions to confirm before publishing</b><button type="button" class="btn-sm" data-blog-copy="rq">Copy</button></div><ul>${b.reviewQuestions.map(r=>`<li><b>${esc(r.q)}</b>${r.why?` ${esc(r.why)}`:""}</li>`).join("")}</ul></div>`:""}
+      <div class="blog-ask"><div class="lt-h"><b>Ask about this draft</b></div>
+        <div class="qa-chips">${QA_QUICK.map(([k,l])=>`<button type="button" class="btn-sm" data-qa-quick="${k}">${l}</button>`).join("")}</div>
+        <div class="blog-form"><input type="text" id="blog-q" maxlength="1000" placeholder="Ask anything, for example: should we mention modular construction here?"><button type="button" class="blog-go" data-qa-go>Ask</button></div>
+        <div id="blog-qa-list">${qaList()}</div></div>
       ${b.schema?`<details class="or-more" style="margin-top:10px"><summary>Schema markup (${esc(b.schema.recommendation||"Article and FAQPage")})</summary><pre class="blog-code">${esc(typeof b.schema.jsonld==="string"?b.schema.jsonld:JSON.stringify(b.schema.jsonld,null,2))}</pre></details>`:""}
       <p class="sec-note">AI-written draft from the linked sources and dashboard data. Fill in any [bracketed] Boldt examples and review facts before publishing.</p></div>`;}
   if(BLOG.recent&&BLOG.recent.length)h+=`<details class="or-more" style="margin-top:12px"><summary>Recent drafts (${BLOG.recent.length})</summary><ul class="blog-recent">${BLOG.recent.map(x=>`<li><button type="button" class="linkish" data-blog-open="${esc(x.id)}">${esc(x.title)}</button> <span class="note" style="margin:0">${esc(x.by||"")} · ${new Date(x.created).toLocaleDateString("en-US",{month:"short",day:"numeric"})}${x.words?` · ${N(x.words)} words`:""}</span></li>`).join("")}</ul></details>`;
@@ -788,7 +817,7 @@ document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest
   if(t.dataset.blogGo!=null){const v=(document.getElementById("blog-topic")||{}).value||"";blogStart(v.trim(),"");}
   else if(t.dataset.blogIdea!=null){blogStart(t.dataset.blogIdea,t.dataset.why||"");}
   else if(t.dataset.blogOpen){blogOpen(t.dataset.blogOpen);}
-  else if(t.dataset.blogCopy&&BLOG.d&&BLOG.d.blog){const b=BLOG.d.blog,k=t.dataset.blogCopy;blogCopy(t,k==="article"?blogText(b):k==="html"?blogHtml(b):k==="linkedin"?(b.linkedin||{}).post||"":`Subject: ${(b.email||{}).subject||""}\n\n${(b.email||{}).body||""}`);}});
+  else if(t.dataset.blogCopy&&BLOG.d&&BLOG.d.blog){const b=BLOG.d.blog,k=t.dataset.blogCopy;blogCopy(t,k==="article"?blogText(b):k==="html"?blogHtml(b):k==="rq"?["Questions to confirm before publishing: "+b.title,"",...(b.reviewQuestions||[]).map(r=>`- ${r.q}${r.why?` ${r.why}`:""}`)].join("\n"):k==="linkedin"?(b.linkedin||{}).post||"":`Subject: ${(b.email||{}).subject||""}\n\n${(b.email||{}).body||""}`);}});
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="blog-topic"){e.preventDefault();blogStart(e.target.value.trim(),"");}});
 function rndInsights(d){const I=d.insights;if(!I)return "";const sig=RND_SIG;
   const intent=sig&&sig.buyingIntent?sig.buyingIntent.slice(0,10):[];

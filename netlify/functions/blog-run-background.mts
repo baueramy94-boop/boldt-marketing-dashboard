@@ -35,6 +35,7 @@ Rules:
 - Never name competitors (other healthcare real estate developers, investors, REITs or builders). Say "some developers" or "traditional developers" instead.
 - Never name a health system, hospital or clinic. Describe it instead ("a large Midwest health system", "an academic medical center"). The only exception is a Boldt Real Estate project or case study listed in boldtProjects, which you may name when describing that project. This applies everywhere: headings, body, FAQ, anchor text, LinkedIn post, email and source names (use the publication's name, such as "Becker's Hospital Review", not an article title).
 - 1,400 to 1,900 words in the article body.
+- reviewQuestions: 3 to 6 questions Amy should confirm with her manager before publishing, about anything in this draft only leadership can decide: whether Boldt does a project type or service the article implies (for example freestanding imaging centers), whether to promote an approach (for example modular construction or phasing), how strong a claim can be, and which projects or examples can be named. Each with one short line on why it matters for this article.
 - Links: write links inline as [anchor text](https://url) inside paragraphs, bullets and FAQ answers. Use descriptive anchor text, never "click here".
   - Internal: 3 to 6 links to Boldt pages, using only URLs from dashboardSignals.internalLinks. Link related Boldt blog posts where the topic overlaps.
   - External: 2 to 4 links to the CONTEXT sources the article cites, using only URLs that appear in the CONTEXT.
@@ -85,6 +86,7 @@ const TOOL = { name: "save_blog", description: "Save the finished blog article."
     linkedin: { type: "object", required: ["post"], properties: { post: { type: "string", description: "120 to 200 words" }, thoughtLeaderAd: { type: "string", description: "1 to 2 sentence intro for a Thought Leader Ad" } } },
     email: { type: "object", required: ["subject", "body"], properties: { subject: STR, preview: STR, body: { type: "string", description: "100 to 150 words for health system leaders" } } },
     photo: { type: "object", required: ["suggestion", "altText"], properties: { suggestion: { type: "string", description: "the hero photo to use and why, preferring a real Boldt project photo" }, altText: { type: "string", description: "alt text with the primary keyword" }, caption: STR, stockSearch: { type: "string", description: "search terms if no Boldt photo fits" }, avoid: STR } },
+    reviewQuestions: { type: "array", description: "3 to 6 questions for Amy's manager before publishing", items: { type: "object", required: ["q"], properties: { q: STR, why: STR } } },
     sources: { type: "array", description: "only CONTEXT sources the article uses", items: { type: "object", required: ["name", "url"], properties: { name: STR, url: STR } } } } } };
 
 // Article and FAQPage JSON-LD, built here from the article (more reliable than asking the model for nested JSON).
