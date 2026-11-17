@@ -34,14 +34,27 @@ Rules:
 - Plain, confident American English. No em dashes. Avoid these words and phrases: delve, landscape, navigate, in today's, ever-evolving, game-changer, unlock, leverage (as a verb), robust, seamless, tapestry, realm, pivotal, crucial, "it's not just X, it's Y", "in conclusion".
 - 1,400 to 1,900 words in the article body.
 
-Return only one JSON object, no markdown fences, with exactly these keys:
-{"title": H1, "metaTitle": under 60 characters, "metaDescription": 140 to 155 characters, "slug": url slug, "primaryKeyword": string, "secondaryKeywords": [3 to 6], "whyThisTopic": 1 to 2 sentences on why this topic now, citing the signals,
- "intro": [2 to 3 paragraphs], "sections": [{"h2": string, "paragraphs": [strings], "bullets": [optional strings]}] (5 to 7 sections), "keyTakeaways": [4 to 5 strings],
- "faq": [{"q": string, "a": string}], "cta": one paragraph inviting readers to talk with Boldt,
- "schema": {"recommendation": one sentence on which schema types to add and why, "jsonld": a JSON-LD string with an Article and an FAQPage using the title, description and FAQ},
- "linkedin": {"post": 120 to 200 word LinkedIn post promoting the article, "thoughtLeaderAd": a 1 to 2 sentence intro for a Thought Leader Ad},
- "email": {"subject": string, "preview": string, "body": 100 to 150 word email for health system leaders},
- "sources": [{"name": string, "url": string}] (only sources from the CONTEXT that the article uses)}`;
+Call the save_blog tool once with the finished article. Do not write anything else.`;
+
+const STR = { type: "string" }, ARR = { type: "array", items: { type: "string" } };
+const TOOL = { name: "save_blog", description: "Save the finished blog article.", input_schema: { type: "object", required: ["title", "metaTitle", "metaDescription", "slug", "primaryKeyword", "intro", "sections", "keyTakeaways", "faq", "cta", "linkedin", "email", "sources"],
+  properties: {
+    title: { type: "string", description: "H1" }, metaTitle: { type: "string", description: "under 60 characters" }, metaDescription: { type: "string", description: "140 to 155 characters" },
+    slug: STR, primaryKeyword: STR, secondaryKeywords: ARR, whyThisTopic: { type: "string", description: "1 to 2 sentences on why this topic now, citing the signals" },
+    intro: { ...ARR, description: "2 to 3 paragraphs" },
+    sections: { type: "array", description: "5 to 7 sections", items: { type: "object", required: ["h2", "paragraphs"], properties: { h2: STR, paragraphs: ARR, bullets: ARR } } },
+    keyTakeaways: { ...ARR, description: "4 to 5" },
+    faq: { type: "array", description: "5 to 6 questions, 2 to 4 sentence answers", items: { type: "object", required: ["q", "a"], properties: { q: STR, a: STR } } },
+    cta: { type: "string", description: "one paragraph inviting readers to talk with Boldt" },
+    schemaRecommendation: { type: "string", description: "one sentence on which schema types to add and why" },
+    linkedin: { type: "object", required: ["post"], properties: { post: { type: "string", description: "120 to 200 words" }, thoughtLeaderAd: { type: "string", description: "1 to 2 sentence intro for a Thought Leader Ad" } } },
+    email: { type: "object", required: ["subject", "body"], properties: { subject: STR, preview: STR, body: { type: "string", description: "100 to 150 words for health system leaders" } } },
+    sources: { type: "array", description: "only CONTEXT sources the article uses", items: { type: "object", required: ["name", "url"], properties: { name: STR, url: STR } } } } } };
+
+// Article and FAQPage JSON-LD, built here from the article (more reliable than asking the model for nested JSON).
+const jsonld = (b: any) => JSON.stringify({ "@context": "https://schema.org", "@graph": [
+  { "@type": "Article", headline: b.title, description: b.metaDescription, author: { "@type": "Organization", name: "Boldt Real Estate" }, publisher: { "@type": "Organization", name: "Boldt Real Estate" }, datePublished: new Date().toISOString().slice(0, 10), keywords: [b.primaryKeyword, ...(b.secondaryKeywords || [])].filter(Boolean).join(", ") },
+  { "@type": "FAQPage", mainEntity: (b.faq || []).map((f: any) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) }] }, null, 2);
 
 const clean = (v: any): any => typeof v === "string" ? v.replace(/\s*—\s*/g, ", ").replace(/\s+,/g, ",") : Array.isArray(v) ? v.map(clean) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, k === "jsonld" ? x : clean(x)])) : v;
 
@@ -69,18 +82,19 @@ export default async (req: Request, context: Context) => {
       : "Choose the single best topic for this week: it should align with Boldt's business (outpatient development, capital and financing options, sites of care), connect to a story or trend in the briefing, answer a question health system executives are asking, and build on what already performs (top content, strongest messaging themes, companies showing intent). Do not repeat a recently generated title. Then write the article.";
     const client = claude();
     if (!client) throw new Error("AI connection is not set up for the dashboard");
-    let text = "", lastErr: any = null;
+    let input: any = null, lastErr: any = null;
     for (const model of MODELS()) {
       try {
-        const res = await client.messages.create({ model, max_tokens: 12000, system: SYSTEM,
+        const res: any = await client.messages.create({ model, max_tokens: 12000, system: SYSTEM, tools: [TOOL as any], tool_choice: { type: "tool", name: "save_blog" } as any,
           messages: [{ role: "user", content: `CONTEXT (JSON):\n${JSON.stringify(ctx)}\n\n${ask}` }] });
-        text = (res.content || []).map((c: any) => (c.type === "text" ? c.text : "")).join("");
-        if (text) break;
+        const t = (res.content || []).find((c: any) => c.type === "tool_use");
+        if (t && t.input) { input = t.input; break; }
+        lastErr = new Error(`no article returned (stop: ${res.stop_reason})`);
       } catch (e) { lastErr = e; }
     }
-    if (!text) throw lastErr || new Error("no response");
-    const j = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
-    const blog = clean(JSON.parse(j));
+    if (!input) throw lastErr || new Error("no response");
+    const blog = clean(input);
+    blog.schema = { recommendation: blog.schemaRecommendation || "Add Article and FAQPage schema so search engines and AI tools can read the article and its FAQ.", jsonld: jsonld(blog) };
     if (!blog.title || !Array.isArray(blog.sections)) throw new Error("the draft came back incomplete");
     blog.sources = (blog.sources || []).filter((s: any) => /^https:\/\//.test(s.url || ""));
     const words = [...(blog.intro || []), ...blog.sections.flatMap((s: any) => [...(s.paragraphs || []), ...(s.bullets || [])])].join(" ").split(/\s+/).length;
