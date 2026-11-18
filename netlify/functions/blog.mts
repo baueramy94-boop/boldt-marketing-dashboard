@@ -12,7 +12,7 @@ import { clean, jsonld } from "../lib/blog-common.mts";
 //   dismiss / undismiss { qid, idx }       delete or bring back a suggestion from an answer
 //   qaitem { qid, kind: suggestions | questions, idx, op: edit | delete | undelete, title?, change?, q?, why? }
 //   rq { items: [{ q, why }] }             edit the draft's questions to confirm before publishing
-//   comment { text, section?, kind: comment | edit, parent? }    review comments and edit requests
+//   comment { text, section?, kind: comment | edit, parent?, quote?, field?, at0? }   quote = highlighted text in field (data-f), at0 = its offset    review comments and edit requests
 //   resolve { cid, resolved }   delcomment { cid }
 //   review { status: approved | changes | "" }
 //   edit { patch: { title?, intro?, sections?, keyTakeaways?, faq?, cta? } }   direct text edits (keeps the old version)
@@ -113,9 +113,11 @@ async function post(req: Request, context: Context, store: any) {
   }
   if (act === "comment") {
     const text = String(b.text || "").trim().slice(0, 4000);
-    if (!text) return json({ ok: false, error: "empty" }, 400);
+    const quote = String(b.quote || "").replace(/\s+/g, " ").trim().slice(0, 600), field = /^[a-z0-9.]{1,30}$/i.test(String(b.field || "")) ? String(b.field) : "";
+    if (!text && !quote) return json({ ok: false, error: "empty" }, 400);
     const cid = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-    const c = { cid, by: user, at: now, text, section: String(b.section || "General").slice(0, 200), kind: b.kind === "edit" ? "edit" : "comment", parent: okId(b.parent) ? b.parent : null };
+    const c = { cid, by: user, at: now, text, section: String(b.section || "General").slice(0, 200), kind: b.kind === "edit" ? "edit" : "comment", parent: okId(b.parent) ? b.parent : null,
+      ...(quote && field ? { quote, field, at0: Math.max(0, Math.min(100000, Math.floor(+b.at0 || 0))) } : {}) };
     await store.setJSON(`cm/${id}/${cid}`, c);
     return json({ ok: true, comment: c });
   }
