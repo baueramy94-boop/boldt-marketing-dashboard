@@ -11,6 +11,10 @@ import { getStore } from "@netlify/blobs";
 // POST /api/campaigns { c, op: "items", items: {id: item} } -> saves several (used by Remove this set)
 // POST /api/campaigns { c, op: "bg", bg }               -> saves the background choice
 // POST /api/campaigns { c, op: "reset" }                -> clears edits, approvals and notes; removed ads stay removed
+// Campaign briefs (New campaign form on the Campaign Builder tab), one key each: b/<brief id>
+// GET  /api/campaigns?briefs=1                          -> { ok, briefs: [...] } newest first
+// POST /api/campaigns { op: "brief", brief }            -> creates (no id) or updates (id) a brief
+// POST /api/campaigns { op: "deletebrief", id }         -> deletes a brief
 // The edge gate has already checked the site password.
 
 const json = (o: unknown, status = 200) =>
@@ -20,6 +24,19 @@ const ID = /^[A-Za-z0-9_-]{2,100}$/;
 const STATUS = new Set(["pending", "approved", "changes"]);
 const BG = new Set(["light", "navy", "black"]);
 const cut = (v: unknown, n: number) => String(v ?? "").slice(0, n);
+const BRIEF_ID = /^[a-z0-9-]{3,60}$/;
+const LINES = new Set(["Healthcare"]);
+const ASSETS = ["ads", "lp", "pdf"];
+const TEXT_FIELDS: [string, number][] = [["name", 120], ["audience", 2000], ["offer", 2000], ["messages", 4000], ["proof", 3000], ["photos", 2000], ["mustSay", 2000], ["cantSay", 2000], ["notes", 3000], ["launch", 20]];
+function cleanBrief(raw: any) {
+  const b: Record<string, unknown> = {};
+  for (const [k, n] of TEXT_FIELDS) b[k] = cut(raw?.[k], n).trim();
+  b.line = LINES.has(raw?.line) ? raw.line : "Healthcare";
+  const a = Array.isArray(raw?.assets) ? raw.assets.filter((x: string) => ASSETS.includes(x)) : ASSETS;
+  b.assets = a.length ? a : ASSETS;
+  return b;
+}
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "campaign";
 
 function clean(raw: any) {
   const it: Record<string, unknown> = {};
@@ -36,6 +53,13 @@ function clean(raw: any) {
 export default async (req: Request, context: Context) => {
   const store = getStore({ name: "campaigns", consistency: "strong" });
   try {
+    if (req.method === "GET" && new URL(req.url).searchParams.get("briefs")) {
+      const { blobs } = await store.list({ prefix: "b/" });
+      const briefs: any[] = [];
+      await Promise.all(blobs.map(async (x) => { const v = await store.get(x.key, { type: "json" }); if (v) briefs.push(v); }));
+      briefs.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+      return json({ ok: true, briefs });
+    }
     if (req.method === "GET") {
       const c = new URL(req.url).searchParams.get("c") || "";
       if (!CAMP.test(c)) return json({ ok: false, error: "bad request" }, 400);
@@ -49,9 +73,26 @@ export default async (req: Request, context: Context) => {
     if (req.method !== "POST") return json({ ok: false, error: "method not allowed" }, 405);
     const b: any = await req.json().catch(() => ({}));
     const c = String(b.c || ""), op = String(b.op || "");
-    if (!CAMP.test(c)) return json({ ok: false, error: "bad request" }, 400);
     const user = decodeURIComponent(context.cookies.get("bmd_user") || "") || "someone";
     const now = new Date().toISOString();
+    if (op === "brief") {
+      const fields = cleanBrief(b.brief || {});
+      if (!fields.name) return json({ ok: false, error: "Give the campaign a name." }, 400);
+      let id = String(b.brief?.id || "");
+      let prev: any = null;
+      if (id) { if (!BRIEF_ID.test(id)) return json({ ok: false, error: "bad request" }, 400); prev = await store.get(`b/${id}`, { type: "json" }); if (!prev) return json({ ok: false, error: "That campaign no longer exists." }, 404); }
+      else id = `${slug(String(fields.name))}-${Date.now().toString(36).slice(-5)}`;
+      const brief = { ...fields, id, createdBy: prev?.createdBy || user, createdAt: prev?.createdAt || now, updatedBy: user, updatedAt: now };
+      await store.setJSON(`b/${id}`, brief);
+      return json({ ok: true, brief });
+    }
+    if (op === "deletebrief") {
+      const id = String(b.id || "");
+      if (!BRIEF_ID.test(id)) return json({ ok: false, error: "bad request" }, 400);
+      await store.delete(`b/${id}`);
+      return json({ ok: true });
+    }
+    if (!CAMP.test(c)) return json({ ok: false, error: "bad request" }, 400);
     const put = (id: string, raw: any) => store.setJSON(`c/${c}/i/${id}`, { ...clean(raw), savedBy: user, savedAt: now });
     if (op === "item") {
       const id = String(b.id || "");

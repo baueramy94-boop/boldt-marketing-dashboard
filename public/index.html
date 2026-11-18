@@ -485,7 +485,25 @@ body.editing .ed-mod{background:color-mix(in srgb,var(--yellow) 16%,transparent)
 .cb-btn.line{background:var(--surface);color:var(--navy)}
 @media (prefers-color-scheme:dark){.cb-btn.line{color:var(--ink)}}
 .cb-btn:hover{filter:brightness(1.08)}.cb-btn:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
-@media (max-width:860px){.cb-steps{grid-template-columns:1fr}}
+.cb-sec{justify-content:space-between;flex-wrap:wrap}.cb-sec>div{display:flex;align-items:center;gap:10px}
+.cb-new{font:inherit;font-size:14px;font-weight:800;padding:10px 16px;border-radius:10px;border:0;background:var(--gold);color:#1b1b1b;cursor:pointer;box-shadow:0 4px 12px rgba(201,151,0,.22)}.cb-new:hover{filter:brightness(1.05)}.cb-new:focus-visible{outline:3px solid var(--navy);outline-offset:2px}
+.cb-form{border-top:4px solid var(--gold);margin-bottom:16px}
+.cb-form h3{margin:0 0 4px}.cb-form>p{margin:0 0 14px;color:var(--muted);font-size:14px}
+.cb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px}
+.cb-f{display:flex;flex-direction:column;gap:5px;min-width:0}.cb-f.wide{grid-column:1/-1}
+.cb-f label,.cb-f .lb{font-size:13px;font-weight:700}.cb-f .hint{font-size:12.5px;color:var(--muted);margin:0}
+.cb-f input[type=text],.cb-f input[type=date],.cb-f select,.cb-f textarea{font:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);width:100%}
+.cb-f textarea{min-height:78px;resize:vertical;line-height:1.45}
+.cb-f input:focus-visible,.cb-f select:focus-visible,.cb-f textarea:focus-visible{outline:2px solid var(--navy);outline-offset:1px}
+.cb-checks{display:flex;flex-wrap:wrap;gap:8px 18px}.cb-checks label{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:14px}
+.cb-fa{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:16px}.cb-err{color:var(--bad);font-weight:600;font-size:13.5px}
+.cb-meta{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+.cb-brief{margin-top:14px;border:1px solid var(--line);border-radius:var(--r);background:var(--soft)}
+.cb-brief summary{cursor:pointer;padding:10px 14px;font-weight:700;font-size:14px}
+.cb-brief dl{margin:0;padding:0 14px 12px;display:grid;grid-template-columns:160px 1fr;gap:6px 14px;font-size:13.5px}.cb-brief dt{font-weight:700;color:var(--muted)}.cb-brief dd{margin:0;white-space:pre-wrap}
+.cb-tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.cb-del.armed{background:var(--bad);border-color:var(--bad);color:#fff}
+@media (max-width:860px){.cb-steps{grid-template-columns:1fr}.cb-grid{grid-template-columns:1fr}.cb-brief dl{grid-template-columns:1fr}}
 </style>
 
 <header class="mast">
@@ -937,13 +955,60 @@ document.addEventListener("change",e=>{if(e.target.id==="rnd-week"){RND_W=e.targ
 const CB_CAMPS=[{key:"wl-senior-living",name:"White Label Senior Living",line:"Healthcare",dir:"campaigns/white-label",ads:24,
   about:"A new offer for health systems: a senior living community with the health system's name on it. Boldt develops and finances the real estate, and an experienced senior living operator runs the community."}];
 const CB={};
+/* New campaign briefs: saved for everyone through /api/campaigns (op brief / deletebrief, GET ?briefs=1). */
+const CBB={list:null,err:false,form:null,saving:false,msg:""};
+const CB_FIELDS=[["name","Campaign name","For example, Medical Office Buildings",0,1],["audience","Who it's for","Titles, organization types and any target account list",1],["offer","The offer","What's new or different, and the one thing the audience should believe",1],["messages","Approved messages","Optional. Leave blank and Claude will draft options from Boldt's LinkedIn data for you to pick from",1],["proof","Proof we can use","Projects, numbers or case studies that are approved for public use",1],["photos","Photos","Which photos to use, or note the imagery library",1],["mustSay","Must say","Wording that has to appear, such as how the model works",1],["cantSay","Can't say","Topics, claims or words to avoid",1],["notes","Other notes","Budget, timing, approvals or anything else",1]];
+const CB_ASSETS=[["ads","LinkedIn ads"],["lp","Landing page"],["pdf","PDF"]];
+function cbBriefsLoad(force){if(CBB.list&&!force)return;fetch("/api/campaigns?briefs=1",{cache:"no-store"}).then(r=>r.json()).then(j=>{if(!j.ok)throw 0;CBB.list=j.briefs||[];CBB.err=false;if(current()==="campaigns")cbRedraw();}).catch(()=>{CBB.list=CBB.list||[];CBB.err=true;if(current()==="campaigns")cbRedraw();});}
+function cbRedraw(){const y=scrollY;render();scrollTo(0,y);}
+function cbDate(iso){try{return new Date(iso).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});}catch(e){return"";}}
+function cbForm(){const f=CBB.form||{},v=k=>esc(f[k]||""),as=f.assets||["ads","lp","pdf"];
+  return `<div class="panel cb-form" id="cb-form"><h3>${f.id?"Edit campaign brief":"New campaign"}</h3><p>Fill in what you know. Only the name is required, and you can edit the brief later. When it's ready, copy the brief into a Claude chat to build the assets.</p>
+  <div class="cb-grid">
+    <div class="cb-f"><label for="cbf-name">Campaign name</label><input type="text" id="cbf-name" data-cbf="name" value="${v("name")}" placeholder="For example, Medical Office Buildings" maxlength="120" required></div>
+    <div class="cb-f"><label for="cbf-line">Line of business</label><select id="cbf-line" data-cbf="line"><option>Healthcare</option></select><p class="hint">Healthcare only for now.</p></div>
+    ${CB_FIELDS.slice(1).map(([k,l,h])=>`<div class="cb-f${k==="messages"||k==="notes"?" wide":""}"><label for="cbf-${k}">${l}</label><textarea id="cbf-${k}" data-cbf="${k}" placeholder="${esc(h)}">${v(k)}</textarea></div>`).join("")}
+    <div class="cb-f"><span class="lb" id="cbf-as-l">Assets</span><div class="cb-checks" role="group" aria-labelledby="cbf-as-l">${CB_ASSETS.map(([k,l])=>`<label><input type="checkbox" data-cba="${k}" ${as.includes(k)?"checked":""}> ${l}</label>`).join("")}</div><p class="hint">Built in this order: ads, then the landing page, then the PDF.</p></div>
+    <div class="cb-f"><label for="cbf-launch">Target launch</label><input type="date" id="cbf-launch" data-cbf="launch" value="${v("launch")}"></div>
+  </div>
+  <div class="cb-fa"><button type="button" class="cb-btn" data-cb-save ${CBB.saving?"disabled":""}>${CBB.saving?"Saving…":f.id?"Save changes":"Create campaign"}</button><button type="button" class="cb-btn line" data-cb-cancel>Cancel</button>${CBB.msg?`<span class="cb-err" role="alert">${esc(CBB.msg)}</span>`:""}</div></div>`;}
+function cbBriefText(b){const L=[`Campaign brief: ${b.name}`,`Line of business: ${b.line||"Healthcare"}`];
+  CB_FIELDS.slice(1).forEach(([k,l])=>{if(b[k])L.push(`${l}: ${b[k]}`);});
+  L.push(`Assets: ${CB_ASSETS.filter(([k])=>(b.assets||[]).includes(k)).map(x=>x[1]).join(", ")}`);if(b.launch)L.push(`Target launch: ${cbDate(b.launch+"T12:00:00")}`);
+  L.push(`Created by ${b.createdBy||"someone"} on ${cbDate(b.createdAt)}`);return L.join("\n");}
+function cbBriefCard(b){const as=CB_ASSETS.filter(([k])=>(b.assets||[]).includes(k));
+  const dl=CB_FIELDS.slice(1).filter(([k])=>b[k]).map(([k,l])=>`<dt>${l}</dt><dd>${esc(b[k])}</dd>`).join("")+(b.launch?`<dt>Target launch</dt><dd>${esc(cbDate(b.launch+"T12:00:00"))}</dd>`:"");
+  return `<div class="panel cb-camp" id="cb-${esc(b.id)}"><div class="cb-top"><div><h3>${esc(b.name)}</h3><p>${esc(b.offer||"No offer written yet. Edit the brief to add one.")}</p><p class="cb-meta">Brief created by ${esc(b.createdBy||"someone")} on ${esc(cbDate(b.createdAt))}${b.updatedAt&&b.updatedAt!==b.createdAt?` · edited by ${esc(b.updatedBy||"someone")} on ${esc(cbDate(b.updatedAt))}`:""}</p></div><span class="chip">${esc(b.line||"Healthcare")}</span></div>
+    <ol class="cb-steps">${as.map(([k,l],i)=>`<li class="cb-step"><span class="n">Step ${i+1}</span><h4>${l}</h4><p>${k==="ads"?"Single-image LinkedIn ads with the review tools and shared saving.":k==="lp"?"The campaign landing page, as one HTML file to download.":"A PDF for sales follow-up and the form download."}</p><div class="cb-stat"><span class="chip">Not started</span></div></li>`).join("")}</ol>
+    ${dl?`<details class="cb-brief"><summary>Campaign brief</summary><dl>${dl}</dl></details>`:""}
+    <div class="cb-tools"><button type="button" class="cb-btn" data-cb-copy="${esc(b.id)}">Copy brief</button><button type="button" class="cb-btn line" data-cb-edit="${esc(b.id)}">Edit brief</button><button type="button" class="cb-btn line cb-del" data-cb-del="${esc(b.id)}">Delete</button></div></div>`;}
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-cb-new],[data-cb-save],[data-cb-cancel],[data-cb-copy],[data-cb-edit],[data-cb-del]");if(!t)return;
+  const ds=t.dataset,find=id=>(CBB.list||[]).find(b=>b.id===id);
+  if(ds.cbNew!=null){CBB.form={};CBB.msg="";cbRedraw();const f=document.getElementById("cbf-name");if(f){f.scrollIntoView({block:"center"});f.focus();}return;}
+  if(ds.cbCancel!=null){CBB.form=null;CBB.msg="";cbRedraw();return;}
+  if(ds.cbSave!=null){const f={...(CBB.form||{})};document.querySelectorAll("#cb-form [data-cbf]").forEach(el=>{f[el.dataset.cbf]=el.value.trim();});f.assets=[...document.querySelectorAll("#cb-form [data-cba]")].filter(x=>x.checked).map(x=>x.dataset.cba);
+    CBB.form=f;if(!f.name){CBB.msg="Give the campaign a name.";cbRedraw();const n=document.getElementById("cbf-name");if(n)n.focus();return;}
+    if(!f.assets.length){CBB.msg="Pick at least one asset.";cbRedraw();return;}
+    CBB.saving=true;CBB.msg="";cbRedraw();
+    fetch("/api/campaigns",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({op:"brief",brief:f})}).then(r=>r.json()).then(j=>{CBB.saving=false;if(!j.ok){CBB.msg=j.error||"That didn't save. Try again.";cbRedraw();return;}
+      const L=(CBB.list||[]).filter(b=>b.id!==j.brief.id);L.unshift(j.brief);CBB.list=L.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));CBB.form=null;cbRedraw();
+      const card=document.getElementById("cb-"+j.brief.id);if(card)card.scrollIntoView({block:"start",behavior:"smooth"});}).catch(()=>{CBB.saving=false;CBB.msg="That didn't save. Check your connection and try again.";cbRedraw();});return;}
+  if(ds.cbEdit){const b=find(ds.cbEdit);if(!b)return;CBB.form={...b};CBB.msg="";cbRedraw();const f=document.getElementById("cb-form");if(f)f.scrollIntoView({block:"start"});return;}
+  if(ds.cbCopy){const b=find(ds.cbCopy);if(b)blogCopy(t,cbBriefText(b));return;}
+  if(ds.cbDel){if(!t.classList.contains("armed")){t.classList.add("armed");t.textContent="Click again to delete";setTimeout(()=>{if(t.isConnected){t.classList.remove("armed");t.textContent="Delete";}},3500);return;}
+    t.disabled=true;fetch("/api/campaigns",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({op:"deletebrief",id:ds.cbDel})}).then(r=>r.json()).then(j=>{if(!j.ok)throw 0;CBB.list=(CBB.list||[]).filter(b=>b.id!==ds.cbDel);cbRedraw();}).catch(()=>{t.disabled=false;t.textContent="Couldn't delete. Try again";});}
+});
 function cbLoad(c){if(CB[c.key])return;CB[c.key]={loading:true};fetch(`/api/campaigns?c=${c.key}`,{cache:"no-store"}).then(r=>r.json()).then(j=>{CB[c.key]=j.ok?{items:(j.state||{}).items||{}}:{err:true};if(current()==="campaigns")render();}).catch(()=>{CB[c.key]={err:true};if(current()==="campaigns")render();});}
 function cbStats(c){const d=CB[c.key];if(!d||d.loading)return`<span class="note" style="margin:0">Loading review status…</span>`;if(d.err)return`<span class="note" style="margin:0">Review status isn't available right now.</span>`;
   let ok=0,ch=0,rm=0;Object.values(d.items).forEach(it=>{if(it.removed)rm++;else if(it.status==="approved")ok++;else if(it.status==="changes")ch++;});const pend=Math.max(0,c.ads-ok-ch-rm);
   return`<span class="chip good">${ok} approved</span><span class="chip">${ch} need changes</span><span class="chip">${pend} not reviewed</span>${rm?`<span class="chip">${rm} removed</span>`:""}`;}
 R.campaigns=()=>{
   let h=head("Campaign Builder",`Campaign assets in one place, built in order: LinkedIn ads, then the landing page, then the PDF. Healthcare only. Ad reviews save for everyone with the dashboard password.`);
-  h+=`<div class="cb-sec"><h3>Healthcare</h3><span class="chip">${CB_CAMPS.length} campaign${CB_CAMPS.length===1?"":"s"}</span></div>`;
+  cbBriefsLoad();const BR=CBB.list||[],n=CB_CAMPS.length+BR.length;
+  h+=`<div class="cb-sec"><div><h3>Healthcare</h3><span class="chip">${n} campaign${n===1?"":"s"}</span></div>${CBB.form?"":`<button type="button" class="cb-new" data-cb-new>+ New campaign</button>`}</div>`;
+  if(CBB.form)h+=cbForm();
+  if(CBB.err)h+=`<p class="note">New campaigns couldn't be loaded right now. Refresh to try again.</p>`;
+  BR.forEach(b=>{h+=cbBriefCard(b);});
   CB_CAMPS.forEach(c=>{cbLoad(c);
     h+=`<div class="panel cb-camp" id="cb-${c.key}"><div class="cb-top"><div><h3>${esc(c.name)}</h3><p>${esc(c.about)}</p></div><span class="chip">${esc(c.line)}</span></div>
     <ol class="cb-steps">
