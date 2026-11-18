@@ -298,3 +298,11 @@ After the marketing report is saved, write the sales write-up for the month just
 
 ### Leads tab order (Nov 17, 2026)
 - Engaged companies, month over month now sits right after New MQLs by source, month by month (`defMqlPanel` draws it; `R.leads` only draws it on its own when there is no engagement-definition data).
+
+### Campaign Builder tab (`#campaigns`, Nov 18, 2026)
+- One panel per campaign, healthcare only, built in order: LinkedIn ads, then the landing page, then the PDF. Campaigns are listed in `CB_CAMPS` in `public/index.html` (key, name, folder, number of ads). First campaign: White Label Senior Living (`public/campaigns/white-label/`).
+- LinkedIn ads: `ads.html` is the ad review page (24 single-image ads in sketch, photo, text-only and modern styles). Reviewers can edit any ad's text, approve or flag it with notes, remove one ad or a whole style set (two clicks, no restore), and switch the sketch, photo and text-only ads between white, blue and black backgrounds. Everything saves for everyone through `netlify/functions/campaigns.mts` (`/api/campaigns`), Netlify Blobs store `campaigns`: one key per ad, `c/<campaign>/i/<ad id>`, plus `c/<campaign>/bg`. Open pages check for other reviewers' changes every 8 seconds and skip any ad someone is typing in. Reset clears edits, approvals and notes for everyone; removed ads stay removed. The reviewer name comes from the dashboard sign-in (`bmd_user`). Download review summary gives a CSV.
+- The tab shows each campaign's review counts (approved, need changes, not reviewed, removed) from the same endpoint.
+- Landing page: `landing-page.html`, offered as Download HTML (one self-contained file) with a Preview link. PDF: `guidebook.pdf`, Download and Open.
+- The ad page is generated outside the repo (one self-contained HTML file with embedded fonts and photos). To change an ad, regenerate the file and replace `ads.html`; review state is keyed by each ad's file name (`data-file`), so renaming an ad starts its review fresh.
+- An imagery library is planned; nothing in the tab depends on it yet.

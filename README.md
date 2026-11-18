@@ -7,6 +7,7 @@ Password-protected healthcare marketing dashboard and shared project calendar fo
 - `netlify/edge-functions/gate.ts`: shared-password sign-in for the whole site. Env vars: `SITE_PASSWORD`, `COOKIE_SECRET`.
 - `netlify/functions/api.mts`: server bridge to the Apps Script web app. Env vars: `SCRIPT_URL`, `SCRIPT_TOKEN`.
 - `apps-script/Code.gs`: paste into the tracker Sheet's Apps Script and deploy as a web app.
+- `public/campaigns/`: Campaign Builder assets (ad review page, landing page HTML, PDF). Ad reviews save for everyone through `/api/campaigns` (`netlify/functions/campaigns.mts`, Netlify Blobs store `campaigns`).
 - `RUNBOOK.md`: what the monthly report run does on the 1st of each month.
 
 To change the password, edit `SITE_PASSWORD` in Netlify (Project configuration > Environment variables) and redeploy.

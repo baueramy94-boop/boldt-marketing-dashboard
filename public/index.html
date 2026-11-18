@@ -470,6 +470,22 @@ body.editing .ed-mod{background:color-mix(in srgb,var(--yellow) 16%,transparent)
 .dash-sw a:not([aria-current]):hover{background:rgba(255,255,255,.16)}
 .dash-sw a:focus-visible{outline:2px solid #fff;outline-offset:-3px}
 @media print{.dash-sw{display:none}}
+/* Campaign Builder tab */
+.cb-sec{display:flex;align-items:center;gap:10px;margin:4px 0 12px}.cb-sec h3{margin:0}
+.cb-camp{border-top:4px solid var(--navy)}
+.cb-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:8px 16px}
+.cb-top h3{margin:0 0 4px;font-size:22px}.cb-top p{margin:0;color:var(--muted);font-size:14px;max-width:760px}
+.cb-steps{list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.cb-step{border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--surface);min-width:0}
+.cb-step .n{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cb-step h4{margin:0;font-size:17px}.cb-step p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.5}
+.cb-stat{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.cb-act{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;padding-top:6px}
+.cb-btn{display:inline-flex;align-items:center;font:inherit;font-size:13.5px;font-weight:700;padding:9px 14px;border-radius:8px;background:var(--navy);color:#fff;text-decoration:none;border:1px solid var(--navy)}
+.cb-btn.line{background:var(--surface);color:var(--navy)}
+@media (prefers-color-scheme:dark){.cb-btn.line{color:var(--ink)}}
+.cb-btn:hover{filter:brightness(1.08)}.cb-btn:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+@media (max-width:860px){.cb-steps{grid-template-columns:1fr}}
 </style>
 
 <header class="mast">
@@ -500,7 +516,7 @@ body.editing .ed-mod{background:color-mix(in srgb,var(--yellow) 16%,transparent)
 (function(){
 /* On the live site, opening the dashboard without a page link shows the Marketing / Sales chooser once per browser session. */
 try{if(/netlify\.app$|boldt/i.test(location.hostname)&&!location.hash&&!sessionStorage.getItem("bmd_dash")){location.replace("start.html");return;}sessionStorage.setItem("bmd_dash","marketing");}catch(e){}
-const PAGES=[["exec","Executive Summary"],["trends","Month Over Month"],["paid","Paid Media"],["creative","Ads & Creative"],["website","Website"],["leads","Leads"],["roi","ROI & Variables"],["budget","Budget"],["recs","Recommendations"],["rnd","R&D"],["blog","Blog Generator"]];
+const PAGES=[["exec","Executive Summary"],["trends","Month Over Month"],["paid","Paid Media"],["creative","Ads & Creative"],["website","Website"],["leads","Leads"],["roi","ROI & Variables"],["budget","Budget"],["recs","Recommendations"],["rnd","R&D"],["blog","Blog Generator"],["campaigns","Campaign Builder"]];
 let D=null; const DIV="HC";
 /* LinkedIn image links expire about a week after each pull; on the live site /api/img serves a saved copy. */
 const LIVE_IMG=/netlify\.app$|boldt/i.test(location.hostname)&&location.protocol==="https:";
@@ -917,6 +933,26 @@ document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest
   if(t.dataset.rndCopy!=null)return rndCopy(t);
   if(t.dataset.rndInd){RND_IND=t.dataset.rndInd;}if(t.dataset.rndMkt){RND_MKT=t.dataset.rndMkt;}const y=scrollY;render();scrollTo(0,y);});
 document.addEventListener("change",e=>{if(e.target.id==="rnd-week"){RND_W=e.target.value;rndLoad();const y=scrollY;render();scrollTo(0,y);}});
+/* ---------- Campaign Builder (Nov 18, 2026): healthcare campaigns, built in order: LinkedIn ads, landing page, PDF ---------- */
+const CB_CAMPS=[{key:"wl-senior-living",name:"White Label Senior Living",line:"Healthcare",dir:"campaigns/white-label",ads:24,
+  about:"A new offer for health systems: a senior living community with the health system's name on it. Boldt develops and finances the real estate, and an experienced senior living operator runs the community."}];
+const CB={};
+function cbLoad(c){if(CB[c.key])return;CB[c.key]={loading:true};fetch(`/api/campaigns?c=${c.key}`,{cache:"no-store"}).then(r=>r.json()).then(j=>{CB[c.key]=j.ok?{items:(j.state||{}).items||{}}:{err:true};if(current()==="campaigns")render();}).catch(()=>{CB[c.key]={err:true};if(current()==="campaigns")render();});}
+function cbStats(c){const d=CB[c.key];if(!d||d.loading)return`<span class="note" style="margin:0">Loading review status…</span>`;if(d.err)return`<span class="note" style="margin:0">Review status isn't available right now.</span>`;
+  let ok=0,ch=0,rm=0;Object.values(d.items).forEach(it=>{if(it.removed)rm++;else if(it.status==="approved")ok++;else if(it.status==="changes")ch++;});const pend=Math.max(0,c.ads-ok-ch-rm);
+  return`<span class="chip good">${ok} approved</span><span class="chip">${ch} need changes</span><span class="chip">${pend} not reviewed</span>${rm?`<span class="chip">${rm} removed</span>`:""}`;}
+R.campaigns=()=>{
+  let h=head("Campaign Builder",`Campaign assets in one place, built in order: LinkedIn ads, then the landing page, then the PDF. Healthcare only. Ad reviews save for everyone with the dashboard password.`);
+  h+=`<div class="cb-sec"><h3>Healthcare</h3><span class="chip">${CB_CAMPS.length} campaign${CB_CAMPS.length===1?"":"s"}</span></div>`;
+  CB_CAMPS.forEach(c=>{cbLoad(c);
+    h+=`<div class="panel cb-camp" id="cb-${c.key}"><div class="cb-top"><div><h3>${esc(c.name)}</h3><p>${esc(c.about)}</p></div><span class="chip">${esc(c.line)}</span></div>
+    <ol class="cb-steps">
+      <li class="cb-step"><span class="n">Step 1</span><h4>LinkedIn ads</h4><p>${c.ads} single-image ads in sketch, photo, text-only and modern styles. Edit wording, approve, flag or remove ads. Changes save for everyone.</p><div class="cb-stat">${cbStats(c)}</div><div class="cb-act"><a class="cb-btn" href="${c.dir}/ads.html">Review ads</a></div></li>
+      <li class="cb-step"><span class="n">Step 2</span><h4>Landing page</h4><p>The campaign page with the short form, how it works, the path for current owners and two New Perspective case studies. Downloads as one HTML file.</p><div class="cb-act"><a class="cb-btn" href="${c.dir}/landing-page.html" download="Boldt_${c.name.replace(/\s+/g,"_")}_Landing_Page.html">Download HTML</a><a class="cb-btn line" href="${c.dir}/landing-page.html" target="_blank" rel="noopener">Preview</a></div></li>
+      <li class="cb-step"><span class="n">Step 3</span><h4>Guidebook (PDF)</h4><p>White label senior living: a guide for health system leaders. Eight pages for sales follow-up and the form download.</p><div class="cb-act"><a class="cb-btn" href="${c.dir}/guidebook.pdf" download="Boldt_${c.name.replace(/\s+/g,"_")}_Guidebook.pdf">Download PDF</a><a class="cb-btn line" href="${c.dir}/guidebook.pdf" target="_blank" rel="noopener">Open</a></div></li>
+    </ol></div>`;});
+  return h;
+};
 R.blog=()=>{
   let h=head("Blog Generator",`Long-form healthcare articles written from this week's R&D research, the dashboard's data and the text on boldthealthcarerealestate.com. Share a draft for review to highlight text, comment and make edits.`);
   h+=`<div class="panel blog-panel" id="blog-gen">${blogBody()}</div>`; if(!BLOG.recent)setTimeout(blogRecent,0);
