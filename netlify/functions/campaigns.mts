@@ -15,6 +15,9 @@ import { getStore } from "@netlify/blobs";
 // GET  /api/campaigns?briefs=1                          -> { ok, briefs: [...] } newest first
 // POST /api/campaigns { op: "brief", brief }            -> creates (no id) or updates (id) a brief
 // POST /api/campaigns { op: "deletebrief", id }         -> deletes a brief
+// Campaign status (status menu on each campaign card), one key each: st/<campaign key or brief id>
+// GET  /api/campaigns?status=1                          -> { ok, status: { id: { s, by, at } } }
+// POST /api/campaigns { op: "status", id, s }           -> saves the status for everyone
 // The edge gate has already checked the site password.
 
 const json = (o: unknown, status = 200) =>
@@ -36,6 +39,7 @@ function cleanBrief(raw: any) {
   b.assets = a.length ? a : ASSETS;
   return b;
 }
+const STATUSES = new Set(["Not started", "In progress", "Ready for review", "Needs edits", "Approved", "On hold", "Live", "Complete"]);
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "campaign";
 
 function clean(raw: any) {
@@ -53,6 +57,12 @@ function clean(raw: any) {
 export default async (req: Request, context: Context) => {
   const store = getStore({ name: "campaigns", consistency: "strong" });
   try {
+    if (req.method === "GET" && new URL(req.url).searchParams.get("status")) {
+      const { blobs } = await store.list({ prefix: "st/" });
+      const status: Record<string, unknown> = {};
+      await Promise.all(blobs.map(async (x) => { const v = await store.get(x.key, { type: "json" }); if (v) status[x.key.slice(3)] = v; }));
+      return json({ ok: true, status });
+    }
     if (req.method === "GET" && new URL(req.url).searchParams.get("briefs")) {
       const { blobs } = await store.list({ prefix: "b/" });
       const briefs: any[] = [];
@@ -86,10 +96,18 @@ export default async (req: Request, context: Context) => {
       await store.setJSON(`b/${id}`, brief);
       return json({ ok: true, brief });
     }
+    if (op === "status") {
+      const id = String(b.id || "");
+      if (!BRIEF_ID.test(id) || !STATUSES.has(b.s)) return json({ ok: false, error: "bad request" }, 400);
+      const v = { s: b.s, by: user, at: now };
+      await store.setJSON(`st/${id}`, v);
+      return json({ ok: true, status: v });
+    }
     if (op === "deletebrief") {
       const id = String(b.id || "");
       if (!BRIEF_ID.test(id)) return json({ ok: false, error: "bad request" }, 400);
       await store.delete(`b/${id}`);
+      await store.delete(`st/${id}`);
       return json({ ok: true });
     }
     if (!CAMP.test(c)) return json({ ok: false, error: "bad request" }, 400);
