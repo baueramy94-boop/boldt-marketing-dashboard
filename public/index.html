@@ -212,7 +212,7 @@ tr.future td{color:var(--muted)}
 .rc-list li.rc-i{display:grid;grid-template-columns:auto 1fr auto;gap:10px 12px;align-items:start}.rc-chk{padding-top:2px;cursor:pointer}.rc-chk input{width:18px;height:18px;accent-color:var(--good);cursor:pointer}
 .rc-body p{margin:6px 0 4px}.rc-meta{display:block;margin:4px 0 0}.rc-i.done .rc-body b,.rc-i.done .rc-body p{color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(0,0,0,.25)}.rc-i.del{opacity:.6}
 .rc-act{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.rc-x{border:1px solid var(--line);background:transparent;border-radius:6px;width:28px;height:28px;font-size:17px;line-height:1;color:var(--muted);cursor:pointer}.rc-x:hover{color:var(--bad);border-color:var(--bad)}
-.rc-in{color:var(--good);border-color:var(--good)}.rc-when{font:inherit;font-size:12.5px;padding:5px 6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}.rc-prog{height:6px;border-radius:99px;background:var(--soft);margin:2px 0 12px;overflow:hidden}.rc-prog i{display:block;height:100%;background:var(--good);border-radius:99px}.rc-plan .lt-h h3{margin:0}.rc-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px}.rc-f{flex-wrap:wrap}
+.rc-in{color:var(--good);border-color:var(--good)}.mini-h{margin:14px 0 6px;font-size:13px}.fd-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0}.fd{border-radius:var(--r);padding:12px 14px;background:var(--soft)}.fd b{display:block;font-size:32px;font-family:var(--f-display);line-height:1.1}.fd.good b{color:var(--good)}.fd.bad b{color:var(--bad)}.fd span{display:block;font-size:13.5px;margin-top:2px}.fd em{display:block;font-style:normal;font-size:12.5px;color:var(--muted);margin-top:4px}.fd-bar{height:8px;border-radius:99px;background:var(--bad-bg,#F8E3DF);overflow:hidden;margin:6px 0 4px}.fd-bar i{display:block;height:100%;background:var(--good)}.rc-when{font:inherit;font-size:12.5px;padding:5px 6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}.rc-prog{height:6px;border-radius:99px;background:var(--soft);margin:2px 0 12px;overflow:hidden}.rc-prog i{display:block;height:100%;background:var(--good);border-radius:99px}.rc-plan .lt-h h3{margin:0}.rc-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px}.rc-f{flex-wrap:wrap}
 .linkbtn{background:none;border:0;padding:0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
 @media (max-width:640px){.rc-list li.rc-i{grid-template-columns:auto 1fr}.rc-act{grid-column:2;justify-content:flex-start}}
 .rec-h{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -1705,7 +1705,7 @@ R.roi=()=>{
   const rows=[["Marketing spend","spend",v=>$(v),$(ytdSp)],["Advertising spend","ad",v=>$(v),$(ytdAd)],["Cost per MQL","cpMql",v=>$(v,2),$(ytdSp/s.ytd,2)],["Ad spend per MQL","adMql",v=>$(v,2),$(ytdAd/s.ytd,2)],
     ["Cost per SQL","cpSql",v=>$(v,2),$(ytdSp/ytdSql,2)],["Ad spend per SQL","adSql",v=>$(v,2),$(ytdAd/ytdSql,2)],["Subscriber to MQL","subMql",v=>P(v,2),LIVE(SUBN?P(s.ytd/SUBN,2):"–")],["MQL to SQL","mqlSql",v=>P(v,2),P(ytdSql/sum(mq.slice(0,SQLN())),2)],
     ["MQL to awarded","mqlAw",v=>P(v,2),LIVE(PR&&s.ytd?P(PR.length/s.ytd,2):"–")],["SQL to awarded","sqlAw",v=>P(v,2),LIVE(PR&&ytdSql?P(PR.length/ytdSql,2):"–")],["Cost per awarded project","cpAw",v=>$(v,2),LIVE(PR&&PR.length?$(ytdSp/PR.length,2):"–")],["Ad spend per awarded project","adAw",v=>$(v,2),LIVE(PR&&PR.length?$(ytdAd/PR.length,2):"–")],["Awarded ROI","awRoi",v=>N(v,1)+"x",LIVE(PR?xR(roiOf(ret(PR),ytdSp)):"")],["Awarded ROAS","awRoas",v=>N(v,1)+"x",LIVE(PR?xR(roiOf(ret(PR),ytdAd)):"")]];
-  h+=`${roiProjects(G,ytdSp,ytdAd,rate,val,ret,roiOf,tot,ohYtd,OH)}<div class="panel"><h3>Year over year</h3><p class="sub">2024 and 2025 from the Healthcare ROI tab; 2026 is year to date</p><div class="tbl-wrap"><table><thead><tr><th class="l">Measure</th><th>2024</th><th>2025</th><th>2026 YTD</th></tr></thead><tbody>
+  h+=`${roiProjects(G,ytdSp,ytdAd,rate,val,ret,roiOf,tot,ohYtd,OH)}${salesInsights(PR,ytdSp,rate,roiOf)}<div class="panel"><h3>Year over year</h3><p class="sub">2024 and 2025 from the Healthcare ROI tab; 2026 is year to date</p><div class="tbl-wrap"><table><thead><tr><th class="l">Measure</th><th>2024</th><th>2025</th><th>2026 YTD</th></tr></thead><tbody>
     ${rows.map(([n,k,f,v26])=>{const [a,b]=yr(k,f);return `<tr><td class="l">${n}</td><td>${a}</td><td>${b}</td><td>${v26}</td></tr>`;}).join("")}</tbody></table></div>
     </div>`;
   const g=L.goals, sq25=D.sql2025, mq25=L.mql2025;
@@ -1730,6 +1730,65 @@ function roiProjects(G,sp,ad,rate,val,ret,roiOf,tot,ohYtd,OH){
     <details class="or-more" style="margin-top:10px" ${ROI_OPEN?"open":""} data-roi-list><summary>Projects counted (${G.total.length})</summary><div class="tbl-wrap"><table><thead><tr><th class="l">Project</th><th class="l">Stage</th><th>Date awarded</th><th>Project value</th><th></th></tr></thead><tbody>
     ${G.total.map(p=>`<tr><td class="l">${esc(p.name)}</td><td class="l">${esc(p.stage)}</td><td>${day(p.reached)}</td><td>${$m(p.amount)}</td><td><button type="button" class="rc-x bd-x" data-roi-rm="${esc(p.id)}" title="Remove from ROI" aria-label="Remove ${esc(p.name)} from ROI">×</button></td></tr>`).join("")}</tbody></table></div>
     ${RM_.length?`<p class="note" style="margin:10px 0 4px"><b>Removed projects (${RM_.length})</b>: not counted in ROI. Restore one to count it again.</p><div class="tbl-wrap"><table><tbody>${RM_.map(p=>`<tr><td class="l">${esc(p.name)}</td><td class="l">${esc(p.stage)}</td><td>${$m(p.amount)}</td><td class="l note">Removed by ${esc(p.by||"")}${p.at?`, ${day(p.at)}`:""}</td><td><button type="button" class="btn-sm" data-roi-restore="${esc(p.id)}">Restore</button></td></tr>`).join("")}</tbody></table></div>`:""}</details></div>`;}
+/* Sales insights (/api/hs-pipeline): marketing influence on 2026 projects, time in each phase, projects that move forward vs die
+   before groundbreaking, and open pipeline. */
+let PL=null, PL_ERR="", PL_ON=false, PL_TRIES=0, PL_T=null;
+function plLoad(){if(PL||PL_ON||PL_T)return;PL_ON=true;fetch("/api/hs-pipeline").then(r=>r.json()).then(j=>{if(!j.ok||!j.ready)throw j;PL=j;PL_ERR="";PL_TRIES=0;})
+  .catch(()=>{PL_TRIES++;PL_ERR=PL_TRIES<4?"Loading sales insights from HubSpot…":"Sales insights couldn't be loaded from HubSpot. Refresh the page to try again.";if(PL_TRIES<4)PL_T=setTimeout(()=>{PL_T=null;plLoad();},20000*PL_TRIES);})
+  .finally(()=>{PL_ON=false;if(current()==="roi"){const y=scrollY;render();scrollTo(0,y);}});}
+const SRC_L={ORGANIC_SEARCH:"Organic search",PAID_SEARCH:"Paid search",EMAIL_MARKETING:"Email marketing",SOCIAL_MEDIA:"Organic social",REFERRALS:"Referrals",OTHER_CAMPAIGNS:"Other campaigns",DIRECT_TRAFFIC:"Direct traffic",OFFLINE:"Offline (added by sales)",PAID_SOCIAL:"Paid social",AI_REFERRALS:"AI referrals","":"Not set"};
+const TOUCH_L={w:"Website visit",f:"Form fill",e:"Marketing email click",m:"MQL"};
+const med=a=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),k=Math.floor(b.length/2);return b.length%2?b[k]:(b[k-1]+b[k])/2;};
+const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+const dd=n=>n==null?"–":N(Math.round(n))+" days";
+function salesInsights(PR,sp,rate,roiOf){
+  plLoad();
+  if(!PL||!PR)return `<div class="panel"><h3>Sales insights</h3><p class="note">${PL_ERR||ROIL_ERR||"Loading sales insights from HubSpot…"}</p></div>`;
+  const byId={};PL.deals.forEach(d=>byId[d.id]=d);
+  const BUILD=["closedwon","1432137869"],DIED=["closedlost","54fbc2bb-eaf3-4480-9e25-cff9ecbd7073"],day=t=>new Date(t).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+  const val=a=>sum(a.map(p=>p.amount));
+  // A. Marketing influence on 2026 projects
+  const P2=PR.map(p=>({...p,i:byId[p.id]||{}})),inf=P2.filter(p=>p.i.touch&&Object.keys(p.i.touch).length),pts=inf.map(p=>p.i.points||0),lead=inf.filter(p=>p.i.first).map(p=>(p.reached-p.i.first)/864e5);
+  const firstType=p=>{const t=p.i.touch||{},k=Object.keys(t);return k.length?k.reduce((a,b)=>t[a]<=t[b]?a:b):null;};
+  const grp=(arr,f)=>{const m={};arr.forEach(p=>{const k=f(p);(m[k]=m[k]||[]).push(p);});return Object.entries(m).sort((a,b)=>val(b[1])-val(a[1]));};
+  let h=`<div class="panel" id="roi-influence"><h3>Marketing influence on awarded projects</h3><p class="sub">2026 projects from the table above. A project counts as marketing-influenced when anyone at the company visited the website, filled out a form, clicked a marketing email or became an MQL before it was awarded.</p>
+    <div class="grid g-kpi">${kpi("Marketing-influenced projects",`${inf.length} of ${P2.length}`,`${P2.length?P(inf.length/P2.length,0):"–"} of projects · ${$m(val(inf))} (${val(P2)?P(val(inf)/val(P2),0):"–"} of value)`)}
+      ${kpi("Marketing-influenced ROI",xR(roiOf(val(inf)*rate,sp)),`Only influenced projects: ${$m(val(inf)*rate)} estimated return vs marketing spend`)}
+      ${kpi("Touchpoints before award",pts.length?N(avg(pts),1):"–",`Average per influenced project · median ${dd(med(lead))} from first touch to award`)}</div>
+    <div class="grid g-2"><div><h4 class="mini-h">How marketing first reached them</h4><div class="tbl-wrap"><table><thead><tr><th class="l">First touch</th><th>Projects</th><th>Value</th></tr></thead><tbody>
+      ${grp(inf,firstType).map(([k,a])=>`<tr><td class="l">${TOUCH_L[k]||k}</td><td>${a.length}</td><td>${$m(val(a))}</td></tr>`).join("")||`<tr><td class="l" colspan="3">No marketing touches before award yet</td></tr>`}
+      ${P2.length-inf.length?`<tr><td class="l">No marketing touch before award</td><td>${P2.length-inf.length}</td><td>${$m(val(P2.filter(p=>!inf.includes(p))))}</td></tr>`:""}</tbody></table></div></div>
+    <div><h4 class="mini-h">By the company's original source</h4><div class="tbl-wrap"><table><thead><tr><th class="l">Original source</th><th>Projects</th><th>Value</th></tr></thead><tbody>
+      ${grp(P2,p=>p.i.source||"").map(([k,a])=>`<tr><td class="l">${SRC_L[k]||k}</td><td>${a.length}</td><td>${$m(val(a))}</td></tr>`).join("")}</tbody></table></div></div></div>
+    <details class="or-more" style="margin-top:10px"><summary>Touches by project (${P2.length})</summary><div class="tbl-wrap"><table><thead><tr><th class="l">Project</th><th class="l">Touches before award</th><th>Touchpoints</th><th>First touch</th></tr></thead><tbody>
+      ${P2.map(p=>{const t=p.i.touch||{};return `<tr><td class="l">${esc(p.name)}</td><td class="l">${Object.keys(t).length?Object.keys(t).map(k=>`<span class="chip">${TOUCH_L[k]}</span>`).join(" "):`<span class="note" style="margin:0">None</span>`}</td><td>${p.i.points||0}</td><td>${p.i.first?day(p.i.first):"–"}</td></tr>`;}).join("")}</tbody></table></div></details></div>`;
+  // B. Time in each phase (median days between stage dates; times ending on a bulk-update day are skipped)
+  const SK=new Set(PL.skipDays||[]),okT=t=>!SK.has(new Date(t).toISOString().slice(0,10));
+  const SEQ=[["qualifiedtobuy","Lead"],["presentationscheduled","Verbal Award"],["decisionmakerboughtin","Awarded Not Financed"],["contractsent","Board Approval"],["build","In Construction"]];
+  const at=(d,k)=>k==="build"?(()=>{const v=BUILD.map(b=>d.entered[b]).filter(x=>x!=null);return v.length?Math.min(...v):null;})():d.entered[k]??null;
+  const trans=SEQ.slice(0,-1).map(([k,l],i)=>{const vals=[];PL.deals.forEach(d=>{const a=at(d,k);if(a==null)return;const b=at(d,SEQ[i+1][0]);if(b!=null&&b>a&&okT(a)&&okT(b))vals.push((b-a)/864e5);});return [l,SEQ[i+1][1],vals];});
+  const aw=PL.deals.filter(d=>d.award),c2a=g=>aw.filter(d=>g(d)&&d.created<d.award&&okT(d.award)).map(d=>(d.award-d.created)/864e5);
+  const isInf=d=>d.touch&&Object.keys(d.touch).length,a2b=aw.map(d=>{const b=at(d,"build");return b&&b>d.award&&okT(b)&&okT(d.award)?(b-d.award)/864e5:null;}).filter(x=>x!=null);
+  h+=`<div class="grid g-2"><div class="panel"><h3>Time in each phase</h3><p class="sub">Median days between Sales Pipeline stages, all years</p><div class="tbl-wrap"><table><thead><tr><th class="l">From</th><th class="l">To</th><th>Deals</th><th>Median</th><th>Average</th></tr></thead><tbody>
+    ${trans.map(([a,b,v])=>`<tr><td class="l">${a}</td><td class="l">${b}</td><td>${v.length}</td><td>${dd(med(v))}</td><td>${dd(avg(v))}</td></tr>`).join("")}
+    <tr class="total"><td class="l">Deal created</td><td class="l">Awarded</td><td>${c2a(()=>true).length}</td><td>${dd(med(c2a(()=>true)))}</td><td>${dd(avg(c2a(()=>true)))}</td></tr>
+    <tr><td class="l">Awarded</td><td class="l">In Construction</td><td>${a2b.length}</td><td>${dd(med(a2b))}</td><td>${dd(avg(a2b))}</td></tr></tbody></table></div>
+    <p class="note">Deal created to award: marketing-influenced ${dd(med(c2a(d=>isInf(d))))} (${c2a(d=>isInf(d)).length} deals) vs no marketing touch ${dd(med(c2a(d=>!isInf(d))))} (${c2a(d=>!isInf(d)).length} deals), median.</p></div>`;
+  // C. Move forward vs die before groundbreaking (deals that reached Verbal Award or later)
+  const fwd=aw.filter(d=>BUILD.includes(d.stage)||BUILD.some(b=>d.entered[b]!=null)),died=aw.filter(d=>DIED.includes(d.stage)&&!fwd.includes(d)),open=aw.length-fwd.length-died.length,dec=fwd.length+died.length;
+  h+=`<div class="panel"><h3>Awarded projects: move forward vs die before groundbreaking</h3><p class="sub">Every Sales Pipeline project that reached Verbal Award or later, all years</p>
+    <div class="fd-row"><div class="fd good"><b>${dec?P(fwd.length/dec,0):"–"}</b><span>moved forward to construction</span><em>${fwd.length} projects · ${$m(val(fwd))}</em></div><div class="fd bad"><b>${dec?P(died.length/dec,0):"–"}</b><span>died before groundbreaking</span><em>${died.length} projects · ${$m(val(died))}</em></div></div>
+    <div class="fd-bar" aria-hidden="true"><i style="width:${dec?fwd.length/dec*100:0}%"></i></div>
+    <p class="note">${open} awarded project${open===1?" is":"s are"} still before groundbreaking and not counted until they move forward or close.</p></div></div>`;
+  // D. Open pipeline
+  const ST=PL.stages.filter(s=>!s.closed&&!BUILD.includes(s.id)),openD=PL.deals.filter(d=>ST.some(s=>s.id===d.stage));
+  const rows=ST.map(s=>{const a=openD.filter(d=>d.stage===s.id);return {s,a,v:val(a),w:val(a)*(s.prob??0)};}).filter(r=>r.a.length);
+  const W=sum(rows.map(r=>r.w)),V=sum(rows.map(r=>r.v)),aw26=val(PR),Wpre=sum(rows.filter(r=>["qualifiedtobuy","presentationscheduled"].includes(r.s.id)).map(r=>r.w));
+  h+=`<div class="panel"><h3>Open pipeline</h3><p class="sub">Sales Pipeline deals not yet in construction or closed, weighted by each stage's probability in HubSpot</p><div class="tbl-wrap"><table><thead><tr><th class="l">Stage</th><th>Deals</th><th>Value</th><th>Probability</th><th>Weighted value</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr><td class="l">${esc(r.s.label)}</td><td>${r.a.length}</td><td>${$m(r.v)}</td><td>${r.s.prob==null?"–":P(r.s.prob,0)}</td><td>${$m(r.w)}</td></tr>`).join("")}
+    <tr class="total"><td class="l">Total</td><td>${openD.length}</td><td>${$m(V)}</td><td></td><td>${$m(W)}</td></tr></tbody></table></div>
+    <p class="note">Not yet awarded (Lead and Verbal Award): ${$m(Wpre)} weighted, ${aw26?N(Wpre/aw26*100,0)+"%":"–"} of the ${$m(aw26)} awarded so far in 2026.</p></div>`;
+  return h;}
 let ROI_OPEN=false;
 document.addEventListener("toggle",e=>{if(e.target.matches&&e.target.matches("[data-roi-list]"))ROI_OPEN=e.target.open;},true);
 document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-roi-rm],[data-roi-restore]");if(!t||!ROIL)return;
