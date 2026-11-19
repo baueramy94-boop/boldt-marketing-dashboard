@@ -95,18 +95,15 @@ export default async (req: Request) => {
     const d2c = await assoc(token, "deals", "companies", awarded.map((d: any) => d.id));
     const coIds = [...new Set(Object.values(d2c).flatMap((x) => x.slice(0, 1)))];
     const cos = coIds.length ? await read(token, "companies", coIds, ["name", "hs_analytics_source", "hs_analytics_first_visit_timestamp", "first_conversion_date"]) : {};
-    // People who touched marketing: contacts at these companies with a first website visit, form fill or marketing email click.
-    const people: Record<string, any> = {}, c2p: Record<string, string[]> = {};
-    const PP = ["hs_analytics_first_visit_timestamp", "first_conversion_date", "hs_email_first_click_date"];
-    for (let i = 0; i < coIds.length; i += 100) {
-      const ids = coIds.slice(i, i + 100).map(Number); let aft: string | undefined;
-      for (let p = 0; p < 15; p++) {
-        const d = await hs(token, "/crm/v3/objects/contacts/search", { limit: 200, after: aft, properties: [...PP, "associatedcompanyid"],
-          filterGroups: PP.map((prop) => ({ associatedWith: [{ objectType: "companies", operator: "IN", objectIdValues: ids }], filters: [{ propertyName: prop, operator: "HAS_PROPERTY" }] })) });
-        (d.results || []).forEach((x: any) => { const pr = x.properties || {}; people[String(x.id)] = pr; const co = String(pr.associatedcompanyid || ""); if (co) (c2p[co] = c2p[co] || []).push(String(x.id)); });
-        aft = d.paging?.next?.after; if (!aft) break;
-      }
-    }
+    // People who touched marketing: contacts at these companies (associations, then batch read) with a first website visit,
+    // form fill or marketing email click. Capped so the pull stays quick; a failure here only drops the person-level touches.
+    const people: Record<string, any> = {};
+    let c2p: Record<string, string[]> = {}, peopleOk = true;
+    try {
+      c2p = coIds.length ? await assoc(token, "companies", "contacts", coIds) : {};
+      const ids = [...new Set(Object.values(c2p).flat())].slice(0, 4000);
+      Object.assign(people, ids.length ? await read(token, "contacts", ids, ["hs_analytics_first_visit_timestamp", "first_conversion_date", "hs_email_first_click_date"]) : {});
+    } catch (e: any) { peopleOk = false; console.log(`hs-pipeline contacts skipped: ${e?.message || e}`); }
     const ppl = Object.keys(people);
     // MQLs: Lead records at these companies that entered New.
     let leadsOk = true, c2l: Record<string, string[]> = {}, leads: Record<string, any> = {};
@@ -131,10 +128,10 @@ export default async (req: Request) => {
       d.touch = touch; d.points = points;
       const ts = Object.values(touch); d.first = ts.length ? Math.min(...ts) : null;
     }
-    const data = { ok: true, ready: true, asOf: Date.now(), stages, deals, skipDays, leadsOk };
+    const data = { ok: true, ready: true, asOf: Date.now(), stages, deals, skipDays, leadsOk, peopleOk };
     await store.setJSON("result", { at: Date.now(), data });
     await store.delete("pulling").catch(() => {});
-    console.log(`hs-pipeline deals=${deals.length} awarded=${awarded.length} companies=${coIds.length} contacts=${ppl.length} leadsOk=${leadsOk} ms=${Date.now() - t0}`);
+    console.log(`hs-pipeline deals=${deals.length} awarded=${awarded.length} companies=${coIds.length} contacts=${ppl.length} leadsOk=${leadsOk} peopleOk=${peopleOk} ms=${Date.now() - t0}`);
     return json(data);
   } catch (e: any) {
     console.log(`hs-pipeline failed: ${e?.message || e}`);
