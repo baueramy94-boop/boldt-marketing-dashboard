@@ -1686,32 +1686,34 @@ R.roi=()=>{
   const LIVE=v=>PR?v:ROIL_ERR?"–":`<span class="ph-cell">…</span>`;
   const G=PR?{awarded:PR.filter(p=>p.group==="awarded"),construction:PR.filter(p=>p.group==="construction"),total:PR}:null;
   const byM=g=>M().map((_,i)=>PR?PR.filter(p=>p.month===i&&(!g||p.group===g)).length:null);
+  const SUB=ROIL&&ROIL.subscribers||null, SUBN=SUB?[...SUB].reverse().find(v=>v!=null):null;
+  const OH=ROIL?ROIL.overheadMonthly||0:0, ohYtd=OH*cm, tot=ytdSp+ohYtd;
   let h=head("ROI & Healthcare Variables",`Healthcare ROI and healthcare variables, from the budget workbook. Awarded and in-construction projects come from the HubSpot Sales Pipeline; estimated return is ${PR?P(rate,0):"10%"} of project value.`);
   h+=`<div class="grid g-kpi">${kpi("Healthcare marketing spend, YTD",$k(ytdSp),`2025 full year: ${$k(A["2025"].spend)}`)}${kpi("Cost per MQL, YTD",$(ytdSp/s.ytd),`2025: ${$(A["2025"].cpMql)}`)}${kpi("Cost per SQL, YTD",$(ytdSp/ytdSql),`2025: ${$(A["2025"].cpSql)}`)}
     ${PR?kpi("Projects awarded, YTD",N(PR.length),`${$m(val(PR))} project value · ${$m(ret(PR))} estimated return`):phKpi("Projects awarded, YTD",ROIL_ERR||"Loading from HubSpot…")}
-    ${PR?kpi("Marketing ROI, YTD",xR(roiOf(ret(PR),ytdSp)),`ROAS ${xR(roiOf(ret(PR),ytdAd))} · 2025 ROI: ${xR(A["2025"].awRoi)}`):phKpi("Marketing ROI, YTD",ROIL_ERR||"Loading from HubSpot…")}</div>`;
+    ${PR?kpi("Marketing ROI, YTD",xR(roiOf(ret(PR),ytdSp)),`ROAS ${xR(roiOf(ret(PR),ytdAd))} · 2025 ROI: ${xR(A["2025"].awRoi)}`):phKpi("Marketing ROI, YTD",ROIL_ERR||"Loading from HubSpot…")}
+    ${PR?kpi("Total ROI, YTD",xR(roiOf(ret(PR),tot)),`Includes ${$m(ohYtd)} overhead through ${MONTHS_LONG[cm-1]} plus marketing spend`):phKpi("Total ROI, YTD",ROIL_ERR||"Loading from HubSpot…")}</div>`;
   h+=`<div class="panel"><h3>Healthcare ROI by month</h3><p class="sub">Marketing spend = Healthcare Budget tab total. Ad spend = Google and LinkedIn healthcare lines.${MTD()}</p><div class="tbl-wrap"><table>
     <thead><tr><th class="l">Month</th><th>Marketing spend</th><th>Ad spend</th><th>MQLs</th><th>Cost / MQL</th><th>Ad spend / MQL</th><th>SQLs</th><th>Cost / SQL</th><th>Ad spend / SQL</th><th>MQL to SQL</th><th>Subscriber to MQL</th></tr></thead><tbody>
-    ${M().slice(0,cm).map((m,i)=>`<tr><td class="l">${m}</td><td>${$(sp[i])}</td><td>${$(ad[i])}</td><td>${mq[i]}</td><td>${r(sp[i],mq[i])}</td><td>${r(ad[i],mq[i])}</td><td>${sq[i]==null?PH:sq[i]}</td><td>${sq[i]?r(sp[i],sq[i]):sq[i]==null?PH:"–"}</td><td>${sq[i]?r(ad[i],sq[i]):sq[i]==null?PH:"–"}</td><td>${sq[i]==null?PH:P(sq[i]/mq[i],1)}</td><td>${PH}</td></tr>`).join("")}
-    <tr class="total"><td class="l">2026 YTD</td><td>${$(ytdSp)}</td><td>${$(ytdAd)}</td><td>${s.ytd}</td><td>${$(ytdSp/s.ytd)}</td><td>${$(ytdAd/s.ytd)}</td><td>${ytdSql}</td><td>${$(ytdSp/ytdSql)}</td><td>${$(ytdAd/ytdSql)}</td><td>${P(ytdSql/sum(mq.slice(0,SQLN())),1)}</td><td>${PH}</td></tr></tbody></table></div>
+    ${M().slice(0,cm).map((m,i)=>`<tr><td class="l">${m}</td><td>${$(sp[i])}</td><td>${$(ad[i])}</td><td>${mq[i]}</td><td>${r(sp[i],mq[i])}</td><td>${r(ad[i],mq[i])}</td><td>${sq[i]==null?PH:sq[i]}</td><td>${sq[i]?r(sp[i],sq[i]):sq[i]==null?PH:"–"}</td><td>${sq[i]?r(ad[i],sq[i]):sq[i]==null?PH:"–"}</td><td>${sq[i]==null?PH:P(sq[i]/mq[i],1)}</td><td>${LIVE(SUB&&SUB[i]?P(mq[i]/SUB[i],2):"–")}</td></tr>`).join("")}
+    <tr class="total"><td class="l">2026 YTD</td><td>${$(ytdSp)}</td><td>${$(ytdAd)}</td><td>${s.ytd}</td><td>${$(ytdSp/s.ytd)}</td><td>${$(ytdAd/s.ytd)}</td><td>${ytdSql}</td><td>${$(ytdSp/ytdSql)}</td><td>${$(ytdAd/ytdSql)}</td><td>${P(ytdSql/sum(mq.slice(0,SQLN())),1)}</td><td>${LIVE(SUBN?P(s.ytd/SUBN,2):"–")}</td></tr></tbody></table></div>
     </div>`;
   const yr=(k,f)=>["2024","2025"].map(y=>A[y][k]==null?"–":f(A[y][k]));
   const rows=[["Marketing spend","spend",v=>$(v),$(ytdSp)],["Advertising spend","ad",v=>$(v),$(ytdAd)],["Cost per MQL","cpMql",v=>$(v,2),$(ytdSp/s.ytd,2)],["Ad spend per MQL","adMql",v=>$(v,2),$(ytdAd/s.ytd,2)],
-    ["Cost per SQL","cpSql",v=>$(v,2),$(ytdSp/ytdSql,2)],["Ad spend per SQL","adSql",v=>$(v,2),$(ytdAd/ytdSql,2)],["Subscriber to MQL","subMql",v=>P(v,2),PH],["MQL to SQL","mqlSql",v=>P(v,2),P(ytdSql/sum(mq.slice(0,SQLN())),2)],
+    ["Cost per SQL","cpSql",v=>$(v,2),$(ytdSp/ytdSql,2)],["Ad spend per SQL","adSql",v=>$(v,2),$(ytdAd/ytdSql,2)],["Subscriber to MQL","subMql",v=>P(v,2),LIVE(SUBN?P(s.ytd/SUBN,2):"–")],["MQL to SQL","mqlSql",v=>P(v,2),P(ytdSql/sum(mq.slice(0,SQLN())),2)],
     ["MQL to awarded","mqlAw",v=>P(v,2),LIVE(PR&&s.ytd?P(PR.length/s.ytd,2):"–")],["SQL to awarded","sqlAw",v=>P(v,2),LIVE(PR&&ytdSql?P(PR.length/ytdSql,2):"–")],["Cost per awarded project","cpAw",v=>$(v,2),LIVE(PR&&PR.length?$(ytdSp/PR.length,2):"–")],["Ad spend per awarded project","adAw",v=>$(v,2),LIVE(PR&&PR.length?$(ytdAd/PR.length,2):"–")],["Awarded ROI","awRoi",v=>N(v,1)+"x",LIVE(PR?xR(roiOf(ret(PR),ytdSp)):"")],["Awarded ROAS","awRoas",v=>N(v,1)+"x",LIVE(PR?xR(roiOf(ret(PR),ytdAd)):"")]];
-  h+=`<div class="grid g-2"><div class="panel"><h3>Year over year</h3><p class="sub">2024 and 2025 from the Healthcare ROI tab; 2026 is year to date</p><div class="tbl-wrap"><table><thead><tr><th class="l">Measure</th><th>2024</th><th>2025</th><th>2026 YTD</th></tr></thead><tbody>
+  h+=`${roiProjects(G,ytdSp,ytdAd,rate,val,ret,roiOf,tot,ohYtd,OH)}<div class="panel"><h3>Year over year</h3><p class="sub">2024 and 2025 from the Healthcare ROI tab; 2026 is year to date</p><div class="tbl-wrap"><table><thead><tr><th class="l">Measure</th><th>2024</th><th>2025</th><th>2026 YTD</th></tr></thead><tbody>
     ${rows.map(([n,k,f,v26])=>{const [a,b]=yr(k,f);return `<tr><td class="l">${n}</td><td>${a}</td><td>${b}</td><td>${v26}</td></tr>`;}).join("")}</tbody></table></div>
-    </div>
-    ${roiProjects(G,ytdSp,ytdAd,rate,val,ret,roiOf)}</div>`;
+    </div>`;
   const g=L.goals, sq25=D.sql2025, mq25=L.mql2025;
   h+=`<div class="panel"><h3>Healthcare variables by month</h3><p class="sub">MQL and SQL goals, % to goal and year-over-year change. Variance shows true change vs 2025 (2026 ÷ 2025 − 1).</p><div class="tbl-wrap"><table>
     <thead><tr><th class="l">Month</th><th>MQLs</th><th>% to 37</th><th>% to 42</th><th>% to 47</th><th>2025 MQLs</th><th>YoY</th><th>SQLs</th><th>% to 3</th><th>2025 SQLs</th><th>YoY</th><th>In construction</th><th>Projects awarded</th><th>Subscribers</th></tr></thead><tbody>
     ${M().map((m,i)=>{const v=i<cm?mq[i]:null, q=i<cm?sq[i]:null, fut=i>=cm;
       const yo=(a,b)=>a==null||!b?"–":`<span class="${a>=b?'up':'dn'}">${a>=b?"+":""}${P(a/b-1,0)}</span>`;
       return `<tr class="${fut?'future':''}"><td class="l">${m}</td><td>${v??"–"}</td><td>${v==null?"–":P(v/g.conservative,0)}</td><td>${v==null?"–":P(v/g.base,0)}</td><td>${v==null?"–":P(v/g.optimistic,0)}</td><td>${mq25[i]}</td><td>${yo(v,mq25[i])}</td>
-      <td>${fut?"–":q==null?PH:q}</td><td>${fut?"–":q==null?PH:P(q/3,0)}</td><td>${sq25[i]}</td><td>${fut?"–":q==null?PH:yo(q,sq25[i])}</td><td>${fut?"–":LIVE(byM("construction")[i])}</td><td>${fut?"–":LIVE(byM()[i])}</td><td>${fut?"–":PH}</td></tr>`;}).join("")}
-    <tr class="total"><td class="l">Total</td><td>${s.ytd}</td><td>${P(s.ytd/444,0)}</td><td>${P(s.ytd/504,0)}</td><td>${P(s.ytd/564,0)}</td><td>${sum(mq25)}</td><td></td><td>${ytdSql}</td><td>${P(ytdSql/36,0)}</td><td>${sum(sq25)}</td><td></td><td>${LIVE(G?G.construction.length:"")}</td><td>${LIVE(G?G.total.length:"")}</td><td>${PH}</td></tr></tbody></table></div>
-    <p class="note">Annual goals: MQLs 444 / 504 / 564, SQLs 36. The YTD % columns compare with the full-year goal, as in the workbook.</p></div>`;
+      <td>${fut?"–":q==null?PH:q}</td><td>${fut?"–":q==null?PH:P(q/3,0)}</td><td>${sq25[i]}</td><td>${fut?"–":q==null?PH:yo(q,sq25[i])}</td><td>${fut?"–":LIVE(byM("construction")[i])}</td><td>${fut?"–":LIVE(byM()[i])}</td><td>${fut||!SUB?LIVE("–"):SUB[i]==null?"–":N(SUB[i])}</td></tr>`;}).join("")}
+    <tr class="total"><td class="l">Total</td><td>${s.ytd}</td><td>${P(s.ytd/444,0)}</td><td>${P(s.ytd/504,0)}</td><td>${P(s.ytd/564,0)}</td><td>${sum(mq25)}</td><td></td><td>${ytdSql}</td><td>${P(ytdSql/36,0)}</td><td>${sum(sq25)}</td><td></td><td>${LIVE(G?G.construction.length:"")}</td><td>${LIVE(G?G.total.length:"")}</td><td>${LIVE(SUBN?N(SUBN):"–")}</td></tr></tbody></table></div>
+    <p class="note">Annual goals: MQLs 444 / 504 / 564, SQLs 36. The YTD % columns compare with the full-year goal, as in the workbook. Subscribers = companies in HubSpot at each month end, not counting Boldt's own company records.</p></div>`;
   const MS=D.mqlSource, ms=Object.keys(MS.months), allM=M().slice(0,cm);
   h+=`<div class="panel"><h3>New MQLs by original source</h3><p class="sub">From the Healthcare Variables tab</p><div class="tbl-wrap"><table>
     <thead><tr><th class="l">Source</th>${allM.map(m=>`<th>${m}</th>`).join("")}<th>Total</th></tr></thead><tbody>
@@ -1720,14 +1722,25 @@ R.roi=()=>{
   return h;
 };
 
-function roiProjects(G,sp,ad,rate,val,ret,roiOf){
+function roiProjects(G,sp,ad,rate,val,ret,roiOf,tot,ohYtd,OH){
   if(!G)return `<div class="panel"><h3>Awarded and in-construction projects</h3><p class="note">${ROIL_ERR||"Loading projects from HubSpot…"}</p></div>`;
   const rows=[["Awarded, not yet in construction","Awarded Not Financed / Pre-Development and Board Approval",G.awarded],["In construction","Closed / In Construction and In Construction",G.construction],["Total","All 2026 projects",G.total]];
-  return `<div class="panel"><h3>Awarded and in-construction projects</h3><p class="sub">2026 year to date, from the HubSpot Sales Pipeline. A project counts in the month it first reached one of these stages. Estimated return = ${P(rate,0)} of project value. ROI uses healthcare marketing spend; ROAS uses healthcare ad spend.</p>
-    <div class="tbl-wrap"><table><thead><tr><th class="l">Projects</th><th>Count</th><th>Project value</th><th>Estimated return</th><th>Cost per project</th><th>ROI</th><th>ROAS</th></tr></thead><tbody>
-    ${rows.map(([n,d,a],k)=>`<tr${k===2?' class="total"':""}><td class="l"><b>${n}</b><br><span class="note" style="margin:0">${d}</span></td><td>${a.length}</td><td>${$m(val(a))}</td><td>${$m(ret(a))}</td><td>${a.length?$(sp/a.length):"–"}</td><td>${xR(roiOf(ret(a),sp))}</td><td>${xR(roiOf(ret(a),ad))}</td></tr>`).join("")}</tbody></table></div>
-    <details class="or-more" style="margin-top:10px"><summary>Projects counted (${G.total.length})</summary><div class="tbl-wrap"><table><thead><tr><th class="l">Project</th><th class="l">Stage</th><th>Reached</th><th>Project value</th></tr></thead><tbody>
-    ${G.total.map(p=>`<tr><td class="l">${esc(p.name)}</td><td class="l">${esc(p.stage)}</td><td>${new Date(p.reached).toLocaleDateString("en-US",{month:"short",day:"numeric"})}</td><td>${$m(p.amount)}</td></tr>`).join("")}</tbody></table></div></details></div>`;}
+  const RM_=(ROIL&&ROIL.removed)||[],day=t=>new Date(t).toLocaleDateString("en-US",{month:"short",day:"numeric"});
+  return `<div class="panel" id="roi-projects"><h3>Awarded and in-construction projects</h3><p class="sub">2026 year to date, from the HubSpot Sales Pipeline. A project counts in the month it was awarded (first moved into Awarded Not Financed, Board Approval or In Construction). Estimated return = ${P(rate,0)} of project value. Marketing ROI uses healthcare marketing spend, ROAS uses healthcare ad spend, and Total ROI adds healthcare overhead (${$k(OH)} a month, ${$m(ohYtd)} so far this year).</p>
+    <div class="tbl-wrap"><table><thead><tr><th class="l">Projects</th><th>Count</th><th>Project value</th><th>Estimated return</th><th>Cost per project</th><th>Marketing ROI</th><th>ROAS</th><th>Total ROI</th></tr></thead><tbody>
+    ${rows.map(([n,d,a],k)=>`<tr${k===2?' class="total"':""}><td class="l"><b>${n}</b><br><span class="note" style="margin:0">${d}</span></td><td>${a.length}</td><td>${$m(val(a))}</td><td>${$m(ret(a))}</td><td>${a.length?$(sp/a.length):"–"}</td><td>${xR(roiOf(ret(a),sp))}</td><td>${xR(roiOf(ret(a),ad))}</td><td>${xR(roiOf(ret(a),tot))}</td></tr>`).join("")}</tbody></table></div>
+    <details class="or-more" style="margin-top:10px" ${ROI_OPEN?"open":""} data-roi-list><summary>Projects counted (${G.total.length})</summary><div class="tbl-wrap"><table><thead><tr><th class="l">Project</th><th class="l">Stage</th><th>Date awarded</th><th>Project value</th><th></th></tr></thead><tbody>
+    ${G.total.map(p=>`<tr><td class="l">${esc(p.name)}</td><td class="l">${esc(p.stage)}</td><td>${day(p.reached)}</td><td>${$m(p.amount)}</td><td><button type="button" class="rc-x bd-x" data-roi-rm="${esc(p.id)}" title="Remove from ROI" aria-label="Remove ${esc(p.name)} from ROI">×</button></td></tr>`).join("")}</tbody></table></div>
+    ${RM_.length?`<p class="note" style="margin:10px 0 4px"><b>Removed projects (${RM_.length})</b>: not counted in ROI. Restore one to count it again.</p><div class="tbl-wrap"><table><tbody>${RM_.map(p=>`<tr><td class="l">${esc(p.name)}</td><td class="l">${esc(p.stage)}</td><td>${$m(p.amount)}</td><td class="l note">Removed by ${esc(p.by||"")}${p.at?`, ${day(p.at)}`:""}</td><td><button type="button" class="btn-sm" data-roi-restore="${esc(p.id)}">Restore</button></td></tr>`).join("")}</tbody></table></div>`:""}</details></div>`;}
+let ROI_OPEN=false;
+document.addEventListener("toggle",e=>{if(e.target.matches&&e.target.matches("[data-roi-list]"))ROI_OPEN=e.target.open;},true);
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-roi-rm],[data-roi-restore]");if(!t||!ROIL)return;
+  const id=t.dataset.roiRm||t.dataset.roiRestore,rm=!!t.dataset.roiRm,prev=JSON.parse(JSON.stringify(ROIL));
+  if(rm){const p=ROIL.projects.find(x=>x.id===id);if(!p)return;ROIL.projects=ROIL.projects.filter(x=>x.id!==id);ROIL.removed=[...(ROIL.removed||[]),{...p,by:"you",at:new Date().toISOString()}];}
+  else{const p=(ROIL.removed||[]).find(x=>x.id===id);if(!p)return;ROIL.removed=ROIL.removed.filter(x=>x.id!==id);ROIL.projects=[...ROIL.projects,p].sort((a,b)=>a.reached-b.reached);}
+  ROI_OPEN=true;{const y=scrollY;render();scrollTo(0,y);}
+  fetch("/api/hs-roi",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:rm?"remove":"restore",id})}).then(r=>r.json()).then(j=>{if(!j.ok)throw j;if(j.projects){ROIL={...ROIL,projects:j.projects,removed:j.removed};const y=scrollY;render();scrollTo(0,y);}})
+    .catch(()=>{ROIL=prev;ROIL_ERR="";const y=scrollY;render();scrollTo(0,y);});});
 R.budget=()=>{
   const bl=budgetLines(), bt=budgetTotals(bl), cm=CM();
   const cats={}; bl.forEach(l=>{const c=cats[l.cat]||(cats[l.cat]={a:0,b:0,ann:0});c.a+=sum(l.actual.slice(0,cm));c.b+=sum(l.budget.slice(0,cm));c.ann+=sum(l.budget);});
