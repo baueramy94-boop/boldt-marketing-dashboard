@@ -1717,11 +1717,6 @@ R.roi=()=>{
       <td>${fut?"–":q==null?PH:q}</td><td>${fut?"–":q==null?PH:P(q/3,0)}</td><td>${sq25[i]}</td><td>${fut?"–":q==null?PH:yo(q,sq25[i])}</td><td>${fut?"–":LIVE(byM("construction")[i])}</td><td>${fut?"–":LIVE(byM()[i])}</td><td>${fut||!SUB?LIVE("–"):SUB[i]==null?"–":N(SUB[i])}</td></tr>`;}).join("")}
     <tr class="total"><td class="l">Total</td><td>${s.ytd}</td><td>${P(s.ytd/444,0)}</td><td>${P(s.ytd/504,0)}</td><td>${P(s.ytd/564,0)}</td><td>${sum(mq25)}</td><td></td><td>${ytdSql}</td><td>${P(ytdSql/36,0)}</td><td>${sum(sq25)}</td><td></td><td>${LIVE(G?G.construction.length:"")}</td><td>${LIVE(G?G.total.length:"")}</td><td>${LIVE(SUBN?N(SUBN):"–")}</td></tr></tbody></table></div>
     <p class="note">Annual goals: MQLs 444 / 504 / 564, SQLs 36. The YTD % columns compare with the full-year goal, as in the workbook. Subscribers = companies in HubSpot at each month end, not counting Boldt's own company records.</p></div>`;
-  const MS=D.mqlSource, ms=Object.keys(MS.months), allM=M().slice(0,cm);
-  h+=`<div class="panel"><h3>New MQLs by original source</h3><p class="sub">From the Healthcare Variables tab</p><div class="tbl-wrap"><table>
-    <thead><tr><th class="l">Source</th>${allM.map(m=>`<th>${m}</th>`).join("")}<th>Total</th></tr></thead><tbody>
-    ${MS.sources.map((src,j)=>`<tr><td class="l">${src}</td>${allM.map(m=>MS.months[m]?`<td>${MS.months[m][j]}</td>`:`<td>${PH}</td>`).join("")}<td>${sum(ms.map(m=>MS.months[m][j]))}</td></tr>`).join("")}
-    <tr class="total"><td class="l">Total</td>${allM.map(m=>MS.months[m]?`<td>${sum(MS.months[m])}</td>`:`<td></td>`).join("")}<td>${sum(ms.map(m=>sum(MS.months[m])))}</td></tr></tbody></table></div></div>`;
   return h;
 };
 
