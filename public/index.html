@@ -1672,9 +1672,12 @@ function accountsSection(){
 
 /* Awarded and in-construction projects, live from the HubSpot Sales Pipeline (/api/hs-roi). Return = 10% of project value.
    ROI = (return - marketing spend) / marketing spend; ROAS = (return - ad spend) / ad spend (the workbook's formulas). */
-let ROIL=null, ROIL_ERR="", ROIL_ON=false;
-function roiLoad(){if(ROIL||ROIL_ON)return;ROIL_ON=true;fetch("/api/hs-roi").then(r=>r.json()).then(j=>{if(!j.ok||!j.ready)throw j;ROIL=j;ROIL_ERR="";})
-  .catch(e=>{ROIL_ERR=(e&&e.error)||"Projects couldn't be loaded from HubSpot. Refresh to try again.";}).finally(()=>{ROIL_ON=false;if(current()==="roi"){const y=scrollY;render();scrollTo(0,y);}});}
+let ROIL=null, ROIL_ERR="", ROIL_ON=false, ROIL_TRIES=0, ROIL_T=null;
+// One request at a time. After a failure, wait and try again (20s, 40s, 60s), never in a loop from re-rendering.
+function roiLoad(){if(ROIL||ROIL_ON||ROIL_T)return;ROIL_ON=true;fetch("/api/hs-roi").then(r=>r.json()).then(j=>{if(!j.ok||!j.ready)throw j;ROIL=j;ROIL_ERR="";ROIL_TRIES=0;})
+  .catch(e=>{ROIL_TRIES++;ROIL_ERR=ROIL_TRIES<4?"Loading projects from HubSpot…":"Projects couldn't be loaded from HubSpot. Refresh the page to try again.";
+    if(ROIL_TRIES<4)ROIL_T=setTimeout(()=>{ROIL_T=null;roiLoad();},20000*ROIL_TRIES);})
+  .finally(()=>{ROIL_ON=false;if(current()==="roi"){const y=scrollY;render();scrollTo(0,y);}});}
 const $m=n=>Math.abs(n)>=1e6?"$"+(n/1e6).toFixed(1)+"M":$k(n);
 const xR=v=>v==null||!isFinite(v)?"–":N(v,1)+"x";
 R.roi=()=>{

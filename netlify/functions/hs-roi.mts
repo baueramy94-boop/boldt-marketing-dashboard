@@ -27,6 +27,21 @@ const BOLDT_DOMAINS = ["boldt.com", "boldthealthcarerealestate.com"];
 const OVERHEAD = 508000;
 const json = (o: unknown, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
 const ms = (v: any) => (v ? Date.parse(String(v)) : NaN);
+const sleep = (t: number) => new Promise((r) => setTimeout(r, t));
+// HubSpot search allows about 5 requests a second for the whole account, shared with the dashboard's other functions:
+// space the calls out and retry a rate-limited (429) call a few times.
+let lastCall = 0;
+async function search(token: string, obj: string, body: any): Promise<any> {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const wait = lastCall + 260 - Date.now(); if (wait > 0) await sleep(wait);
+    lastCall = Date.now();
+    const r = await fetch(`${API}/crm/v3/objects/${obj}/search`, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify(body) });
+    if (r.status === 429) { await sleep(Math.min(4000, (Number(r.headers.get("retry-after")) || 0) * 1000 || 700 * (attempt + 1))); continue; }
+    if (!r.ok) throw new Error(`${obj} search ${r.status}`);
+    return r.json();
+  }
+  throw new Error(`${obj} search 429`);
+}
 
 async function removedList(store: any): Promise<Record<string, any>> {
   const r: any = await store.get("removed", { type: "json" }).catch(() => null);
@@ -57,15 +72,20 @@ export default async (req: Request, context: any) => {
   let cached: any = await store.get("result", { type: "json" }).catch(() => null);
   if (cached && !Array.isArray(cached.data?.all)) cached = null;   // older cache format
   if (cached && !fresh && Date.now() - cached.at < 10 * 60 * 1000) return json(shape(cached.data, await removedList(store)));
+  const lock: any = await store.get("pulling", { type: "json" }).catch(() => null);
+  if (lock && Date.now() - lock.at < 20000) {
+    if (cached) return json({ ...shape(cached.data, await removedList(store)), stale: true });
+    await sleep(6000);
+    const c2: any = await store.get("result", { type: "json" }).catch(() => null);
+    if (c2 && Array.isArray(c2.data?.all)) return json(shape(c2.data, await removedList(store)));
+  }
+  await store.setJSON("pulling", { at: Date.now() }).catch(() => {});
   try {
     const stages = [...AWARDED, ...BUILD];
     const props = ["dealname", "dealstage", "amount", "amount_in_home_currency", "createdate", ...stages.map((s) => `hs_v2_date_entered_${s}`)];
     const deals: any[] = []; let after: string | undefined;
     for (let p = 0; p < 10; p++) {
-      const r = await fetch(`${API}/crm/v3/objects/deals/search`, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-        body: JSON.stringify({ limit: 200, after, properties: props, filterGroups: [{ filters: [{ propertyName: "pipeline", operator: "EQ", value: PIPELINE }, { propertyName: "dealstage", operator: "IN", values: stages }] }] }) });
-      if (!r.ok) throw new Error(`deals search ${r.status}`);
-      const d: any = await r.json();
+      const d: any = await search(token, "deals", { limit: 200, after, properties: props, filterGroups: [{ filters: [{ propertyName: "pipeline", operator: "EQ", value: PIPELINE }, { propertyName: "dealstage", operator: "IN", values: stages }] }] });
       deals.push(...(d.results || []));
       after = d.paging?.next?.after; if (!after) break;
     }
@@ -85,29 +105,39 @@ export default async (req: Request, context: any) => {
       all.push(row);
     }
     all.sort((a, b) => a.reached - b.reached);
-    // Subscribers: companies created by each month end, minus Boldt's own company records.
-    const count = async (filters: any[]) => {
-      const r = await fetch(`${API}/crm/v3/objects/companies/search`, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify({ limit: 1, properties: ["createdate"], filterGroups: [{ filters }] }) });
-      if (!r.ok) throw new Error(`companies search ${r.status}`);
-      return Number(((await r.json()) as any).total || 0);
-    };
-    const boldt: number[] = [];
-    for (const dom of BOLDT_DOMAINS) {
-      const r = await fetch(`${API}/crm/v3/objects/companies/search`, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify({ limit: 50, properties: ["createdate"], filterGroups: [{ filters: [{ propertyName: "domain", operator: "EQ", value: dom }] }] }) });
-      if (r.ok) (((await r.json()) as any).results || []).forEach((c: any) => boldt.push(ms(c.properties?.createdate)));
-    }
-    const now = Date.now(), subscribers: (number | null)[] = [];
-    for (let m = 0; m < 12; m++) {
-      const end = Math.min(Date.UTC(year, m + 1, 1), now);
-      if (Date.UTC(year, m, 1) > now) { subscribers.push(null); continue; }
-      const n = await count([{ propertyName: "createdate", operator: "LT", value: String(end) }]);
-      subscribers.push(n - boldt.filter((t) => t < end).length);
+    // Subscribers: companies created by each month end, minus Boldt's own company records. Past months don't change, so they
+    // are kept for a day (key "subscribers"); a failure here never blocks the project numbers.
+    let subscribers: (number | null)[] | null = null;
+    try {
+      const prevSubs: any = await store.get("subscribers", { type: "json" }).catch(() => null);
+      const fresh = prevSubs && prevSubs.year === year && Date.now() - prevSubs.at < 24 * 3600 * 1000 ? prevSubs.counts : null;
+      const boldt: number[] = [];
+      for (const dom of BOLDT_DOMAINS) {
+        const r = await search(token, "companies", { limit: 50, properties: ["createdate"], filterGroups: [{ filters: [{ propertyName: "domain", operator: "EQ", value: dom }] }] });
+        (r.results || []).forEach((c: any) => boldt.push(ms(c.properties?.createdate)));
+      }
+      const now = Date.now(), cur = new Date(now).getUTCMonth();
+      subscribers = [];
+      for (let m = 0; m < 12; m++) {
+        if (Date.UTC(year, m, 1) > now) { subscribers.push(null); continue; }
+        if (fresh && m < cur && fresh[m] != null) { subscribers.push(fresh[m]); continue; }
+        const end = Math.min(Date.UTC(year, m + 1, 1), now);
+        const r = await search(token, "companies", { limit: 1, properties: ["createdate"], filterGroups: [{ filters: [{ propertyName: "createdate", operator: "LT", value: String(end) }] }] });
+        subscribers.push(Number(r.total || 0) - boldt.filter((t) => t < end).length);
+      }
+      await store.setJSON("subscribers", { at: fresh ? prevSubs.at : Date.now(), year, counts: subscribers }).catch(() => {});
+    } catch (e: any) {
+      console.log(`hs-roi subscribers failed: ${e?.message || e}`);
+      const prevSubs: any = await store.get("subscribers", { type: "json" }).catch(() => null);
+      subscribers = prevSubs && prevSubs.year === year ? prevSubs.counts : null;
     }
     const data = { ok: true, ready: true, asOf: Date.now(), year, rate: RATE, overheadMonthly: OVERHEAD, all, subscribers };
     await store.setJSON("result", { at: Date.now(), data });
+    await store.delete("pulling").catch(() => {});
     return json(shape(data, await removedList(store)));
   } catch (e: any) {
     console.log(`hs-roi failed: ${e?.message || e}`);
+    await store.delete("pulling").catch(() => {});
     if (cached) return json({ ...shape(cached.data, await removedList(store)), stale: true });
     return json({ ok: false, ready: true, error: "Couldn't read projects from HubSpot." }, 502);
   }
