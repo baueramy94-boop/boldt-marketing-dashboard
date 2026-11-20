@@ -552,7 +552,7 @@ body.editing .ed-mod{background:color-mix(in srgb,var(--yellow) 16%,transparent)
 (function(){
 /* On the live site, opening the dashboard without a page link shows the Marketing / Sales chooser once per browser session. */
 try{if(/netlify\.app$|boldt/i.test(location.hostname)&&!location.hash&&!sessionStorage.getItem("bmd_dash")){location.replace("start.html");return;}sessionStorage.setItem("bmd_dash","marketing");}catch(e){}
-const PAGES=[["exec","Executive Summary"],["trends","Month Over Month"],["paid","Paid Media"],["creative","Ads & Creative"],["website","Website"],["leads","Leads"],["roi","ROI & Variables"],["budget","Budget"],["recs","Recommendations"],["rnd","R&D"],["blog","Blog Generator"],["campaigns","Campaign Builder"]];
+const PAGES=[["exec","Executive Summary"],["trends","Month Over Month"],["paid","Paid Media"],["creative","Ads & Creative"],["website","Website"],["leads","Leads"],["roi","ROI & Variables"],["budget","Budget"],["recs","Recommendations"],["rnd","R&D"],["blog","Blog Generator"]];
 let D=null; const DIV="HC";
 /* LinkedIn image links expire about a week after each pull; on the live site /api/img serves a saved copy. */
 const LIVE_IMG=/netlify\.app$|boldt/i.test(location.hostname)&&location.protocol==="https:";
