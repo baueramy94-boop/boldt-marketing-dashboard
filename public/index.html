@@ -552,7 +552,7 @@ body.editing .ed-mod{background:color-mix(in srgb,var(--yellow) 16%,transparent)
 (function(){
 /* On the live site, opening the dashboard without a page link shows the Marketing / Sales chooser once per browser session. */
 try{if(/netlify\.app$|boldt/i.test(location.hostname)&&!location.hash&&!sessionStorage.getItem("bmd_dash")){location.replace("start.html");return;}sessionStorage.setItem("bmd_dash","marketing");}catch(e){}
-const PAGES=[["exec","Executive Summary"],["trends","Month Over Month"],["paid","Paid Media"],["creative","Ads & Creative"],["website","Website"],["leads","Leads"],["roi","ROI & Variables"],["budget","Budget"],["recs","Recommendations"],["rnd","R&D"],["blog","Blog Generator"]];
+const PAGES=[["exec","Executive Summary"],["trends","Month Over Month"],["paid","Paid Media"],["creative","Ads & Creative"],["website","Website"],["leads","Leads"],["roi","ROI & Variables"],["budget","Budget"],["recs","Recommendations"],["rnd","R&D"],["campaigns","Campaign Builder"],["blog","Blog Generator"]];
 let D=null; const DIV="HC";
 /* LinkedIn image links expire about a week after each pull; on the live site /api/img serves a saved copy. */
 const LIVE_IMG=/netlify\.app$|boldt/i.test(location.hostname)&&location.protocol==="https:";
@@ -1033,11 +1033,9 @@ function cbStats(c){const d=CB[c.key];if(!d||d.loading)return`<span class="note"
   return`<span class="chip good">${ok} approved</span><span class="chip">${ch} need changes</span><span class="chip">${pend} not reviewed</span>${rm?`<span class="chip">${rm} removed</span>`:""}`;}
 R.campaigns=()=>{
   let h=head("Campaign Builder",`Campaign assets in one place, built in order: LinkedIn ads, then the landing page, then the PDF. Healthcare only. Ad reviews save for everyone with the dashboard password.`);
-  cbBriefsLoad();cbStatusLoad();const BR=CBB.list||[],n=CB_CAMPS.length+BR.length;
-  h+=`<div class="cb-sec"><div><h3>Healthcare</h3><span class="chip">${n} campaign${n===1?"":"s"}</span></div>${CBB.form?"":`<button type="button" class="cb-new" data-cb-new>+ New campaign</button>`}</div>`;
-  if(CBB.form)h+=cbForm();
-  if(CBB.err)h+=`<p class="note">New campaigns couldn't be loaded right now. Refresh to try again.</p>`;
-  BR.forEach(b=>{h+=cbBriefCard(b);});
+  // The "New campaign" brief builder (briefs copied into a Claude chat) is switched off (Nov 20, 2026); cbForm/cbBriefCard stay for later.
+  cbStatusLoad();const n=CB_CAMPS.length;
+  h+=`<div class="cb-sec"><div><h3>Healthcare</h3><span class="chip">${n} campaign${n===1?"":"s"}</span></div></div>`;
   CB_CAMPS.forEach(c=>{cbLoad(c);
     h+=`<div class="panel cb-camp" id="cb-${c.key}"><div class="cb-top"><div><h3>${esc(c.name)}</h3><p>${esc(c.about)}</p></div>${cbStatus(c.key,c.status||"In progress",c.line)}</div>
     <ol class="cb-steps">
