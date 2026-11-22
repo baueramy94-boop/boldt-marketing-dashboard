@@ -212,7 +212,7 @@ tr.future td{color:var(--muted)}
 .rc-list li.rc-i{display:grid;grid-template-columns:auto 1fr auto;gap:10px 12px;align-items:start}.rc-chk{padding-top:2px;cursor:pointer}.rc-chk input{width:18px;height:18px;accent-color:var(--good);cursor:pointer}
 .rc-body p{margin:6px 0 4px}.rc-meta{display:block;margin:4px 0 0}.rc-i.done .rc-body b,.rc-i.done .rc-body p{color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(0,0,0,.25)}.rc-i.del{opacity:.6}
 .rc-act{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.rc-x{border:1px solid var(--line);background:transparent;border-radius:6px;width:28px;height:28px;font-size:17px;line-height:1;color:var(--muted);cursor:pointer}.rc-x:hover{color:var(--bad);border-color:var(--bad)}
-.rc-in{color:var(--good);border-color:var(--good)}.mini-h{margin:14px 0 6px;font-size:13px}.fd-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0}.fd{border-radius:var(--r);padding:12px 14px;background:var(--soft)}.fd b{display:block;font-size:32px;font-family:var(--f-display);line-height:1.1}.fd.good b{color:var(--good)}.fd.bad b{color:var(--bad)}.fd span{display:block;font-size:13.5px;margin-top:2px}.fd em{display:block;font-style:normal;font-size:12.5px;color:var(--muted);margin-top:4px}.fd-bar{height:8px;border-radius:99px;background:var(--bad-bg,#F8E3DF);overflow:hidden;margin:6px 0 4px}.fd-bar i{display:block;height:100%;background:var(--good)}.rc-when{font:inherit;font-size:12.5px;padding:5px 6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}.rc-prog{height:6px;border-radius:99px;background:var(--soft);margin:2px 0 12px;overflow:hidden}.rc-prog i{display:block;height:100%;background:var(--good);border-radius:99px}.rc-plan .lt-h h3{margin:0}.rc-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px}.rc-f{flex-wrap:wrap}
+.rc-in{color:var(--good);border-color:var(--good)}.mini-h{margin:14px 0 6px;font-size:13px}.roi-act{white-space:nowrap;text-align:right}.roi-act .btn-sm{margin-right:6px}.roi-ed input,.roi-ed select{font:inherit;font-size:13px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);width:100%;min-width:110px}.roi-ed td.l input{min-width:200px}.fd-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0}.fd{border-radius:var(--r);padding:12px 14px;background:var(--soft)}.fd b{display:block;font-size:32px;font-family:var(--f-display);line-height:1.1}.fd.good b{color:var(--good)}.fd.bad b{color:var(--bad)}.fd span{display:block;font-size:13.5px;margin-top:2px}.fd em{display:block;font-style:normal;font-size:12.5px;color:var(--muted);margin-top:4px}.fd-bar{height:8px;border-radius:99px;background:var(--bad-bg,#F8E3DF);overflow:hidden;margin:6px 0 4px}.fd-bar i{display:block;height:100%;background:var(--good)}.rc-when{font:inherit;font-size:12.5px;padding:5px 6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}.rc-prog{height:6px;border-radius:99px;background:var(--soft);margin:2px 0 12px;overflow:hidden}.rc-prog i{display:block;height:100%;background:var(--good);border-radius:99px}.rc-plan .lt-h h3{margin:0}.rc-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px}.rc-f{flex-wrap:wrap}
 .linkbtn{background:none;border:0;padding:0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
 @media (max-width:640px){.rc-list li.rc-i{grid-template-columns:auto 1fr}.rc-act{grid-column:2;justify-content:flex-start}}
 .rec-h{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -552,7 +552,7 @@ body.editing .ed-mod{background:color-mix(in srgb,var(--yellow) 16%,transparent)
 (function(){
 /* On the live site, opening the dashboard without a page link shows the Marketing / Sales chooser once per browser session. */
 try{if(/netlify\.app$|boldt/i.test(location.hostname)&&!location.hash&&!sessionStorage.getItem("bmd_dash")){location.replace("start.html");return;}sessionStorage.setItem("bmd_dash","marketing");}catch(e){}
-const PAGES=[["exec","Executive Summary"],["trends","Month Over Month"],["paid","Paid Media"],["creative","Ads & Creative"],["website","Website"],["leads","Leads"],["roi","ROI & Variables"],["budget","Budget"],["recs","Recommendations"],["rnd","R&D"],["campaigns","Campaigns"],["blog","Blog Generator"]];
+const PAGES=[["exec","Executive Summary"],["trends","Month Over Month"],["paid","Paid Media"],["creative","Ads & Creative"],["website","Website"],["leads","Leads"],["roi","ROI"],["budget","Budget"],["recs","Recommendations"],["rnd","R&D"],["campaigns","Campaigns"],["blog","Blog Generator"]];
 let D=null; const DIV="HC";
 /* LinkedIn image links expire about a week after each pull; on the live site /api/img serves a saved copy. */
 const LIVE_IMG=/netlify\.app$|boldt/i.test(location.hostname)&&location.protocol==="https:";
@@ -1702,7 +1702,7 @@ R.roi=()=>{
   const byM=g=>M().map((_,i)=>PR?PR.filter(p=>p.month===i&&(!g||p.group===g)).length:null);
   const SUB=ROIL&&ROIL.subscribers||null, SUBN=SUB?[...SUB].reverse().find(v=>v!=null):null;
   const OH=ROIL?ROIL.overheadMonthly||0:0, ohYtd=OH*cm, tot=ytdSp+ohYtd;
-  let h=head("ROI & Healthcare Variables",`Healthcare ROI and healthcare variables, from the budget workbook. Awarded and in-construction projects come from the HubSpot Sales Pipeline; estimated return is ${PR?P(rate,0):"10%"} of project value.`);
+  let h=head("ROI",`Healthcare ROI and healthcare variables, from the budget workbook. Awarded and in-construction projects come from the HubSpot Sales Pipeline; estimated return is ${PR?P(rate,0):"10%"} of project value.`);
   h+=`<div class="grid g-kpi">${kpi("Healthcare marketing spend, YTD",$k(ytdSp),`2025 full year: ${$k(A["2025"].spend)}`)}${kpi("Cost per MQL, YTD",$(ytdSp/s.ytd),`2025: ${$(A["2025"].cpMql)}`)}${kpi("Cost per SQL, YTD",$(ytdSp/ytdSql),`2025: ${$(A["2025"].cpSql)}`)}
     ${PR?kpi("Projects awarded, YTD",N(PR.length),`${$m(val(PR))} project value · ${$m(ret(PR))} estimated return`):phKpi("Projects awarded, YTD",ROIL_ERR||"Loading from HubSpot…")}
     ${PR?kpi("Marketing ROI, YTD",xR(roiOf(ret(PR),ytdSp)),`ROAS ${xR(roiOf(ret(PR),ytdAd))} · 2025 ROI: ${xR(A["2025"].awRoi)}`):phKpi("Marketing ROI, YTD",ROIL_ERR||"Loading from HubSpot…")}
@@ -1738,9 +1738,27 @@ function roiProjects(G,sp,ad,rate,val,ret,roiOf,tot,ohYtd,OH){
   return `<div class="panel" id="roi-projects"><h3>Awarded and in-construction projects</h3><p class="sub">2026 year to date, from the HubSpot Sales Pipeline. A project counts in the month it was awarded (first moved into Awarded Not Financed, Board Approval or In Construction). Estimated return = ${P(rate,0)} of project value. Marketing ROI uses healthcare marketing spend, ROAS uses healthcare ad spend, and Total ROI adds healthcare overhead (${$k(OH)} a month, ${$m(ohYtd)} so far this year).</p>
     <div class="tbl-wrap"><table><thead><tr><th class="l">Projects</th><th>Count</th><th>Project value</th><th>Estimated return</th><th>Cost per project</th><th>Marketing ROI</th><th>ROAS</th><th>Total ROI</th></tr></thead><tbody>
     ${rows.map(([n,d,a],k)=>`<tr${k===2?' class="total"':""}><td class="l"><b>${n}</b><br><span class="note" style="margin:0">${d}</span></td><td>${a.length}</td><td>${$m(val(a))}</td><td>${$m(ret(a))}</td><td>${a.length?$(sp/a.length):"–"}</td><td>${xR(roiOf(ret(a),sp))}</td><td>${xR(roiOf(ret(a),ad))}</td><td>${xR(roiOf(ret(a),tot))}</td></tr>`).join("")}</tbody></table></div>
-    <details class="or-more" style="margin-top:10px" ${ROI_OPEN?"open":""} data-roi-list><summary>Projects counted (${G.total.length})</summary><div class="tbl-wrap"><table><thead><tr><th class="l">Project</th><th class="l">Stage</th><th>Date awarded</th><th>Project value</th><th></th></tr></thead><tbody>
-    ${G.total.map(p=>`<tr><td class="l">${esc(p.name)}</td><td class="l">${esc(p.stage)}</td><td>${day(p.reached)}</td><td>${$m(p.amount)}</td><td><button type="button" class="rc-x bd-x" data-roi-rm="${esc(p.id)}" title="Remove from ROI" aria-label="Remove ${esc(p.name)} from ROI">×</button></td></tr>`).join("")}</tbody></table></div>
-    ${RM_.length?`<p class="note" style="margin:10px 0 4px"><b>Removed projects (${RM_.length})</b>: not counted in ROI. Restore one to count it again.</p><div class="tbl-wrap"><table><tbody>${RM_.map(p=>`<tr><td class="l">${esc(p.name)}</td><td class="l">${esc(p.stage)}</td><td>${$m(p.amount)}</td><td class="l note">Removed by ${esc(p.by||"")}${p.at?`, ${day(p.at)}`:""}</td><td><button type="button" class="btn-sm" data-roi-restore="${esc(p.id)}">Restore</button></td></tr>`).join("")}</tbody></table></div>`:""}</details></div>`;}
+    <h4 class="mini-h">Projects counted (${G.total.length})</h4><p class="note" style="margin:0 0 6px">Edit any project to correct it for the dashboard. Edits are saved here only and never change HubSpot.</p>
+    <div class="tbl-wrap"><table class="roi-pc"><thead><tr><th class="l">Project</th><th class="l">Stage</th><th>Date awarded</th><th>Project value</th><th></th></tr></thead><tbody>
+    ${G.total.map(p=>ROI_EDIT===p.id?`<tr class="roi-ed"><td class="l"><input type="text" data-rf="name" value="${esc(p.name)}" aria-label="Project name"></td>
+        <td class="l"><select data-rf="stage" aria-label="Stage">${ROI_STAGES.map(x=>`<option ${x===p.stage?"selected":""}>${x}</option>`).join("")}</select></td>
+        <td><input type="date" data-rf="reached" value="${new Date(p.reached).toISOString().slice(0,10)}" aria-label="Date awarded"></td>
+        <td><input type="number" data-rf="amount" min="0" step="1000" value="${Math.round(p.amount)}" aria-label="Project value in dollars"></td>
+        <td class="roi-act"><button type="button" class="btn-sm primary" data-roi-save="${esc(p.id)}">Save</button><button type="button" class="btn-sm" data-roi-cancel>Cancel</button></td></tr>`
+      :`<tr><td class="l">${esc(p.name)}${p.edited?`<br><span class="note" style="margin:0">Edited by ${esc(p.edited.by||"")}, ${day(p.edited.at)} · <button type="button" class="linkbtn" data-roi-reset="${esc(p.id)}">Use HubSpot values</button></span>`:""}</td><td class="l">${esc(p.stage)}</td><td>${day(p.reached)}</td><td>${$m(p.amount)}</td>
+        <td class="roi-act"><button type="button" class="btn-sm" data-roi-edit="${esc(p.id)}">Edit</button><button type="button" class="rc-x bd-x" data-roi-rm="${esc(p.id)}" title="Remove from ROI" aria-label="Remove ${esc(p.name)} from ROI">×</button></td></tr>`).join("")}</tbody></table></div>
+    ${RM_.length?`<p class="note" style="margin:10px 0 4px"><b>Removed projects (${RM_.length})</b>: not counted in ROI. Restore one to count it again.</p><div class="tbl-wrap"><table><tbody>${RM_.map(p=>`<tr><td class="l">${esc(p.name)}</td><td class="l">${esc(p.stage)}</td><td>${$m(p.amount)}</td><td class="l note">Removed by ${esc(p.by||"")}${p.at?`, ${day(p.at)}`:""}</td><td><button type="button" class="btn-sm" data-roi-restore="${esc(p.id)}">Restore</button></td></tr>`).join("")}</tbody></table></div>`:""}</div>`;}
+const ROI_STAGES=["Awarded Not Financed / Pre-Development","Board Approval","Closed / In Construction","In Construction"];
+let ROI_EDIT="";
+function roiApply(j){if(j&&j.projects){ROIL={...ROIL,projects:j.projects,removed:j.removed};}const y=scrollY;render();scrollTo(0,y);}
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-roi-edit],[data-roi-cancel],[data-roi-save],[data-roi-reset]");if(!t||!ROIL)return;const ds=t.dataset;
+  if(ds.roiEdit){ROI_EDIT=ds.roiEdit;roiApply();const f=document.querySelector('.roi-ed [data-rf="name"]');if(f)f.focus();return;}
+  if(ds.roiCancel!=null){ROI_EDIT="";roiApply();return;}
+  const post=(body)=>fetch("/api/hs-roi",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)}).then(r=>r.json());
+  if(ds.roiSave){const row=t.closest("tr"),v=k=>row.querySelector(`[data-rf="${k}"]`).value;const fields={name:v("name"),stage:v("stage"),reached:v("reached"),amount:+v("amount")};
+    t.disabled=true;t.textContent="Saving…";post({action:"edit",id:ds.roiSave,fields}).then(j=>{if(!j.ok)throw j;ROI_EDIT="";roiApply(j);}).catch(()=>{t.disabled=false;t.textContent="Try again";});return;}
+  if(ds.roiReset){t.disabled=true;post({action:"reset",id:ds.roiReset}).then(j=>{if(!j.ok)throw j;roiApply(j);}).catch(()=>{t.disabled=false;});}});
+
 /* Sales insights (/api/hs-pipeline): marketing influence on 2026 projects, time in each phase, projects that move forward vs die
    before groundbreaking, and open pipeline. */
 let PL=null, PL_ERR="", PL_ON=false, PL_TRIES=0, PL_T=null;
@@ -1762,17 +1780,7 @@ function salesInsights(PR,sp,rate,roiOf){
   const P2=PR.map(p=>({...p,i:byId[p.id]||{}})),inf=P2.filter(p=>p.i.touch&&Object.keys(p.i.touch).length),pts=inf.map(p=>p.i.points||0),lead=inf.filter(p=>p.i.first).map(p=>(p.reached-p.i.first)/864e5);
   const firstType=p=>{const t=p.i.touch||{},k=Object.keys(t);return k.length?k.reduce((a,b)=>t[a]<=t[b]?a:b):null;};
   const grp=(arr,f)=>{const m={};arr.forEach(p=>{const k=f(p);(m[k]=m[k]||[]).push(p);});return Object.entries(m).sort((a,b)=>val(b[1])-val(a[1]));};
-  let h=`<div class="panel" id="roi-influence"><h3>Marketing influence on awarded projects</h3><p class="sub">2026 projects from the table above. A project counts as marketing-influenced when anyone at the company visited the website, filled out a form, clicked a marketing email or became an MQL before it was awarded.</p>
-    <div class="grid g-kpi">${kpi("Marketing-influenced projects",`${inf.length} of ${P2.length}`,`${P2.length?P(inf.length/P2.length,0):"–"} of projects · ${$m(val(inf))} (${val(P2)?P(val(inf)/val(P2),0):"–"} of value)`)}
-      ${kpi("Marketing-influenced ROI",xR(roiOf(val(inf)*rate,sp)),`Only influenced projects: ${$m(val(inf)*rate)} estimated return vs marketing spend`)}
-      ${kpi("Touchpoints before award",pts.length?N(avg(pts),1):"–",`Average per influenced project · median ${dd(med(lead))} from first touch to award`)}</div>
-    <div class="grid g-2"><div><h4 class="mini-h">How marketing first reached them</h4><div class="tbl-wrap"><table><thead><tr><th class="l">First touch</th><th>Projects</th><th>Value</th></tr></thead><tbody>
-      ${grp(inf,firstType).map(([k,a])=>`<tr><td class="l">${TOUCH_L[k]||k}</td><td>${a.length}</td><td>${$m(val(a))}</td></tr>`).join("")||`<tr><td class="l" colspan="3">No marketing touches before award yet</td></tr>`}
-      ${P2.length-inf.length?`<tr><td class="l">No marketing touch before award</td><td>${P2.length-inf.length}</td><td>${$m(val(P2.filter(p=>!inf.includes(p))))}</td></tr>`:""}</tbody></table></div></div>
-    <div><h4 class="mini-h">By the company's original source</h4><div class="tbl-wrap"><table><thead><tr><th class="l">Original source</th><th>Projects</th><th>Value</th></tr></thead><tbody>
-      ${grp(P2,p=>p.i.source||"").map(([k,a])=>`<tr><td class="l">${SRC_L[k]||k}</td><td>${a.length}</td><td>${$m(val(a))}</td></tr>`).join("")}</tbody></table></div></div></div>
-    <details class="or-more" style="margin-top:10px"><summary>Touches by project (${P2.length})</summary><div class="tbl-wrap"><table><thead><tr><th class="l">Project</th><th class="l">Touches before award</th><th>Touchpoints</th><th>First touch</th></tr></thead><tbody>
-      ${P2.map(p=>{const t=p.i.touch||{};return `<tr><td class="l">${esc(p.name)}</td><td class="l">${Object.keys(t).length?Object.keys(t).map(k=>`<span class="chip">${TOUCH_L[k]}</span>`).join(" "):`<span class="note" style="margin:0">None</span>`}</td><td>${p.i.points||0}</td><td>${p.i.first?day(p.i.first):"–"}</td></tr>`;}).join("")}</tbody></table></div></details></div>`;
+  let h="";
   // B. Time in each phase (median days between stage dates; times ending on a bulk-update day are skipped)
   const SK=new Set(PL.skipDays||[]),okT=t=>!SK.has(new Date(t).toISOString().slice(0,10));
   const SEQ=[["qualifiedtobuy","Lead"],["presentationscheduled","Verbal Award"],["decisionmakerboughtin","Awarded Not Financed"],["contractsent","Board Approval"],["build","In Construction"]];
@@ -1783,8 +1791,7 @@ function salesInsights(PR,sp,rate,roiOf){
   h+=`<div class="grid g-2"><div class="panel"><h3>Time in each phase</h3><p class="sub">Median days between Sales Pipeline stages, all years</p><div class="tbl-wrap"><table><thead><tr><th class="l">From</th><th class="l">To</th><th>Deals</th><th>Median</th><th>Average</th></tr></thead><tbody>
     ${trans.map(([a,b,v])=>`<tr><td class="l">${a}</td><td class="l">${b}</td><td>${v.length}</td><td>${dd(med(v))}</td><td>${dd(avg(v))}</td></tr>`).join("")}
     <tr class="total"><td class="l">Deal created</td><td class="l">Awarded</td><td>${c2a(()=>true).length}</td><td>${dd(med(c2a(()=>true)))}</td><td>${dd(avg(c2a(()=>true)))}</td></tr>
-    <tr><td class="l">Awarded</td><td class="l">In Construction</td><td>${a2b.length}</td><td>${dd(med(a2b))}</td><td>${dd(avg(a2b))}</td></tr></tbody></table></div>
-    <p class="note">Deal created to award: marketing-influenced ${dd(med(c2a(d=>isInf(d))))} (${c2a(d=>isInf(d)).length} deals) vs no marketing touch ${dd(med(c2a(d=>!isInf(d))))} (${c2a(d=>!isInf(d)).length} deals), median.</p></div>`;
+    <tr><td class="l">Awarded</td><td class="l">In Construction</td><td>${a2b.length}</td><td>${dd(med(a2b))}</td><td>${dd(avg(a2b))}</td></tr></tbody></table></div></div>`;
   // C. Move forward vs die before groundbreaking (deals that reached Verbal Award or later)
   const fwd=aw.filter(d=>BUILD.includes(d.stage)||BUILD.some(b=>d.entered[b]!=null)),died=aw.filter(d=>DIED.includes(d.stage)&&!fwd.includes(d)),open=aw.length-fwd.length-died.length,dec=fwd.length+died.length;
   h+=`<div class="panel"><h3>Awarded projects: move forward vs die before groundbreaking</h3><p class="sub">Every Sales Pipeline project that reached Verbal Award or later, all years</p>
@@ -1836,7 +1843,7 @@ function narrative(pg){
   return `<div class="grid g-2 narr"><div class="panel nar-good"><h3>What went well</h3><ul class="flags">${live(b+".well",well).map(([w,i])=>flagItem("good",E(`${b}.well.${i}.0`),E(`${b}.well.${i}.1`),`${b}.well.${i}`)).join("")}</ul>${addBtn(b+".well","pair")}</div>
   <div class="panel nar-bad"><h3>Needs improvement</h3><ul class="flags">${live(b+".improve",improve).map(([w,i])=>flagItem(w[2]||"warn",E(`${b}.improve.${i}.0`),E(`${b}.improve.${i}.1`),`${b}.improve.${i}`)).join("")}</ul>${addBtn(b+".improve","pair")}</div></div>`;
 }
-const NARR_PAGES=new Set(["paid","creative","website","roi","budget"]);
+const NARR_PAGES=new Set(["paid","creative","website","budget"]);   // ROI's went well / needs improvement live in the Executive Summary
 const NARR=new Proxy({},{get:(_,pg)=>{const n=D&&D.text&&D.text.narrative&&D.text.narrative[pg];return n?()=>[n.well||[],n.improve||[]]:undefined;}});
 
 R.website=()=>{

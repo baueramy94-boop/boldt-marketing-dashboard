@@ -5,6 +5,8 @@ import { getStore } from "@netlify/blobs";
 // GET  /api/hs-roi -> { ok, asOf, year, rate, overheadMonthly, projects: [{ id, name, stage, group, amount, reached, month }],
 //                       removed: [{ ...project, by, at }], subscribers: [count at each month end, or null for future months] }
 // POST /api/hs-roi { action: remove | restore, id } -> remove a project from ROI or bring it back (shared, Blobs key "removed")
+// POST /api/hs-roi { action: edit, id, fields: { name?, stage?, amount?, reached? (YYYY-MM-DD) } } / { action: reset, id }
+//   -> dashboard-only corrections to a project (Blobs key "edits"). Never written back to HubSpot.
 // Rules (Amy, Nov 19, 2026):
 //  - Sales Pipeline deals in Awarded Not Financed / Pre-Development, Board Approval, Closed / In Construction or In Construction.
 //  - A deal counts for the year when it first reached one of those stages in that year (or entered construction that year).
@@ -47,9 +49,23 @@ async function removedList(store: any): Promise<Record<string, any>> {
   const r: any = await store.get("removed", { type: "json" }).catch(() => null);
   return r || { ...DEFAULT_REMOVED };
 }
-// Apply the shared removed list at read time, so a remove or restore shows up at once (the HubSpot pull stays cached).
-function shape(data: any, removed: Record<string, any>) {
-  const all = data.all || [];
+async function state(store: any) {
+  const [removed, edits] = await Promise.all([removedList(store), store.get("edits", { type: "json" }).catch(() => null)]);
+  return { removed, edits: (edits || {}) as Record<string, any> };
+}
+const GROUP_OF = (label: string) => (/construction/i.test(label) ? "construction" : "awarded");
+// Apply the shared removed list and dashboard edits at read time, so changes show up at once (the HubSpot pull stays cached).
+function shape(data: any, st: { removed: Record<string, any>; edits: Record<string, any> }) {
+  const removed = st.removed;
+  const all = (data.all || []).map((p: any) => {
+    const e = st.edits[p.id]; if (!e) return p;
+    const f = e.fields || {}, q = { ...p, orig: { name: p.name, stage: p.stage, amount: p.amount, reached: p.reached }, edited: { by: e.by, at: e.at } };
+    if (f.name) q.name = f.name;
+    if (f.stage) { q.stage = f.stage; q.group = GROUP_OF(f.stage); }
+    if (f.amount != null) q.amount = f.amount;
+    if (f.reached) { q.reached = f.reached; q.month = new Date(f.reached).getUTCMonth(); }
+    return q;
+  }).sort((a: any, b: any) => a.reached - b.reached);
   return { ...data, all: undefined, projects: all.filter((p: any) => !removed[p.id]), removed: all.filter((p: any) => removed[p.id]).map((p: any) => ({ ...p, ...removed[p.id] })) };
 }
 
@@ -60,24 +76,39 @@ export default async (req: Request, context: any) => {
   if (req.method === "POST") {
     const b: any = await req.json().catch(() => ({}));
     const id = String(b.id || "");
-    if (!/^\d{3,20}$/.test(id) || !["remove", "restore"].includes(b.action)) return json({ ok: false, error: "bad request" }, 400);
+    if (!/^\d{3,20}$/.test(id) || !["remove", "restore", "edit", "reset"].includes(b.action)) return json({ ok: false, error: "bad request" }, 400);
     const user = decodeURIComponent(context?.cookies?.get("bmd_user") || "") || "Someone";
-    const removed = await removedList(store);
-    if (b.action === "remove") removed[id] = { by: user, at: new Date().toISOString() }; else delete removed[id];
-    await store.setJSON("removed", removed);
+    if (b.action === "edit" || b.action === "reset") {
+      const edits: Record<string, any> = ((await store.get("edits", { type: "json" }).catch(() => null)) || {}) as any;
+      if (b.action === "reset") delete edits[id];
+      else {
+        const f = b.fields || {}, clean: any = {};
+        if (typeof f.name === "string" && f.name.trim()) clean.name = f.name.trim().slice(0, 200);
+        if (typeof f.stage === "string" && Object.values(LABEL).includes(f.stage)) clean.stage = f.stage;
+        if (f.amount != null && isFinite(+f.amount) && +f.amount >= 0 && +f.amount < 1e11) clean.amount = Math.round(+f.amount);
+        if (typeof f.reached === "string" && /^\d{4}-\d{2}-\d{2}$/.test(f.reached)) clean.reached = Date.parse(f.reached + "T12:00:00Z");
+        if (!Object.keys(clean).length) return json({ ok: false, error: "Nothing to save." }, 400);
+        edits[id] = { fields: { ...((edits[id] || {}).fields || {}), ...clean }, by: user, at: new Date().toISOString() };
+      }
+      await store.setJSON("edits", edits);
+    } else {
+      const removed = await removedList(store);
+      if (b.action === "remove") removed[id] = { by: user, at: new Date().toISOString() }; else delete removed[id];
+      await store.setJSON("removed", removed);
+    }
     const cached: any = await store.get("result", { type: "json" }).catch(() => null);
-    return json(cached && Array.isArray(cached.data?.all) ? shape(cached.data, removed) : { ok: true });
+    return json(cached && Array.isArray(cached.data?.all) ? shape(cached.data, await state(store)) : { ok: true });
   }
   const fresh = new URL(req.url).searchParams.get("fresh") === "1";
   let cached: any = await store.get("result", { type: "json" }).catch(() => null);
   if (cached && !Array.isArray(cached.data?.all)) cached = null;   // older cache format
-  if (cached && !fresh && Date.now() - cached.at < 10 * 60 * 1000) return json(shape(cached.data, await removedList(store)));
+  if (cached && !fresh && Date.now() - cached.at < 10 * 60 * 1000) return json(shape(cached.data, await state(store)));
   const lock: any = await store.get("pulling", { type: "json" }).catch(() => null);
   if (lock && Date.now() - lock.at < 20000) {
-    if (cached) return json({ ...shape(cached.data, await removedList(store)), stale: true });
+    if (cached) return json({ ...shape(cached.data, await state(store)), stale: true });
     await sleep(6000);
     const c2: any = await store.get("result", { type: "json" }).catch(() => null);
-    if (c2 && Array.isArray(c2.data?.all)) return json(shape(c2.data, await removedList(store)));
+    if (c2 && Array.isArray(c2.data?.all)) return json(shape(c2.data, await state(store)));
   }
   await store.setJSON("pulling", { at: Date.now() }).catch(() => {});
   try {
@@ -134,11 +165,11 @@ export default async (req: Request, context: any) => {
     const data = { ok: true, ready: true, asOf: Date.now(), year, rate: RATE, overheadMonthly: OVERHEAD, all, subscribers };
     await store.setJSON("result", { at: Date.now(), data });
     await store.delete("pulling").catch(() => {});
-    return json(shape(data, await removedList(store)));
+    return json(shape(data, await state(store)));
   } catch (e: any) {
     console.log(`hs-roi failed: ${e?.message || e}`);
     await store.delete("pulling").catch(() => {});
-    if (cached) return json({ ...shape(cached.data, await removedList(store)), stale: true });
+    if (cached) return json({ ...shape(cached.data, await state(store)), stale: true });
     return json({ ok: false, ready: true, error: "Couldn't read projects from HubSpot." }, 502);
   }
 };
