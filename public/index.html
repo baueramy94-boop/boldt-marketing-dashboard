@@ -1654,17 +1654,14 @@ function accountsSection(){
   const PG=p=>esc(p==="/"?"Home page":p==="/boldt-real-estate"?"Boldt Real Estate page":p.startsWith("/blog/")?"Blog: "+cap(p.slice(6).replace(/-/g," ")):cap(p.replace(/^\//,"").replace(/[-/]/g," ")));
   let h=`<h3 class="sec-h">Known accounts on the site</h3><p class="sec-sub">Factors.ai, ${A.window}. Healthcare companies identified on the site from every source: paid search, LinkedIn ads, organic search, direct visits, referrals and social.</p>`;
   if(AS){
-    const ord=o=>Object.entries(o||{}).map(([k,v])=>({k,v}));
     h+=`<div class="grid g-kpi">${kpi("Healthcare companies on the site",N(AS.healthcareCompanies),`${N(AS.sessions)} sessions, ${A.window}`)}
       ${kpi("Already in HubSpot",N(AS.inHubspot),`${P(AS.inHubspot/AS.healthcareCompanies,0)} of healthcare visitors`)}
       ${kpi("Not in HubSpot yet",N(AS.notInHubspot),"Healthcare organizations to consider adding")}
       ${kpi("HubSpot companies on the site, all industries",N(A.knownVisitsMonth??A.knownVisitsWeek),`Unique companies with a session, ${A.window}`)}</div>`;
-    h+=`<div class="grid g-2"><div class="panel"><h3>How they arrived</h3><p class="sub">Healthcare companies by the source of their visits. One company can arrive more than one way.</p>
-      <div class="grid g-2" style="gap:14px"><div><div class="eyebrow">In HubSpot (${N(AS.inHubspot)})</div>${hbars(ord(AS.byChannelKnown),{max:AS.inHubspot})}</div>
-      <div><div class="eyebrow">Not in HubSpot yet (${N(AS.notInHubspot)})</div>${hbars(ord(AS.byChannelNew),{max:AS.notInHubspot})}</div></div></div>
-      <div class="panel"><h3>Pages they landed on</h3><p class="sub">Healthcare companies by first page of the visit</p>${hbars(AS.topPages.map(x=>({k:PG(x.page),v:x.companies})),{max:AS.healthcareCompanies})}</div></div>`;
+    h+=`<div class="panel"><h3>Pages they landed on</h3><p class="sub">Healthcare companies by first page of the visit</p>${hbars(AS.topPages.map(x=>({k:PG(x.page),v:x.companies})),{max:AS.healthcareCompanies})}</div>`;
   }
-  h+=`<div class="grid g-2"><div class="panel"><h3>HubSpot companies visiting by day</h3><p class="sub">Companies in HubSpot with at least one session, any source</p>${chart({labels:A.knownVisitsDaily.map((d,i)=>A.knownVisitsDaily.length>10&&i%3?"":d.day),bars:[{name:"Companies",color:css("--c-hc"),values:A.knownVisitsDaily.map(d=>d.count)}],h:220,half:true})}</div>
+  const KC=(D.factorsWeb&&D.factorsWeb.knownCompanies)||{}, KM=Object.keys(KC);
+  h+=`<div class="grid g-2"><div class="panel"><h3>HubSpot companies visiting by month</h3><p class="sub">Unique companies in HubSpot with at least one session that month, any source</p>${chart({labels:KM,bars:[{name:"Companies",color:css("--c-hc"),values:KM.map(m=>KC[m])}],h:220,half:true})}</div>
     <div class="panel"><h3>LinkedIn and paid search together</h3><p class="sub">How companies move between our LinkedIn ads, paid search and the site</p>
       ${(()=>{const rows=[["Saw LinkedIn ads, then visited the site",halo.visited,halo.reached,""],["Saw LinkedIn ads, then came through paid search",O.liToSearch.next,O.liToSearch.start,`about ${Math.round(O.liToSearch.hours/24)} days later`],["Came through paid search, then saw LinkedIn ads",O.searchToLi.next,O.searchToLi.start,`about ${Math.round(O.searchToLi.hours)} hours later`]];
         const mx=Math.max(...rows.map(r=>r[1]/r[2]));
