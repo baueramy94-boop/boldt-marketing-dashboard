@@ -971,7 +971,16 @@ document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest
 document.addEventListener("change",e=>{if(e.target.id==="rnd-week"){RND_W=e.target.value;rndLoad();const y=scrollY;render();scrollTo(0,y);}});
 /* ---------- Campaign Builder (Nov 18, 2026): healthcare campaigns, built in order: LinkedIn ads, landing page, PDF ---------- */
 const CB_CAMPS=[{key:"wl-senior-living",name:"White Label Senior Living",line:"Healthcare",dir:"campaigns/white-label",ads:24,status:"Ready for review",
-  about:"A new offer for health systems: a senior living community with the health system's name on it. Boldt develops and finances the real estate, and an experienced senior living operator runs the community."}];
+  about:"A new offer for health systems: a senior living community with the health system's name on it. Boldt develops and finances the real estate, and an experienced senior living operator runs the community."},
+ {key:"sl-awareness",name:"Senior Living Owners (SL-Awareness)",line:"Senior Living",dir:"campaigns/sl-awareness",ads:16,status:"Ready for review",
+  about:"Awareness for independent senior living owners who don't know Boldt. Every piece says it plainly: Boldt buys senior living communities and brings in an experienced operator, and owners can keep a share of the real estate. Built from Heidi's Off-Market Senior Living Strategy deck and the NIC Conference Brochure.",
+  sheet:"SL-Awareness_Campaign-Copy-and-Launch-Sheet.xlsx",
+  steps:[
+   {h:"LinkedIn ads",p:"Eight ads on the campaign's light gray background, each with a white test version. Edit wording, approve, flag or remove ads. Changes save for everyone. The 1200x628 versions are in the full package.",stats:1,acts:[["Review ads","ads.html"]]},
+   {h:"Google display ads",p:"Three messages in eight standard sizes, plus photos, logos and square and landscape images for responsive display. Every file is under Google's 150KB limit.",acts:[["Download ZIP","SL-Awareness_Google-Display-Ads.zip",1],["Preview","display-preview.jpg",0,1]]},
+   {h:"Video",p:"A 24-second silent video in two formats: 16:9 for YouTube, Demand Gen and the website, and 1:1 for the LinkedIn feed. The text carries the message, so it works muted.",acts:[["Watch 16:9","SL-Awareness_Video_16x9_1920x1080.mp4",0,1],["Download 16:9","SL-Awareness_Video_16x9_1920x1080.mp4",1],["Download 1:1","SL-Awareness_Video_1x1_1080x1080.mp4",1]]},
+   {h:"Landing page",p:"Five sections: hero with the guide form, the three options, how selling to Boldt works, New Perspective proof and owner questions, with a navy close and Heidi's contact. Downloads as one HTML file.",acts:[["Download HTML","landing-page.html","Boldt_Senior-Living_Owners_Landing-Page.html"],["Preview","landing-page.html",0,1]]},
+   {h:"Owner's guide (PDF)",p:"What's next for your senior living community? A 13-page guide to the three options, how selling to Boldt works and what stays steady, for the form download and sales follow-up.",acts:[["Download PDF","guidebook.pdf","Boldt_Senior-Living_Owners-Guide_Whats-Next.pdf"],["Open","guidebook.pdf",0,1]]}]}];
 const CB={};
 /* New campaign briefs: saved for everyone through /api/campaigns (op brief / deletebrief, GET ?briefs=1). */
 const CBB={list:null,err:false,form:null,saving:false,msg:""};
@@ -1031,12 +1040,16 @@ function cbLoad(c){if(CB[c.key])return;CB[c.key]={loading:true};fetch(`/api/camp
 function cbStats(c){const d=CB[c.key];if(!d||d.loading)return`<span class="note" style="margin:0">Loading review status…</span>`;if(d.err)return`<span class="note" style="margin:0">Review status isn't available right now.</span>`;
   let ok=0,ch=0,rm=0;Object.values(d.items).forEach(it=>{if(it.removed)rm++;else if(it.status==="approved")ok++;else if(it.status==="changes")ch++;});const pend=Math.max(0,c.ads-ok-ch-rm);
   return`<span class="chip good">${ok} approved</span><span class="chip">${ch} need changes</span><span class="chip">${pend} not reviewed</span>${rm?`<span class="chip">${rm} removed</span>`:""}`;}
+function cbSteps(c){if(!c.steps)return "";
+  return `<ol class="cb-steps">${c.steps.map((st,i)=>`<li class="cb-step"><span class="n">Step ${i+1}</span><h4>${esc(st.h)}</h4><p>${esc(st.p)}</p>${st.stats?`<div class="cb-stat">${cbStats(c)}</div>`:""}<div class="cb-act">${st.acts.map(([l,f,dl,nw],k)=>`<a class="cb-btn${k?" line":""}" href="${c.dir}/${f}"${dl?` download${dl===1?"":`="${esc(dl)}"`}`:""}${nw?` target="_blank" rel="noopener"`:""}>${esc(l)}</a>`).join("")}</div></li>`).join("")}</ol>
+    ${c.sheet?`<div class="cb-tools"><a class="cb-btn line" href="${c.dir}/${c.sheet}" download>Copy and launch sheet (Excel)</a></div>`:""}`;}
 R.campaigns=()=>{
-  let h=head("Campaigns",`Campaign assets in one place, built in order: LinkedIn ads, then the landing page, then the PDF. Healthcare only. Ad reviews save for everyone with the dashboard password.`);
+  let h=head("Campaigns",`Campaign assets in one place, built in order: LinkedIn ads, then the landing page, then the PDF. Ad reviews and status changes save for everyone with the dashboard password.`);
   // The "New campaign" brief builder (briefs copied into a Claude chat) is switched off (Nov 20, 2026); cbForm/cbBriefCard stay for later.
-  cbStatusLoad();const n=CB_CAMPS.length;
-  h+=`<div class="cb-sec"><div><h3>Healthcare</h3><span class="chip">${n} campaign${n===1?"":"s"}</span></div></div>`;
+  cbStatusLoad();let lastLine="";
   CB_CAMPS.forEach(c=>{cbLoad(c);
+    if(c.line!==lastLine){lastLine=c.line;const n=CB_CAMPS.filter(x=>x.line===c.line).length;h+=`<div class="cb-sec"><div><h3>${esc(c.line)}</h3><span class="chip">${n} campaign${n===1?"":"s"}</span></div></div>`;}
+    if(c.steps){h+=`<div class="panel cb-camp" id="cb-${c.key}"><div class="cb-top"><div><h3>${esc(c.name)}</h3><p>${esc(c.about)}</p></div>${cbStatus(c.key,c.status||"In progress",c.line)}</div>${cbSteps(c)}</div>`;return;}
     h+=`<div class="panel cb-camp" id="cb-${c.key}"><div class="cb-top"><div><h3>${esc(c.name)}</h3><p>${esc(c.about)}</p></div>${cbStatus(c.key,c.status||"In progress",c.line)}</div>
     <ol class="cb-steps">
       <li class="cb-step"><span class="n">Step 1</span><h4>LinkedIn ads</h4><p>${c.ads} single-image ads in sketch, photo, text-only and modern styles. Edit wording, approve, flag or remove ads. Changes save for everyone.</p><div class="cb-stat">${cbStats(c)}</div><div class="cb-act"><a class="cb-btn" href="${c.dir}/ads.html">Review ads</a></div></li>
