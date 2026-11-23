@@ -1,0 +1,501 @@
+{
+ "weekOf": "2026-11-23",
+ "generated": "2026-11-23",
+ "summary": "Medical office construction starts fell to a 10-year low in the third quarter while demand outpaced new deliveries for the fourth straight quarter, so outpatient space is getting harder to find. Health systems keep buying outpatient capacity at scale, led by a Bon Secours Mercy Health affiliate's offer for Surgery Partners, now valued at about $6 billion, as hospital margins stay thin. On the marketing side, new Content Marketing Institute research shows B2B teams shifting budget to owned media as AI search cuts website traffic, and buyers trust practical, expert content most.",
+ "topStories": [
+  {
+   "title": "Medical office construction starts fall to a 10-year low",
+   "source": "Building Design + Construction",
+   "url": "https://www.bdcnetwork.com/building-sector-reports/healthcare-facilities/article/55420141/medical-office-construction-starts-fall-to-a-10-year-low",
+   "date": "2026-11-18",
+   "summary": "Per Avison Young, third-quarter medical office starts totaled 987,000 square feet, down 64% from a year earlier and 54% from the second quarter. Net absorption rose 61% from the second quarter to 4.1 million square feet, the highest since late 2021, and demand exceeded new deliveries for the fourth straight quarter. Tighter conditions are pushing rents up.",
+   "whyItMatters": "With little new supply coming, health systems that need outpatient space in the next few years will have to build it. Starting development and financing decisions early is the way to secure it."
+  },
+  {
+   "title": "Ascension plans $8M outpatient imaging center",
+   "source": "Becker's Hospital Review",
+   "url": "https://www.beckershospitalreview.com/radiology/ascension-plans-8m-outpatient-imaging-center/",
+   "date": "2026-11-20",
+   "summary": "Ascension Via Christi plans a 6,300 square foot standalone imaging center in southwest Wichita with MRI, CT, mammography, DEXA, ultrasound and fluoroscopy, plus a pad for future PET/CT. Groundbreaking is set for early 2027 and opening for the first half of 2028. Other area imaging centers are at or near capacity.",
+   "whyItMatters": "Systems are still adding small-format outpatient imaging where capacity is tight, even as payment rules for off-campus imaging change in 2027."
+  },
+  {
+   "title": "HealthSpan Partners ups Surgery Partners offer to $6B after rival bid",
+   "source": "Healthcare Dive",
+   "url": "https://www.healthcaredive.com/news/healthspan-partners-ups-surgery-partners-offer-to-6b-after-rival-bid/874313/",
+   "date": "2026-11-10",
+   "summary": "The Bon Secours Mercy Health affiliate raised its cash offer to $25 a share from $23.50 after an unsolicited $28 bid that Bloomberg reported came from UnitedHealth. Surgery Partners operates over 200 short-stay surgical facilities in 30 states. Ascension's $3.9 billion Amsurg deal brought it more than 250 locations.",
+   "whyItMatters": "Health systems are paying billions to own ambulatory surgery. Systems without that scale will look for faster, capital-light ways to add ASC capacity in their own markets."
+  },
+  {
+   "title": "CMS sets the details for site-neutral imaging pay in 2027",
+   "source": "Vizient (Gist Weekly)",
+   "url": "https://www.vizient.com/insights/briefs/gist-weekly/gist-weekly-november-20-2026",
+   "date": "2026-11-20",
+   "summary": "From Jan. 1, 2027, a 40% Physician Fee Schedule relativity adjustment applies to imaging without contrast at certain off-campus hospital outpatient sites, reducing outpatient spending by an estimated $260 million next year. New NPI and attestation requirements for off-campus hospital outpatient departments begin Jan. 1, 2028. The median adjusted year-to-date hospital operating margin was 1.1% in September.",
+   "whyItMatters": "The new off-campus requirements and lower imaging rates give systems a reason to review where each outpatient service sits before signing new leases or starting projects."
+  },
+  {
+   "title": "45 hospital M&As finalized in 2026",
+   "source": "Becker's Hospital Review",
+   "url": "https://www.beckershospitalreview.com/hospital-transactions-and-valuation/38-hospital-mas-finalized-in-2026/",
+   "date": "2026-11-12",
+   "summary": "Recent closings come with large capital commitments. MultiCare completed its Samaritan Health Services affiliation on Nov. 1 with a $700 million, 10-year investment commitment, and WVU Health closed on the five-hospital Independence Health System on Oct. 1 with plans to invest $800 million. Orlando Health acquired a 375-bed hospital and its outpatient facilities.",
+   "whyItMatters": "Post-deal investment pledges turn into facility projects, often outpatient sites, in the first years after closing."
+  },
+  {
+   "title": "OhioHealth to build $700M hospital, its 17th",
+   "source": "Becker's Hospital Review",
+   "url": "https://www.beckershospitalreview.com/capital/ohiohealth-to-build-700m-hospital-17th-for-system/",
+   "date": "2026-11-11",
+   "summary": "OhioHealth New Albany Methodist Hospital will have 160 beds, expandable to 208, across 600,000 square feet, with 325,000 square feet reimagined and 275,000 new. Construction starts in early 2027 with opening in late 2030. OhioHealth already runs 16 hospitals and more than 200 ambulatory sites.",
+   "whyItMatters": "Growing regions still draw major campus investment, and new hospitals bring demand for nearby medical office and outpatient space."
+  }
+ ],
+ "trends": [
+  {
+   "title": "Outpatient space is getting scarce",
+   "detail": "Medical office starts are at a 10-year low while absorption is the highest since late 2021, so rents are rising and existing space is filling. Systems that need capacity will lean on new development rather than finding space to lease.",
+   "sources": [
+    {
+     "name": "Building Design + Construction",
+     "url": "https://www.bdcnetwork.com/building-sector-reports/healthcare-facilities/article/55420141/medical-office-construction-starts-fall-to-a-10-year-low"
+    }
+   ]
+  },
+  {
+   "title": "Health systems buy ambulatory surgery at scale",
+   "detail": "Ascension closed on Amsurg and a Bon Secours Mercy Health affiliate is bidding about $6 billion for Surgery Partners. Fitch's Kevin Holloran describes the outpatient approach as asset-light and return-rich, and the ASC market is projected to grow 6.1% a year through 2033.",
+   "sources": [
+    {
+     "name": "Healthcare Dive",
+     "url": "https://www.healthcaredive.com/news/healthspan-partners-ups-surgery-partners-offer-to-6b-after-rival-bid/874313/"
+    },
+    {
+     "name": "Becker's Hospital Review",
+     "url": "https://www.beckershospitalreview.com/finance/ascension-bon-secours-make-multibillion-dollar-bets-on-ascs/"
+    },
+    {
+     "name": "HFMA",
+     "url": "https://www.hfma.org/healthcare-finance/is-this-the-last-year-of-peak-hospital-growth/"
+    }
+   ]
+  },
+  {
+   "title": "Thin margins and costlier debt favor smaller, phased projects",
+   "detail": "The median hospital margin was 1.1% year to date in September. In a Marsh survey reported by HFMA, 40% of systems plan to issue new debt in 2026 and capital is moving from major growth initiatives to smaller projects.",
+   "sources": [
+    {
+     "name": "Vizient",
+     "url": "https://www.vizient.com/insights/briefs/gist-weekly/gist-weekly-november-20-2026"
+    },
+    {
+     "name": "HFMA",
+     "url": "https://www.hfma.org/fast-finance/market-worries-overtake-policy-concerns/"
+    }
+   ]
+  },
+  {
+   "title": "Partnership models fund new medical office buildings",
+   "detail": "UK HealthCare's $275 million, 220,000 square foot medical office building is a public-private partnership: the developer designs, builds, finances and operates it on a 65-year ground lease and leases it back to the system for 15 years.",
+   "sources": [
+    {
+     "name": "Becker's Hospital Review",
+     "url": "https://www.beckershospitalreview.com/capital/uk-healthcare-breaks-ground-on-275m-medical-office-building/"
+    }
+   ]
+  }
+ ],
+ "opportunities": {
+  "marketing": [
+   "Run LinkedIn ads to health system strategy and real estate leaders on the medical office supply gap, offering a short guide to planning outpatient space for 2027 to 2029.",
+   "Expand the strategic insight (campus, outpatient) message, which earns a 1.79% click-through rate from a single ad, into a full ad set.",
+   "Target systems with recent mergers and investment pledges with content on turning those commitments into outpatient projects."
+  ],
+  "thoughtLeadership": [
+   "A Boldt point of view on why medical office supply is tightening and what it means for systems planning outpatient growth.",
+   "How health systems without national ASC scale can add surgery center capacity without tying up capital.",
+   "Ground leases, leasebacks and partnerships: how systems are funding medical office buildings when debt costs more."
+  ],
+  "content": [
+   "A one-page outpatient space outlook for CFOs and strategy leaders, built on the third-quarter supply data.",
+   "An update to the site selection article that covers on-campus versus off-campus decisions under the 2027 rules.",
+   "A short explainer comparing ownership, lease and partnership options for a new ASC or medical office building."
+  ]
+ },
+ "recommend": {
+  "campaignThemes": [
+   "Secure outpatient space before the supply gap widens",
+   "Add surgery capacity without the acquisition price tag",
+   "Fund your next medical office building without adding debt"
+  ],
+  "webinarTopics": [
+   "Outpatient space is getting scarce: planning medical office and ASC capacity for 2027 to 2029",
+   "Lease, own or partner: funding outpatient buildings when borrowing costs rise",
+   "Where should imaging and surgery sit? Siting outpatient services under the 2027 rules"
+  ],
+  "articleTopics": [
+   "Medical office construction is at a 10-year low. What it means for health systems planning outpatient space",
+   "Why health systems are buying ASCs, and other ways to add surgery capacity",
+   "How public-private partnerships fund medical office buildings",
+   "Choosing on-campus or off-campus sites for outpatient imaging after the 2027 rule"
+  ]
+ },
+ "industry": [
+  {
+   "area": "Real estate expansion activity",
+   "items": [
+    {
+     "title": "Medical office construction starts fall to a 10-year low",
+     "source": "Building Design + Construction",
+     "url": "https://www.bdcnetwork.com/building-sector-reports/healthcare-facilities/article/55420141/medical-office-construction-starts-fall-to-a-10-year-low",
+     "date": "2026-11-18",
+     "summary": "Third-quarter starts of 987,000 square feet were down 64% from a year earlier while net absorption reached 4.1 million square feet."
+    },
+    {
+     "title": "Ascension plans $8M outpatient imaging center",
+     "source": "Becker's Hospital Review",
+     "url": "https://www.beckershospitalreview.com/radiology/ascension-plans-8m-outpatient-imaging-center/",
+     "date": "2026-11-20",
+     "summary": "A 6,300 square foot standalone imaging center in Wichita, opening in the first half of 2028, to relieve capacity limits."
+    },
+    {
+     "title": "Northwestern Medicine opens 80K-square-foot specialty outpatient center",
+     "source": "Becker's ASC Review",
+     "url": "https://www.beckersasc.com/new-asc-development/northwestern-medicine-opens-80k-square-foot-specialty-outpatient-center/",
+     "date": "2026-10-19",
+     "summary": "An 80,000 square foot outpatient center on the Huntley Hospital campus with general surgery, cardiovascular, GI and pulmonary services, adding about 300 jobs over three years."
+    },
+    {
+     "title": "UK HealthCare breaks ground on $275M medical office building",
+     "source": "Becker's Hospital Review",
+     "url": "https://www.beckershospitalreview.com/capital/uk-healthcare-breaks-ground-on-275m-medical-office-building/",
+     "date": "2026-10-15",
+     "summary": "A 220,000 square foot building delivered through a public-private partnership with a 65-year ground lease and a 15-year leaseback; about 300,000 outpatient visits a year expected by 2034."
+    }
+   ]
+  },
+  {
+   "area": "Health system growth initiatives",
+   "items": [
+    {
+     "title": "OhioHealth to build $700M hospital, its 17th",
+     "source": "Becker's Hospital Review",
+     "url": "https://www.beckershospitalreview.com/capital/ohiohealth-to-build-700m-hospital-17th-for-system/",
+     "date": "2026-11-11",
+     "summary": "A 160-bed hospital in New Albany, Ohio, with construction starting in early 2027 and opening in late 2030."
+    },
+    {
+     "title": "Sutter hospital to get $189M expansion",
+     "source": "Becker's Hospital Review",
+     "url": "https://www.beckershospitalreview.com/capital/sutter-hospital-to-get-189m-expansion/",
+     "date": "2026-11-03",
+     "summary": "Sutter's board approved a first phase at Memorial Medical Center in Modesto, Calif., next to a 165,000 square foot cancer center opening in 2029."
+    }
+   ]
+  },
+  {
+   "area": "Provider consolidation",
+   "items": [
+    {
+     "title": "HealthSpan Partners ups Surgery Partners offer to $6B after rival bid",
+     "source": "Healthcare Dive",
+     "url": "https://www.healthcaredive.com/news/healthspan-partners-ups-surgery-partners-offer-to-6b-after-rival-bid/874313/",
+     "date": "2026-11-10",
+     "summary": "The offer rose to $25 a share after a rival $28 bid; closing is expected in the first quarter of 2027."
+    },
+    {
+     "title": "Ascension, Bon Secours make multibillion-dollar bets on ASCs",
+     "source": "Becker's Hospital Review",
+     "url": "https://www.beckershospitalreview.com/finance/ascension-bon-secours-make-multibillion-dollar-bets-on-ascs/",
+     "date": "2026-11-10",
+     "summary": "Ascension's ASC network stands at 312 facilities after the Amsurg deal, and Bon Secours Mercy Health is pursuing Surgery Partners."
+    },
+    {
+     "title": "45 hospital M&As finalized in 2026",
+     "source": "Becker's Hospital Review",
+     "url": "https://www.beckershospitalreview.com/hospital-transactions-and-valuation/38-hospital-mas-finalized-in-2026/",
+     "date": "2026-11-12",
+     "summary": "Closings include MultiCare and Samaritan with a $700 million investment pledge and WVU Health and Independence Health System with $800 million planned."
+    }
+   ]
+  },
+  {
+   "area": "Capital investment trends",
+   "items": [
+    {
+     "title": "Market worries overtake policy concerns",
+     "source": "HFMA",
+     "url": "https://www.hfma.org/fast-finance/market-worries-overtake-policy-concerns/",
+     "date": "2026-10-12",
+     "summary": "52% of surveyed systems drew on investment reserves in 2025, 40% plan new debt in 2026, and capital is shifting toward smaller projects."
+    },
+    {
+     "title": "Is this the last year of peak hospital growth?",
+     "source": "HFMA",
+     "url": "https://www.hfma.org/healthcare-finance/is-this-the-last-year-of-peak-hospital-growth/",
+     "date": "2026-09-29",
+     "summary": "Hospitals' share of provider profits is expected to fall from 41% in 2019 to about 38% by 2029 as care shifts to freestanding sites; the ASC market is projected to reach $72.7 billion by 2033."
+    }
+   ]
+  },
+  {
+   "area": "Regulatory changes",
+   "items": [
+    {
+     "title": "Gist Weekly: November 20, 2026",
+     "source": "Vizient",
+     "url": "https://www.vizient.com/insights/briefs/gist-weekly/gist-weekly-november-20-2026",
+     "date": "2026-11-20",
+     "summary": "Site-neutral imaging pay starts Jan. 1, 2027 with a 40% adjustment; new NPI and attestation rules for off-campus hospital outpatient departments start Jan. 1, 2028."
+    },
+    {
+     "title": "Hospitals split on CMS' outpatient rule",
+     "source": "Becker's Hospital Review",
+     "url": "https://www.beckershospitalreview.com/finance/a-win-for-patients-or-existential-threat-hospitals-split-on-cms-outpatient-rule/",
+     "date": "2026-11-06",
+     "summary": "The AHA called the site-neutral expansion misguided while the Federation of American Hospitals called the rule a win for patients and taxpayers."
+    }
+   ]
+  }
+ ],
+ "marketing": [
+  {
+   "area": "Emerging content trends",
+   "items": [
+    {
+     "title": "Faster and cheaper, but not better: the 2027 B2B Content and Marketing Trends Report",
+     "source": "Content Marketing Institute",
+     "url": "https://contentmarketinginstitute.com/b2b-research/b2b-content-marketing-trends-research",
+     "date": "2026-11-04",
+     "summary": "Owned media is the top 2027 investment area at 42%, up 10 points. 31% of marketers report lower website traffic, and 79% of them blame AI-powered search.",
+     "takeaway": "Put more into Boldt's own site and blog, and write pages that answer questions directly so AI tools cite them."
+    }
+   ]
+  },
+  {
+   "area": "Executive audience engagement",
+   "items": [
+    {
+     "title": "What builds trust with B2B buyers",
+     "source": "Content Marketing Institute",
+     "url": "https://contentmarketinginstitute.com/b2b-research/b2b-content-marketing-trends-research",
+     "date": "2026-11-04",
+     "summary": "Marketers rank useful, practical information (64%), industry expertise (59%) and customer stories (50%) as the top trust builders, ahead of original research (27%).",
+     "takeaway": "Lead with practical planning guidance and project stories from Boldt's experts."
+    }
+   ]
+  },
+  {
+   "area": "AI-driven marketing",
+   "items": [
+    {
+     "title": "Fast, cheap, and forgettable: what AI is really contributing to B2B marketing",
+     "source": "Content Marketing Institute",
+     "url": "https://contentmarketinginstitute.com/press-room/b2b-content-marketing-2027-research-press-announcement",
+     "date": "2026-11-04",
+     "summary": "78% say speed is AI's biggest contribution and only 17% say quality. 75% fear AI is eroding audience trust, yet 52% have no AI disclosure policy.",
+     "takeaway": "Use AI to speed up drafts, but keep expert review and Boldt-specific detail in every piece."
+    },
+    {
+     "title": "Google November 2026 core update: what marketers should know",
+     "source": "Semrush",
+     "url": "https://www.semrush.com/blog/google-core-update-november-2026/",
+     "date": "2026-11-17",
+     "summary": "Google began rolling out its third core update of 2026 on Nov. 10, with up to two weeks to finish, and advises waiting a full week after rollout before comparing Search Console data.",
+     "takeaway": "Hold off on judging blog traffic changes until early December."
+    },
+    {
+     "title": "November 2026 Google Webmaster Report",
+     "source": "Search Engine Roundtable",
+     "url": "https://www.seroundtable.com/november-2026-google-webmaster-report-42431.html",
+     "date": "2026-11-02",
+     "summary": "AI Overviews now appear on 80% of Google searches, and Google updated its guidance to say AI-generated content should be fact-checked and reviewed.",
+     "takeaway": "Clear answers, FAQs and named expert authors help Boldt's pages show up in AI answers."
+    }
+   ]
+  },
+  {
+   "area": "LinkedIn advertising trends",
+   "items": [
+    {
+     "title": "LinkedIn launches CTV ads in the UK",
+     "source": "Social Media Today",
+     "url": "https://www.socialmediatoday.com/news/linkedin-launches-ctv-ads-in-the-uk/874581/",
+     "date": "2026-11-12",
+     "summary": "LinkedIn's connected TV ads, available to US advertisers since April 2024, now reach the UK. LinkedIn says people who saw a brand's CTV ad first cost 30% less to convert into leads.",
+     "takeaway": "Consider a small CTV test alongside the Outlook campaign to warm up target accounts before LinkedIn feed ads."
+    }
+   ]
+  }
+ ],
+ "insights": {
+  "asOf": "2026-11-23",
+  "basis": "October 2026 dashboard data, November so far (through Nov. 22) and this week's industry research.",
+  "observations": [
+   {
+    "type": "Engagement behavior",
+    "title": "129 companies engaged in November so far",
+    "detail": "Through Nov. 22, 129 healthcare companies engaged, 28 of them for the first time. October set the pace at 206 engaged companies, up from 158 in September and well above the 2026 average of 128 a month.",
+    "evidence": "Engaged companies, month over month, and November so far"
+   },
+   {
+    "type": "High-performing message",
+    "title": "Campus and outpatient insight ads perform near the top with one ad",
+    "detail": "The strategic insight (campus, outpatient) message earns a 1.79% click-through rate from a single ad and 8,344 impressions, close to cost certainty (1.86% across 10 ads). It has the fewest impressions of any theme.",
+    "evidence": "LinkedIn healthcare creative analysis, 2026"
+   },
+   {
+    "type": "Underused content",
+    "title": "The site selection article draws search traffic with no ads",
+    "detail": "\"Location matters: choosing the ideal site for healthcare facilities\" has 117 views, 62 of them from organic search, and no LinkedIn ad support. The 2027 off-campus imaging changes make siting a timely question.",
+    "evidence": "Top blog posts by source; this week's briefing"
+   },
+   {
+    "type": "Declining area",
+    "title": "Direct-ask ads trail, while the contact page converts",
+    "detail": "Ads that ask readers to meet or contact Boldt have the lowest click-through rate at 0.54%. Yet the contact page produced 1,585 key events from 846 sessions, so leaders reach out after reading, not because an ad asks.",
+    "evidence": "LinkedIn creative analysis and top landing pages"
+   },
+   {
+    "type": "Topic gaining momentum",
+    "title": "Health systems are buying outpatient surgery",
+    "detail": "The Surgery Partners bid is now about $6 billion and Ascension runs 312 ASCs after the Amsurg deal. Boldt's post on health systems buying back outpatient real estate already has 137 views, including readers sent by AI assistants.",
+    "evidence": "This week's briefing; top blog posts by source"
+   },
+   {
+    "type": "Emerging audience interest",
+    "title": "Supply is tightening, and financing content is read",
+    "detail": "Medical office starts fell 64% from a year earlier while absorption hit 4.1 million square feet. The bonds guide draws 90 of its 172 views from organic search, so leaders are already researching how to pay for new space.",
+    "evidence": "This week's briefing; top blog posts by source"
+   },
+   {
+    "type": "Buying intent",
+    "title": "Recent activity from contact page visitors",
+    "detail": "Encompass Health, Columbia University Irving Medical Center, RWJBarnabas Health and Suburban Hospital all viewed the contact page. Columbia University Irving Medical Center (47 engagements) and Weill Cornell Medicine (52) were both active in the last days of October.",
+    "evidence": "Hot MQLs"
+   },
+   {
+    "type": "ABM opportunity",
+    "title": "28 new companies in November",
+    "detail": "New this month include Halifax Health, Signature Healthcare and St. Louis Children's Hospital, which arrived through Google ad clicks and website visits. Together with 75 hot MQLs, they make a ready list for an outpatient supply nurture.",
+    "evidence": "New MQLs so far this month and hot MQLs"
+   }
+  ],
+  "actions": {
+   "d30": [
+    "Follow up with the four hot MQLs that visited the contact page, using the follow-up task button on the Leads tab.",
+    "Build three more strategic insight (campus, outpatient) LinkedIn ads tied to the medical office supply data.",
+    "Publish a blog on the medical office supply gap and send it to the 28 new November companies.",
+    "Add an on-campus versus off-campus section and FAQ to the site selection article."
+   ],
+   "d60": [
+    "Host a webinar on planning medical office and ASC capacity for 2027 to 2029.",
+    "Publish the PIH Health Whittier MOB story as a case study on a campus medical office building.",
+    "Replace direct-ask ads with content offers that lead to the contact page."
+   ],
+   "d90": [
+    "Release a CFO guide comparing ownership, lease and partnership options for outpatient buildings.",
+    "Launch a named-account program for hot MQLs with content on adding ASC capacity.",
+    "Review campaign results against the 206 engaged companies in October and the 128 a month average."
+   ]
+  }
+ },
+ "contentIdeas": [
+  {
+   "type": "Blog",
+   "title": "Medical office construction is at a 10-year low. What it means for health systems planning outpatient space",
+   "why": "New supply data this week, and outpatient campus planning is Boldt's core work.",
+   "signals": [
+    "Trending healthcare topic",
+    "Business priority",
+    "AEO opportunity"
+   ]
+  },
+  {
+   "type": "Blog",
+   "title": "Why health systems are buying ASCs, and other ways to add surgery capacity",
+   "why": "Billion-dollar ASC deals are in the news, and Boldt's buy-back post already draws readers from AI assistants.",
+   "signals": [
+    "Trending healthcare topic",
+    "High-performing content",
+    "AEO opportunity"
+   ]
+  },
+  {
+   "type": "Blog",
+   "title": "On campus or off campus? Siting outpatient imaging and surgery under the 2027 rules",
+   "why": "Builds on the site selection article's organic traffic and the new off-campus requirements.",
+   "signals": [
+    "Search demand",
+    "Trending healthcare topic",
+    "High-performing content"
+   ]
+  },
+  {
+   "type": "Blog",
+   "title": "How public-private partnerships fund new medical office buildings",
+   "why": "Ground leases and leasebacks are in the news, and financing articles are among Boldt's most-read posts.",
+   "signals": [
+    "Trending healthcare topic",
+    "High-performing content",
+    "Business priority"
+   ]
+  },
+  {
+   "type": "White paper",
+   "title": "Lease, own or partner: a CFO's guide to funding outpatient buildings when debt costs more",
+   "why": "40% of systems plan new debt in 2026, and the bonds guide is the top organic post.",
+   "signals": [
+    "High-performing content",
+    "Search demand",
+    "Business priority"
+   ]
+  },
+  {
+   "type": "Case study",
+   "title": "PIH Health Whittier: building a multi-specialty medical office building on a hospital campus",
+   "why": "Real project proof for the campus and outpatient message; customer stories rank among the top trust builders.",
+   "signals": [
+    "High-performing message",
+    "Competitive gap"
+   ]
+  },
+  {
+   "type": "Webinar",
+   "title": "Outpatient space is getting scarce: planning medical office and ASC capacity for 2027 to 2029",
+   "why": "Timely supply data that strategy and real estate leaders need to plan around.",
+   "signals": [
+    "Trending healthcare topic",
+    "Engaged audience"
+   ]
+  },
+  {
+   "type": "LinkedIn",
+   "title": "Ad series: three campus and outpatient planning insights from recent projects",
+   "why": "The strategic insight message nearly matches cost certainty on click-through rate with one ad behind it.",
+   "signals": [
+    "High-performing message",
+    "Engaged audience"
+   ]
+  },
+  {
+   "type": "Campaign",
+   "title": "Secure outpatient space before the supply gap widens",
+   "why": "Pairs the medical office supply story with Boldt's development and financing options.",
+   "signals": [
+    "Business priority",
+    "Trending healthcare topic"
+   ]
+  },
+  {
+   "type": "Email nurture",
+   "title": "Three-email series for new November companies: supply outlook, siting under the 2027 rules, funding options",
+   "why": "28 companies engaged for the first time this month and need a next step.",
+   "signals": [
+    "CRM engagement",
+    "Engaged audience"
+   ]
+  }
+ ]
+}

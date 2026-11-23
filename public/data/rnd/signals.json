@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-17",
+ "generated": "2026-11-23",
  "reportMonth": "2026-10",
  "engagement": {
   "month": "2026-10",
@@ -29,9 +29,9 @@
   },
   "monthToDate": {
    "month": "2026-11",
-   "through": "2026-11-15",
-   "engaged": 94,
-   "new": 20
+   "through": "2026-11-22",
+   "engaged": 129,
+   "new": 28
   }
  },
  "topContent": [

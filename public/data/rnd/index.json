@@ -1,6 +1,11 @@
 {
  "weeks": [
   {
+   "weekOf": "2026-11-23",
+   "file": "2026-11-23.json",
+   "headline": "Medical office construction starts fall to a 10-year low"
+  },
+  {
    "weekOf": "2026-11-16",
    "file": "2026-11-16.json",
    "headline": "CMS finalizes 2027 outpatient rule: site-neutral pay expands to off-campus imaging"
