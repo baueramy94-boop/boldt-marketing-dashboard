@@ -12,6 +12,8 @@ import { getStore } from "@netlify/blobs";
  * later; "points" counts each person's first website visit, form fill and email click, plus each MQL, before the award. skipDays = days when many deals changed stage at once (bulk edits); stage times that end on those days are left out of
  * the time-in-phase figures by the page. Company names only; contacts are counted, never named.
  * snaps: open deals by phase at each month end since Nov 2026 (see below).
+ * rel (every deal): relationship start, the earliest HubSpot date for the deal's company (first contact, first activity, first
+ *   visit, company created) or the deal's create date (Nov 24, 2026, sales cycle chart).
  * Cached 30 minutes in Netlify Blobs (store "hs-pipeline"); ?fresh=1 skips the cache.
  */
 
@@ -58,7 +60,7 @@ export default async (req: Request) => {
   const store = getStore({ name: "hs-pipeline", consistency: "strong" });
   const fresh = new URL(req.url).searchParams.get("fresh") === "1";
   const cached: any = await store.get("result", { type: "json" }).catch(() => null);
-  if (cached && !fresh && Date.now() - cached.at < 30 * 60 * 1000) return json(cached.data);
+  if (cached && !fresh && Date.now() - cached.at < 30 * 60 * 1000 && cached.data?.v === 2) return json(cached.data);   // v2 adds rel
   const lock: any = await store.get("pulling", { type: "json" }).catch(() => null);
   if (lock && Date.now() - lock.at < 25000) {
     if (cached) return json({ ...cached.data, stale: true });
@@ -93,9 +95,19 @@ export default async (req: Request) => {
 
     // 2. Marketing touches before the award, for deals that reached Verbal Award or later.
     const awarded = deals.filter((d: any) => d.award != null);
-    const d2c = await assoc(token, "deals", "companies", awarded.map((d: any) => d.id));
-    const coIds = [...new Set(Object.values(d2c).flatMap((x) => x.slice(0, 1)))];
-    const cos = coIds.length ? await read(token, "companies", coIds, ["name", "hs_analytics_source", "hs_analytics_first_visit_timestamp", "first_conversion_date"]) : {};
+    // Company for every deal (sales cycle chart needs the relationship start for all of them); touches only for awarded deals.
+    const d2c = await assoc(token, "deals", "companies", deals.map((d: any) => d.id));
+    const allCo = [...new Set(Object.values(d2c).flatMap((x) => x.slice(0, 1)))];
+    const coIds = [...new Set(awarded.flatMap((d: any) => (d2c[d.id] || []).slice(0, 1)))];
+    const cos = allCo.length ? await read(token, "companies", allCo, ["name", "createdate", "hs_analytics_source", "hs_analytics_first_visit_timestamp", "hs_analytics_first_timestamp", "first_contact_createdate", "first_conversion_date"]) : {};
+    // Relationship start = the earliest date HubSpot has for the company (its first contact, first activity, first visit or
+    // the company record), or the deal's create date if that is earlier. HubSpot's records begin in August 2018.
+    for (const d of deals) {
+      const c = cos[(d2c[d.id] || [])[0]] || {};
+      const t = [c.first_contact_createdate, c.hs_analytics_first_timestamp, c.hs_analytics_first_visit_timestamp, c.createdate].map(ms).filter((x) => !isNaN(x));
+      const r = [d.created, ...t].filter((x) => isFinite(x)); d.rel = r.length ? Math.min(...r) : null;
+      if (!d.company) d.company = c.name || "";
+    }
     // People who touched marketing: contacts at these companies (associations, then batch read) with a first website visit,
     // form fill or marketing email click. Capped so the pull stays quick; a failure here only drops the person-level touches.
     const people: Record<string, any> = {};
@@ -145,7 +157,7 @@ export default async (req: Request) => {
       snaps[now.toISOString().slice(0, 7)] = { ...snap, at: now.toISOString() };
       await store.setJSON("snaps", snaps);
     } catch (e: any) { console.log(`hs-pipeline snaps skipped: ${e?.message || e}`); }
-    const data = { ok: true, ready: true, asOf: Date.now(), stages, deals, skipDays, leadsOk, peopleOk, snaps };
+    const data = { ok: true, ready: true, v: 2, asOf: Date.now(), stages, deals, skipDays, leadsOk, peopleOk, snaps };
     await store.setJSON("result", { at: Date.now(), data });
     await store.delete("pulling").catch(() => {});
     console.log(`hs-pipeline deals=${deals.length} awarded=${awarded.length} companies=${coIds.length} contacts=${ppl.length} leadsOk=${leadsOk} peopleOk=${peopleOk} ms=${Date.now() - t0}`);

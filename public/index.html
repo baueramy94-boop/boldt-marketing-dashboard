@@ -159,6 +159,7 @@ tr.future td{color:var(--muted)}
 .gb-m:hover .gb-l,.gb-m:focus .gb-l{color:var(--ink)}
 .gb-tip{position:absolute;top:6px;left:calc(100% + 6px);min-width:180px;background:var(--ink);color:#fff;border-radius:8px;padding:9px 11px;font-size:12px;line-height:1.5;opacity:0;pointer-events:none;transform:translateX(-4px);transition:opacity .18s,transform .18s;z-index:5;box-shadow:0 8px 22px rgba(0,0,0,.18)}
 .gb-m.gb-r .gb-tip{left:auto;right:calc(100% + 6px);transform:translateX(4px)}
+.sc-tl .sc-n{font-size:11.5px;fill:var(--ink)}.sc-tl g:hover .sc-n{font-weight:700}.sc-ks{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:0 0 12px}.sc-k{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:2px}.sc-k span{font-size:12.5px;color:var(--muted);font-weight:600}.sc-k b{font-size:24px;font-family:var(--f-display);font-weight:800;font-stretch:72%}.sc-k em{font-style:normal;font-size:12px;color:var(--muted)}
 #roi-phases .gb-tip{min-width:0;width:max-content;max-width:210px}@media(max-width:600px){#roi-phases .gb-tip{max-width:140px;font-size:11px}}#roi-phases .gb-tip span>span{white-space:normal}
 .gb-tip b{display:block;font-size:12.5px;margin-bottom:3px}
 .gb-tip span{display:flex;justify-content:space-between;gap:12px}
@@ -1715,7 +1716,7 @@ R.roi=()=>{
   const rows=[["Marketing spend","spend",v=>$(v),$(ytdSp)],["Advertising spend","ad",v=>$(v),$(ytdAd)],["Cost per MQL","cpMql",v=>$(v,2),$(ytdSp/s.ytd,2)],["Ad spend per MQL","adMql",v=>$(v,2),$(ytdAd/s.ytd,2)],
     ["Cost per SQL","cpSql",v=>$(v,2),$(ytdSp/ytdSql,2)],["Ad spend per SQL","adSql",v=>$(v,2),$(ytdAd/ytdSql,2)],["Subscriber to MQL","subMql",v=>P(v,2),LIVE(SUBN?P(s.ytd/SUBN,2):"–")],["MQL to SQL","mqlSql",v=>P(v,2),P(ytdSql/sum(mq.slice(0,SQLN())),2)],
     ["MQL to awarded","mqlAw",v=>P(v,2),LIVE(PR&&s.ytd?P(PR.length/s.ytd,2):"–")],["SQL to awarded","sqlAw",v=>P(v,2),LIVE(PR&&ytdSql?P(PR.length/ytdSql,2):"–")],["Cost per awarded project","cpAw",v=>$(v,2),LIVE(PR&&PR.length?$(ytdSp/PR.length,2):"–")],["Ad spend per awarded project","adAw",v=>$(v,2),LIVE(PR&&PR.length?$(ytdAd/PR.length,2):"–")],["Awarded ROI","awRoi",v=>N(v,1)+"x",LIVE(PR?xR(roiOf(ret(PR),ytdSp)):"")],["Awarded ROAS","awRoas",v=>N(v,1)+"x",LIVE(PR?xR(roiOf(ret(PR),ytdAd)):"")]];
-  h+=`${roiProjects(G,ytdSp,ytdAd,rate,val,ret,roiOf,tot,ohYtd,OH)}${phaseCharts(G)}${salesInsights(PR,ytdSp,rate,roiOf)}<div class="panel"><h3>Year over year</h3><p class="sub">2024 and 2025 from the Healthcare ROI tab; 2026 is year to date</p><div class="tbl-wrap"><table><thead><tr><th class="l">Measure</th><th>2024</th><th>2025</th><th>2026 YTD</th></tr></thead><tbody>
+  h+=`${roiProjects(G,ytdSp,ytdAd,rate,val,ret,roiOf,tot,ohYtd,OH)}${phaseCharts(G)}${salesCycle(G)}${salesInsights(PR,ytdSp,rate,roiOf)}<div class="panel"><h3>Year over year</h3><p class="sub">2024 and 2025 from the Healthcare ROI tab; 2026 is year to date</p><div class="tbl-wrap"><table><thead><tr><th class="l">Measure</th><th>2024</th><th>2025</th><th>2026 YTD</th></tr></thead><tbody>
     ${rows.map(([n,k,f,v26])=>{const [a,b]=yr(k,f);return `<tr><td class="l">${n}</td><td>${a}</td><td>${b}</td><td>${v26}</td></tr>`;}).join("")}</tbody></table></div>
     </div>`;
   const g=L.goals, sq25=D.sql2025, mq25=L.mql2025;
@@ -1801,6 +1802,54 @@ function phaseCharts(G){
     <div class="grid g-2" style="gap:18px;margin-top:8px"><div><h4 class="mini-h">2026 projects by phase</h4><p class="note" style="margin:0 0 6px">The same projects as ROI by phase, where each one stands today</p>${A}</div>
     <div><h4 class="mini-h">Deals reaching each phase, by month</h4><p class="note" style="margin:0 0 6px">2026, by the month a deal moved into each phase${V?", project value in $M":""}. A deal that moves through several phases counts once in each.</p>${B}</div></div>${S}</div>`;}
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-phv]");if(!b)return;const v=b.dataset.phv==="1";if(v===PH_VAL)return;PH_VAL=v;const el=document.getElementById("roi-phases");if(el)el.outerHTML=phaseCharts(ROIL?{all:ROIL.projects}:null);});
+
+/* Sales cycle (Nov 24, 2026): one row per project on a timeline in years, from the start of the relationship (earliest HubSpot
+   date for the company, d.rel from /api/hs-pipeline) through each Sales Pipeline phase to construction. Two sets: projects that
+   reached construction (all years) and 2026 projects (the ROI by phase list). Medians shown above the timeline. */
+let SC_SET="won";
+function salesCycle(G){
+  plLoad();
+  if(!G)return "";
+  if(!PL)return `<div class="panel" id="roi-cycle"><h3>Sales cycle: first contact to construction</h3><p class="note">${PL_ERR||"Loading from HubSpot…"}</p></div>`;
+  const C=PH_COL(),YR=365.25*864e5,now=Date.now(),rm=new Set(((ROIL&&ROIL.removed)||[]).map(p=>p.id)),inG=new Set(G.all.map(p=>p.id)),nm={};G.all.forEach(p=>nm[p.id]=p.name);
+  const B=["closedwon","1432137869"],bt=d=>{const v=B.map(b=>d.entered[b]).filter(x=>x!=null);return v.length?Math.min(...v):null;};
+  const awd=d=>{const v=["decisionmakerboughtin","contractsent",...B].map(b=>d.entered[b]).filter(x=>x!=null);return v.length?Math.min(...v):null;};
+  const set=SC_SET==="won"?PL.deals.filter(d=>bt(d)!=null&&!rm.has(d.id)):PL.deals.filter(d=>inG.has(d.id));
+  const rows=set.map(d=>{const rel=d.rel??d.created;const pts=[["rel",rel],["lead",d.entered.qualifiedtobuy??d.created],["verbal",d.entered.presentationscheduled],["anf",d.entered.decisionmakerboughtin],["board",d.entered.contractsent],["build",bt(d)]]
+      .filter(x=>x[1]!=null&&isFinite(x[1])).sort((a,b)=>a[1]-b[1]);
+    const bi=pts.findIndex(x=>x[0]==="build");if(bi>=0)pts.splice(bi+1);   // the journey ends when construction starts
+    return {d,name:nm[d.id]||d.name,rel,pts,award:awd(d),build:bt(d)};}).filter(r=>r.rel).sort((a,b)=>a.rel-b.rel||a.pts[a.pts.length-1][1]-b.pts[b.pts.length-1][1]);
+  const yrs=v=>v==null?"–":N(v,1)+" years";
+  const qr=a=>{const b=a.filter(x=>x>=0).sort((x,y)=>x-y);if(b.length<4)return "–";const q=f=>{const i=(b.length-1)*f,lo=Math.floor(i);return b[lo]+(b[Math.ceil(i)]-b[lo])*(i-lo);};return `${N(q(.25),1)} to ${N(q(.75),1)} years`;};
+  const md=a=>med(a.filter(x=>x!=null&&x>=0));
+  const relAw=rows.filter(r=>r.award).map(r=>(r.award-r.rel)/YR),relB=rows.filter(r=>r.build).map(r=>(r.build-r.rel)/YR),awB=rows.filter(r=>r.build&&r.award&&r.build>=r.award).map(r=>(r.build-r.award)/YR);
+  const open=rows.filter(r=>!r.award).map(r=>(now-r.rel)/YR);
+  const tiles=SC_SET==="won"
+    ?[["First contact to construction",yrs(md(relB)),`Median of ${relB.length} projects`],["First contact to award",yrs(md(relAw)),"Median, to Awarded Not Financed or later"],["Middle half of projects",qr(relB),"First contact to construction, 25th to 75th percentile"]]
+    :[["First contact to award",yrs(md(relAw)),`Median of ${relAw.length} awarded 2026 projects`],["Lead and Verbal Award deals",yrs(md(open)),`Median time since first contact, ${open.length} deals not yet awarded`],["Longest relationship",yrs(rows.length?Math.max(...rows.map(r=>((r.build||now)-r.rel)/YR)):null),"First contact to construction or today"]];
+  // Timeline
+  const W=chartW(false),LW=W<640?118:230,R=14,T=22,RH=W<640?18:20,H=T+rows.length*RH+8;
+  const t0=rows.length?new Date(new Date(Math.min(...rows.map(r=>r.rel))).getFullYear(),0,1).getTime():now,t1=new Date(new Date(now).getFullYear()+1,0,1).getTime();
+  const x=t=>LW+(t-t0)/(t1-t0)*(W-LW-R),day=t=>new Date(t).toLocaleDateString("en-US",{month:"short",year:"numeric"}),cut=(s,n)=>s.length>n?s.slice(0,n-1)+"…":s;
+  const LAB={rel:"First contact",lead:"Lead",verbal:"Opportunity / Verbal Award",anf:"Awarded Not Financed",board:"Board Approval",build:"In construction"};
+  let g=`<svg class="chart sc-tl" viewBox="0 0 ${W} ${H}" role="img" aria-label="Sales cycle timeline"><g class="grid">`;
+  for(let y=new Date(t0).getFullYear();y<=new Date(t1).getFullYear();y++){const xx=x(new Date(y,0,1).getTime());g+=`<line x1="${xx}" x2="${xx}" y1="${T-4}" y2="${H-6}"/>${y<new Date(t1).getFullYear()?`<text x="${xx+3}" y="${T-8}">${W<640?"'"+String(y).slice(2):y}</text>`:""}`;}
+  g+=`</g><line x1="${x(now)}" x2="${x(now)}" y1="${T-4}" y2="${H-6}" stroke="var(--gold)" stroke-dasharray="3 3"/>`;
+  rows.forEach((r,i)=>{const y=T+i*RH,yc=y+RH/2,bh=RH-8;
+    const tip=[r.name,...r.pts.map(([k,t])=>`${LAB[k]}: ${day(t)}`),r.build?`First contact to construction: ${yrs((r.build-r.rel)/YR)}`:r.award?`First contact to award: ${yrs((r.award-r.rel)/YR)}`:`Since first contact: ${yrs((now-r.rel)/YR)}`].join("\n");
+    g+=`<g><title>${esc(tip)}</title><rect x="0" y="${y}" width="${W}" height="${RH}" fill="transparent"/><text x="${LW-8}" y="${yc+4}" text-anchor="end" class="sc-n">${esc(cut(r.name,W<640?16:34))}</text>`;
+    r.pts.forEach(([k,t],j)=>{if(k==="build")return;const e=j<r.pts.length-1?r.pts[j+1][1]:now;if(e<=t)return;
+      g+=`<rect x="${x(t)}" y="${y+4}" width="${Math.max(x(e)-x(t),1.5)}" height="${bh}" fill="${k==="rel"?"var(--line)":C[k]}"/>`;});
+    if(r.build)g+=`<circle cx="${x(r.build)}" cy="${yc}" r="${Math.max(4,bh/2)}" fill="${C.build}" stroke="var(--surface)" stroke-width="1.5"/>`;
+    g+=`</g>`;});
+  g+=`</svg>`;
+  const seg=`<div class="seg" role="group" aria-label="Projects shown" style="margin:4px 0 12px"><button type="button" data-scset="won" class="${SC_SET==="won"?"on":""}" aria-pressed="${SC_SET==="won"}">Reached construction (all years)</button><button type="button" data-scset="y26" class="${SC_SET==="y26"?"on":""}" aria-pressed="${SC_SET==="y26"}">2026 projects</button></div>`;
+  return `<div class="panel" id="roi-cycle"><h3>Sales cycle: first contact to construction</h3><p class="sub">Each row is one project, from the first time anyone at the organization shows up in HubSpot through each Sales Pipeline phase. A green dot marks the move into construction; bars still open run to today (dashed line). Hover a row for its dates.</p>${seg}
+    <div class="sc-ks">${tiles.map(([a,b,c])=>`<div class="sc-k"><span>${a}</span><b class="num">${b}</b><em>${c}</em></div>`).join("")}</div>
+    ${legend([{name:"Relationship before the deal",color:css("--line"),box:1},...ROI_PHASES.slice(0,4).map(([k,n])=>({name:n,color:C[k],box:1})),{name:"Construction starts",color:C.build,box:1}])}
+    ${rows.length?g:`<p class="note">No projects to show.</p>`}
+    <p class="note">First contact = the earliest date HubSpot has for the organization (its first contact, first website visit or company record). HubSpot's records begin in August 2018, so relationships that started earlier show from 2018 and their real cycle is longer.</p></div>`;}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-scset]");if(!b||b.dataset.scset===SC_SET)return;SC_SET=b.dataset.scset;const el=document.getElementById("roi-cycle");if(el)el.outerHTML=salesCycle(ROIL?{all:ROIL.projects}:null);});
 
 /* Sales insights (/api/hs-pipeline): marketing influence on 2026 projects, time in each phase, projects that move forward vs die
    before groundbreaking, and open pipeline. */
