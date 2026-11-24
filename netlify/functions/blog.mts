@@ -4,7 +4,10 @@ import { Document, Packer, Paragraph, HeadingLevel, TextRun, ExternalHyperlink }
 import { clean, jsonld } from "../lib/blog-common.mts";
 
 // Generate Blog drafts (written by blog-run-background).
-// GET /api/blog                 -> { ok, items: [{ id, title, by, created, words }] }   recent drafts
+// GET /api/blog                 -> { ok, items: [{ id, title, by, created, words, phase, phaseBy, phaseAt, open }] }   drafts with their review phase
+//   phase (Nov 24, 2026): draft | review | changes | approved | published. The newest of the phase set on the Blog Generator tab
+//   (Blobs key ph/<id>) and the review page's Approve / Request changes (rv/<id>) wins; with neither, a draft with comments is
+//   "review", otherwise "draft". open = unresolved comments and edit requests.
 // GET /api/blog?id=<id>         -> { ok, draft: { status: running | done | failed, blog?, ... } }
 // GET /api/blog?id=<id>&format=docx -> the draft as a Word document
 // GET /api/blog?id=<id> also returns qa (Ask about this draft), comments (review page) and review ({ status, by, at }).
@@ -16,6 +19,7 @@ import { clean, jsonld } from "../lib/blog-common.mts";
 //   resolve { cid, resolved }   delcomment { cid }
 //   review { status: approved | changes | "" }
 //   edit { patch: { title?, intro?, sections?, keyTakeaways?, faq?, cta? } }   direct text edits (keeps the old version)
+//   phase { phase: draft | review | changes | approved | published }   set the draft's review phase (Blog Generator tab)
 //   deletedraft                            delete the draft (Recent drafts), with its questions, comments and review status
 //   restore                                undo the last change (applied suggestion, edit request or text edit)
 // The edge gate has already checked the site password.
@@ -60,6 +64,23 @@ function docx(b: any): Document {
   return new Document({ creator: "Boldt Marketing Dashboard", title: b.title, styles: { default: { document: { run: { font: "Calibri", size: 22 } } } }, sections: [{ children: c }] });
 }
 
+const PHASES = ["draft", "review", "changes", "approved", "published"];
+// Review phase and open comment count for each draft in the list.
+async function withPhase(store: any, items: any[]) {
+  const { blobs } = await store.list({ prefix: "cm/" }).catch(() => ({ blobs: [] as any[] }));
+  const byDraft: Record<string, string[]> = {};
+  for (const k of blobs) { const d = k.key.split("/")[1]; (byDraft[d] = byDraft[d] || []).push(k.key); }
+  return Promise.all(items.map(async (x: any) => {
+    const [ph, rv, cms] = await Promise.all([store.get(`ph/${x.id}`, { type: "json" }).catch(() => null), store.get(`rv/${x.id}`, { type: "json" }).catch(() => null),
+      Promise.all((byDraft[x.id] || []).map((k) => store.get(k, { type: "json" }).catch(() => null)))]);
+    const open = cms.filter((c: any) => c && !c.resolved).length;
+    const cands = [ph && ph.phase ? { phase: ph.phase, by: ph.by, at: ph.at } : null, rv && rv.status ? { phase: rv.status, by: rv.by, at: rv.at } : null].filter(Boolean) as any[];
+    cands.sort((a, b) => String(b.at).localeCompare(String(a.at)));
+    const cur = cands[0] || { phase: cms.some(Boolean) ? "review" : "draft", by: "", at: "" };
+    return { ...x, phase: cur.phase, phaseBy: cur.by, phaseAt: cur.at, open };
+  }));
+}
+
 const isStrArr = (a: any, max = 40) => Array.isArray(a) && a.length <= max && a.every((x: any) => typeof x === "string" && x.length <= 6000);
 const okId = (v: any) => /^[a-z0-9]{6,24}$/i.test(String(v || ""));
 
@@ -74,9 +95,9 @@ async function post(req: Request, context: Context, store: any) {
     ix.items = (ix.items || []).filter((x: any) => x.id !== id);
     await store.setJSON("index", ix);
     for (const pre of [`qa/${id}/`, `cm/${id}/`]) { const { blobs } = await store.list({ prefix: pre }).catch(() => ({ blobs: [] as any[] })); for (const k of blobs) await store.delete(k.key).catch(() => {}); }
-    await store.delete(`rv/${id}`).catch(() => {}); await store.delete(id).catch(() => {});
+    await store.delete(`rv/${id}`).catch(() => {}); await store.delete(`ph/${id}`).catch(() => {}); await store.delete(id).catch(() => {});
     console.log(`blog draft deleted id=${id} by=${user}`);
-    return json({ ok: true, items: ix.items });
+    return json({ ok: true, items: await withPhase(store, ix.items) });
   }
   const d: any = await store.get(id, { type: "json" }).catch(() => null);
   if (!d || d.status !== "done") return json({ ok: false, error: "draft not found" }, 404);
@@ -128,6 +149,12 @@ async function post(req: Request, context: Context, store: any) {
     if (act === "delcomment") await store.delete(k); else { x.resolved = !!b.resolved; x.resolvedBy = user; await store.setJSON(k, x); }
     return json({ ok: true });
   }
+  if (act === "phase") {
+    const ph = String(b.phase || "");
+    if (!PHASES.includes(ph)) return json({ ok: false, error: "bad request" }, 400);
+    await store.setJSON(`ph/${id}`, { phase: ph, by: user, at: now });
+    return json({ ok: true, phase: ph, phaseBy: user, phaseAt: now });
+  }
   if (act === "review") {
     const st = ["approved", "changes"].includes(b.status) ? b.status : "";
     await store.setJSON(`rv/${id}`, { status: st, by: user, at: now });
@@ -163,7 +190,7 @@ export default async (req: Request, context: Context) => {
   const store = getStore({ name: "blog-drafts", consistency: "strong" });
   if (req.method === "POST") { try { return await post(req, context, store); } catch { return json({ ok: false, error: "storage unavailable" }, 502); } }
   const u = new URL(req.url), id = u.searchParams.get("id") || "";
-  if (!id) { const ix: any = (await store.get("index", { type: "json" }).catch(() => null)) || { items: [] }; return json({ ok: true, items: ix.items }); }
+  if (!id) { const ix: any = (await store.get("index", { type: "json" }).catch(() => null)) || { items: [] }; return json({ ok: true, items: await withPhase(store, ix.items || []) }); }
   if (!/^[a-z0-9-]{8,40}$/i.test(id)) return json({ ok: false, error: "bad id" }, 400);
   const d: any = await store.get(id, { type: "json" }).catch(() => null);
   if (!d) return json({ ok: true, draft: { status: "queued" } });

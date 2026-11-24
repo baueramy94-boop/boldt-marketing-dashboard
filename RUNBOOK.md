@@ -352,3 +352,8 @@ After the marketing report is saved, write the sales write-up for the month just
 - Tab renamed "ROI". The went well / needs improvement box no longer shows on the ROI tab (`roi` removed from `NARR_PAGES`). Each month, make sure the ROI points (cost per MQL and SQL, MQL to SQL, awarded projects and ROI) are covered in the Executive Summary's "What went well" and "Where we are focused" sections. `text.narrative.roi` can still be written but isn't displayed.
 - The marketing influence section was removed from the page (the `hs-pipeline` function still returns the touch data).
 - "Projects counted" is always shown and every row can be edited (name, stage, date awarded, project value). Edits are dashboard-only: `POST /api/hs-roi { action: edit, id, fields }`, saved in Blobs store `hs-roi`, key `edits`, applied on top of the HubSpot pull; "Use HubSpot values" (`action: reset`) removes them. Nothing is ever written to HubSpot.
+
+
+### Blog drafts by phase (Nov 24, 2026)
+- The Blog Generator tab opens with "Blog drafts", which replaced the Recent drafts list. Drafts are grouped by review phase: In review, Changes requested, Draft, Approved, Published (collapsed), with counts at the top, open comment counts, a Review page link, a phase menu and delete.
+- Phase (`GET /api/blog` list, `POST /api/blog { action: phase, id, phase }`, Blobs `blog-drafts` key `ph/<id>`): the newest of the phase set on the tab and the review page's Approve / Request changes (`rv/<id>`). With neither, a draft with comments is In review, otherwise Draft. Clicking "Share for review" on a Draft moves it to In review. Published is set by hand from the menu.

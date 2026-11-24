@@ -352,6 +352,11 @@ body.jm-open{overflow:hidden}
 .blog-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:12px 0}.blog-meta div{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;display:flex;flex-direction:column;gap:3px}.blog-meta b{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
 .blog-art{max-width:none;margin:16px 0;font-size:15px;line-height:1.65}.blog-art h2{font-size:24px;line-height:1.25;margin:0 0 12px}.blog-art h3{font-size:18px;margin:22px 0 8px}.blog-art h4{font-size:15px;margin:14px 0 4px}.blog-art p{margin:0 0 12px}.blog-art ul{margin:0 0 12px;padding-left:20px}
 .blog-promo{margin-top:10px}.blog-code{white-space:pre-wrap;font-size:12px;background:var(--soft);padding:10px;border-radius:8px;overflow:auto;max-height:320px}
+.bb-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:8px 16px;margin-bottom:6px}.bb-head h3{margin:0 0 4px}.bb-sum{display:flex;flex-wrap:wrap;gap:6px}
+.bb-sec{margin-top:14px}.bb-sec h4{display:flex;align-items:center;gap:8px;margin:0 0 6px;font-size:14px}.bb-list{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.bb-card{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;flex-wrap:wrap;border:1px solid var(--line);border-left:4px solid var(--navy);border-radius:10px;padding:10px 12px}.bb-card.on{background:var(--soft)}.bb-card.p-review{border-left-color:#D19000}.bb-card.p-changes{border-left-color:#C2410C}.bb-card.p-draft{border-left-color:#9AA6AD}.bb-card.p-approved,.bb-card.p-published{border-left-color:#1E6B34}
+.bb-main{display:grid;gap:4px;min-width:0;flex:1 1 320px}.bb-t{font-weight:700;font-size:15px;text-decoration:none}.bb-t:hover{text-decoration:underline}.bb-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.bb-chips a.chip{text-decoration:none}
+.bb-side{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.bb-side .cb-ssel{padding:6px 30px 6px 24px;font-size:13px}
 .blog-recent{list-style:none;padding:0;margin:8px 0 0}.blog-recent li{margin:6px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.bd-x{width:24px;height:24px;font-size:15px}.bd-ask{display:inline-flex;gap:6px;align-items:center;font-size:13px;color:var(--bad)}.btn-sm.bd-yes{background:var(--bad);border-color:var(--bad);color:#fff}.linkish{background:none;border:0;padding:0;font:inherit;color:var(--navy);text-decoration:underline;cursor:pointer;text-align:left}
 .ins-grid,.idea-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
 .ins-t{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--navy);background:var(--soft);border-radius:999px;padding:2px 8px;margin-bottom:6px}
@@ -850,7 +855,7 @@ document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest
   else if(ds.sgAll){const x=(BLOG.qa||[]).find(y=>y.qid===ds.sgAll);if(x)blogRevise(x.suggestions.map((g,i)=>[g,i]).filter(([g])=>!g.state).map(([g,i])=>({text:`${g.title}: ${g.change}`,title:g.title,qid:x.qid,idx:i})));}
   else if(ds.sgUndel){const x=(BLOG.qa||[]).find(y=>y.qid===ds.sgUndel);if(!x)return;x.suggestions.forEach((g,i)=>{if(g.state==="deleted"){delete g.state;blogPost({action:"undismiss",qid:x.qid,idx:i}).catch(()=>{});}});qaPaint();}
   else if(ds.blogUndo!=null){t.disabled=true;blogPost({action:"restore"}).then(j=>{if(!j.ok)throw j;return blogReload();}).catch(err=>{BLOG.err=(err&&err.error)||"That couldn't be undone.";blogPaint();});}
-  else if(ds.blogShare!=null){BLOG.share=!BLOG.share;blogPaint();}
+  else if(ds.blogShare!=null){BLOG.share=!BLOG.share;if(BLOG.share)blogMarkReview();blogPaint();}
   else if(ds.shareCopy!=null)blogCopy(t,reviewUrl());});
 function qaPaint(){const el=document.getElementById("blog-qa-list");if(el)el.innerHTML=qaList();}
 function qaAsk(q){q=(q||"").trim();if(!q||!BLOG.d||BLOG.d.status!=="done")return;const qid=(Date.now().toString(36)+Math.random().toString(36).slice(2,8)).slice(0,16);
@@ -878,10 +883,39 @@ function blogStart(topic,why){
 function blogPoll(){clearTimeout(BLOG_T);if(!BLOG.id)return;const id=BLOG.id;
   fetch(`/api/blog?id=${id}`).then(r=>r.json()).then(j=>{if(BLOG.id!==id)return;const d=j.draft||{};
     if(d.status==="done"||d.status==="failed"){blogLoad(j);if(d.revising&&d.revising.status==="running")revPoll(d.revising.rid,Date.parse(d.revising.at));if(BLOG.qa.some(x=>x.status==="running"))setTimeout(qaPoll,3500);if(d.status==="failed")BLOG.err=d.error||"The draft couldn't be generated.";BLOG.recent=null;blogRecent();blogPaint();return;}
-    if(Date.now()-BLOG.t0>8*60*1000){BLOG.d=null;BLOG.err="This is taking longer than expected. Check Recent drafts in a few minutes.";blogPaint();return;}
+    if(Date.now()-BLOG.t0>8*60*1000){BLOG.d=null;BLOG.err="This is taking longer than expected. Check Blog drafts above in a few minutes.";blogPaint();return;}
     blogPaint(true);BLOG_T=setTimeout(blogPoll,4000);}).catch(()=>{BLOG_T=setTimeout(blogPoll,6000);});}
 function blogOpen(id){BLOG={...BLOG,qa:[],comments:[],review:null,share:false,id,d:{status:"running"},t0:Date.now(),err:""};blogPaint();blogPoll();}
-function blogRecent(){if(BLOG.recent)return;fetch("/api/blog").then(r=>r.json()).then(j=>{BLOG.recent=j.items||[];blogPaint();}).catch(()=>{BLOG.recent=[];});}
+/* Blog drafts by review phase (Nov 24, 2026), on the Blog Generator tab in place of Recent drafts. Phase comes from /api/blog
+   (the newest of the phase set here and the review page's Approve / Request changes). Changing the menu saves for everyone. */
+const BPH=[["review","In review","s-ready-for-review"],["changes","Changes requested","s-needs-edits"],["draft","Draft","s-not-started"],["approved","Approved","s-approved"],["published","Published","s-live"]];
+const BPH_ORDER=["draft","review","changes","approved","published"];
+function blogBoard(){
+  const L=BLOG.recent;
+  if(!L)return `<h3>Blog drafts</h3><p class="note">Loading drafts…</p>`;
+  if(!L.length)return `<h3>Blog drafts</h3><p class="note">No drafts yet. Generate one below.</p>`;
+  const cnt=k=>L.filter(x=>(x.phase||"draft")===k).length, day=t=>t?new Date(t).toLocaleDateString("en-US",{month:"short",day:"numeric"}):"";
+  const card=x=>{const ph=BPH.find(p=>p[0]===(x.phase||"draft"))||BPH[2];
+    return `<li class="bb-card p-${ph[0]}${BLOG.id===x.id?" on":""}"><div class="bb-main"><button type="button" class="linkish bb-t" data-blog-open="${esc(x.id)}">${esc(x.title)}</button>
+      <span class="note" style="margin:0">${esc(x.by||"")} · ${day(x.created)}${x.words?` · ${N(x.words)} words`:""}${x.phaseBy?` · ${esc(ph[1])} set by ${esc(x.phaseBy)}, ${day(x.phaseAt)}`:""}</span>
+      <span class="bb-chips">${x.open?`<a class="chip warn" href="review.html?d=${esc(x.id)}" target="_blank" rel="noopener">${x.open} open comment${x.open===1?"":"s"}</a>`:""}<a class="btn-sm" href="review.html?d=${esc(x.id)}" target="_blank" rel="noopener">Review page</a></span></div>
+      <div class="bb-side"><label class="sr-only" for="bph-${esc(x.id)}">Phase</label><select class="cb-ssel ${ph[2]}" id="bph-${esc(x.id)}" data-bph="${esc(x.id)}">${BPH_ORDER.map(k=>{const p=BPH.find(q=>q[0]===k);return `<option value="${k}" ${k===ph[0]?"selected":""}>${p[1]}</option>`;}).join("")}</select>
+      ${BLOG.delAsk===x.id?`<span class="bd-ask">Delete this draft and its comments? <button type="button" class="btn-sm bd-yes" data-bd-yes="${esc(x.id)}">Delete</button><button type="button" class="btn-sm" data-bd-no>Keep</button></span>`:`<button type="button" class="rc-x bd-x" data-bd-del="${esc(x.id)}" title="Delete draft" aria-label="Delete draft: ${esc(x.title)}">×</button>`}</div></li>`;};
+  return `<div class="bb-head"><div><h3>Blog drafts</h3><p class="sub" style="margin:0">Every draft by review phase. Open one to read or edit it below, or send its review page for comments and approval.</p></div>
+    <div class="bb-sum">${BPH_ORDER.map(k=>{const p=BPH.find(q=>q[0]===k),n=cnt(k);return `<span class="chip${n&&(k==="review"||k==="changes")?" warn":k==="approved"&&n?" good":""}">${n} ${p[1].toLowerCase()}</span>`;}).join("")}</div></div>
+    ${BPH.map(([k,n])=>{const a=L.filter(x=>(x.phase||"draft")===k);if(!a.length)return "";
+      const body=`<ul class="bb-list">${a.map(card).join("")}</ul>`;
+      return k==="published"?`<details class="or-more bb-sec"><summary>${n} (${a.length})</summary>${body}</details>`:`<div class="bb-sec"><h4>${n} <span class="chip">${a.length}</span></h4>${body}</div>`;}).join("")}`;}
+document.addEventListener("change",e=>{const sel=e.target.closest&&e.target.closest("[data-bph]");if(!sel||!BLOG.recent)return;const id=sel.dataset.bph,v=sel.value,x=BLOG.recent.find(y=>y.id===id);if(!x)return;
+  const prev={...x};Object.assign(x,{phase:v,phaseBy:"you",phaseAt:new Date().toISOString()});blogBoardPaint();
+  fetch("/api/blog",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"phase",id,phase:v})}).then(r=>r.json()).then(j=>{if(!j.ok)throw 0;Object.assign(x,{phase:j.phase,phaseBy:j.phaseBy,phaseAt:j.phaseAt});blogBoardPaint();const n=document.getElementById("bph-"+id);if(n)n.focus();})
+    .catch(()=>{Object.assign(x,prev);blogBoardPaint();alert("The phase didn't save. Check your connection and try again.");});});
+function blogBoardPaint(){const el=document.getElementById("blog-board");if(el)el.innerHTML=blogBoard();}
+// Sharing a draft for review moves it from Draft to In review.
+function blogMarkReview(){const x=(BLOG.recent||[]).find(y=>y.id===BLOG.id);if(!x||(x.phase&&x.phase!=="draft"))return;
+  Object.assign(x,{phase:"review",phaseBy:"you",phaseAt:new Date().toISOString()});blogBoardPaint();
+  fetch("/api/blog",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"phase",id:x.id,phase:"review"})}).then(r=>r.json()).then(j=>{if(j.ok){Object.assign(x,{phaseBy:j.phaseBy,phaseAt:j.phaseAt});blogBoardPaint();}}).catch(()=>{});}
+function blogRecent(force){if(BLOG.recent&&!(force&&Date.now()-(BLOG.recentAt||0)>20000))return;BLOG.recentAt=Date.now();fetch("/api/blog",{cache:"no-store"}).then(r=>r.json()).then(j=>{BLOG.recent=j.items||[];blogPaint();}).catch(()=>{BLOG.recent=BLOG.recent||[];blogBoardPaint();});}
 const BLOG_LINK=/\[([^\]]+)\]\((https?:[^)\s]+)\)/g;
 function bmd(t){return esc(t||"").replace(BLOG_LINK,(m,a,u)=>`<a href="${u}" target="_blank" rel="noopener">${a}</a>`);}
 const bplain=t=>String(t||"").replace(BLOG_LINK,(m,a,u)=>`${a} (${u})`);
@@ -892,7 +926,7 @@ function blogHtml(b){const p=t=>`<p>${bmd(t)}</p>`,ul=a=>a&&a.length?`<ul>\n${a.
 function blogText(b){return bplain([b.title,"",...(b.intro||[]),"",...(b.sections||[]).flatMap(s=>[s.h2,"",...(s.paragraphs||[]),...(s.bullets||[]).map(x=>`- ${x}`),""]),"Key takeaways",...(b.keyTakeaways||[]).map(x=>`- ${x}`),"","Frequently asked questions",...(b.faq||[]).flatMap(f=>[f.q,f.a,""]),b.cta||"","","Sources",...(b.sources||[]).map(s=>`- ${s.name}: ${s.url}`)].join("\n"));}
 function blogCopy(btn,txt){const ok=()=>{const o=btn.textContent;btn.textContent="Copied";setTimeout(()=>{btn.textContent=o;},2000);};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(ok,()=>prompt("Copy:",txt));else prompt("Copy:",txt);}
 function blogPaint(tick){const el=document.getElementById("blog-gen");if(!el)return;
-  if(tick){const s=el.querySelector(".blog-el");if(s){s.textContent=blogElapsed();return;}}el.innerHTML=blogBody();}
+  if(tick){const s=el.querySelector(".blog-el");if(s){s.textContent=blogElapsed();return;}}el.innerHTML=blogBody();blogBoardPaint();}
 const blogElapsed=()=>{const s=Math.round((Date.now()-BLOG.t0)/1000);return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;};
 function blogShareBox(d,b){const C=(BLOG.comments||[]).filter(c=>!c.resolved).length,R=BLOG.review,st=R&&R.status?`<span class="chip ${R.status==="approved"?"good":"warn"}">${R.status==="approved"?"Approved":"Changes requested"} by ${esc(R.by||"")}</span>`:"";
   const sum=(st||C)?`<p class="note" style="margin:0 0 8px">${st} ${C?`${C} open comment${C===1?"":"s"}`:""}</p>`:"";
@@ -930,15 +964,14 @@ function blogBody(){
       ${blogRq(b)}
       ${b.schema?`<details class="or-more" style="margin-top:10px"><summary>Schema markup (${esc(b.schema.recommendation||"Article and FAQPage")})</summary><pre class="blog-code">${esc(typeof b.schema.jsonld==="string"?b.schema.jsonld:JSON.stringify(b.schema.jsonld,null,2))}</pre></details>`:""}
       <p class="sec-note">AI-written draft from the linked sources and dashboard data. Fill in any [bracketed] Boldt examples and review facts before publishing.</p></div>`;}
-  if(BLOG.recent&&BLOG.recent.length)h+=`<details class="or-more blog-rd" style="margin-top:12px"><summary>Recent drafts (${BLOG.recent.length})</summary><ul class="blog-recent">${BLOG.recent.map(x=>`<li><button type="button" class="linkish" data-blog-open="${esc(x.id)}">${esc(x.title)}</button> <span class="note" style="margin:0">${esc(x.by||"")} · ${new Date(x.created).toLocaleDateString("en-US",{month:"short",day:"numeric"})}${x.words?` · ${N(x.words)} words`:""}</span>${BLOG.delAsk===x.id?` <span class="bd-ask">Delete this draft and its comments? <button type="button" class="btn-sm bd-yes" data-bd-yes="${esc(x.id)}">Delete</button><button type="button" class="btn-sm" data-bd-no>Keep</button></span>`:` <button type="button" class="rc-x bd-x" data-bd-del="${esc(x.id)}" title="Delete draft" aria-label="Delete draft: ${esc(x.title)}">×</button>`}</li>`).join("")}</ul></details>`;
   return h;}
 document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-blog-go],[data-blog-copy],[data-blog-open],[data-blog-idea]");if(!t)return;
   if(t.dataset.blogGo!=null){const v=(document.getElementById("blog-topic")||{}).value||"";blogStart(v.trim(),"");}
   else if(t.dataset.blogIdea!=null){blogStart(t.dataset.blogIdea,t.dataset.why||"");}
-  else if(t.dataset.blogOpen){blogOpen(t.dataset.blogOpen);}
+  else if(t.dataset.blogOpen){blogOpen(t.dataset.blogOpen);if(t.closest("#blog-board")){const g=document.getElementById("blog-gen");if(g)g.scrollIntoView({block:"start",behavior:"smooth"});}}
   else if(t.dataset.blogCopy&&BLOG.d&&BLOG.d.blog){const b=BLOG.d.blog,k=t.dataset.blogCopy;blogCopy(t,k==="article"?blogText(b):k==="html"?blogHtml(b):k==="rq"?["Questions to confirm before publishing: "+b.title,"",...(b.reviewQuestions||[]).map(r=>`- ${r.q}${r.why?` ${r.why}`:""}`)].join("\n"):k==="linkedin"?(b.linkedin||{}).post||"":`Subject: ${(b.email||{}).subject||""}\n\n${(b.email||{}).body||""}`);}});
 document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-bd-del],[data-bd-yes],[data-bd-no]");if(!t)return;
-  const keepOpen=()=>{const dt=document.querySelector("#blog-gen details.blog-rd");if(dt)dt.open=true;};
+  const keepOpen=()=>{};
   if(t.dataset.bdDel){BLOG.delAsk=t.dataset.bdDel;blogPaint();keepOpen();}
   else if(t.dataset.bdNo!=null){BLOG.delAsk="";blogPaint();keepOpen();}
   else if(t.dataset.bdYes){const id=t.dataset.bdYes;t.disabled=true;t.textContent="Deleting…";
@@ -1063,7 +1096,7 @@ R.campaigns=()=>{
 };
 R.blog=()=>{
   let h=head("Blog Generator",`Long-form healthcare articles written from this week's R&D research, the dashboard's data and the text on boldthealthcarerealestate.com. Share a draft for review to highlight text, comment and make edits.`);
-  h+=`<div class="panel blog-panel" id="blog-gen">${blogBody()}</div>`; if(!BLOG.recent)setTimeout(blogRecent,0);
+  h+=`<div class="panel bb-panel" id="blog-board">${blogBoard()}</div><div class="panel blog-panel" id="blog-gen">${blogBody()}</div>`; setTimeout(()=>blogRecent(true),0);
   return h;
 };
 R.rnd=()=>{
