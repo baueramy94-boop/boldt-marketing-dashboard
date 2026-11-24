@@ -11,6 +11,7 @@ import { getStore } from "@netlify/blobs";
  * an MQL (Lead entered New) before the project was awarded. Touch data is only gathered for deals that reached Verbal Award or
  * later; "points" counts each person's first website visit, form fill and email click, plus each MQL, before the award. skipDays = days when many deals changed stage at once (bulk edits); stage times that end on those days are left out of
  * the time-in-phase figures by the page. Company names only; contacts are counted, never named.
+ * snaps: open deals by phase at each month end since Nov 2026 (see below).
  * Cached 30 minutes in Netlify Blobs (store "hs-pipeline"); ?fresh=1 skips the cache.
  */
 
@@ -128,7 +129,23 @@ export default async (req: Request) => {
       d.touch = touch; d.points = points;
       const ts = Object.values(touch); d.first = ts.length ? Math.min(...ts) : null;
     }
-    const data = { ok: true, ready: true, asOf: Date.now(), stages, deals, skipDays, leadsOk, peopleOk };
+    // Month-end phase snapshots (Nov 24, 2026): HubSpot keeps no date for when a deal went Dead, so past month ends can't be
+    // rebuilt. Each pull saves this month's open deals by phase (the last pull of a month stands for its month end) under
+    // key "snaps" ({ "YYYY-MM": { lead, verbal, anf, board, build: [count, value] } }); the ROI tab charts them once two months exist.
+    let snaps: Record<string, any> = {};
+    try {
+      snaps = ((await store.get("snaps", { type: "json" }).catch(() => null)) || {}) as any;
+      const PH: Record<string, string> = { qualifiedtobuy: "lead", presentationscheduled: "verbal", decisionmakerboughtin: "anf", contractsent: "board", closedwon: "build", "1432137869": "build" };
+      const now = new Date(), y0 = Date.UTC(now.getUTCFullYear(), 0, 1), snap: Record<string, number[]> = { lead: [0, 0], verbal: [0, 0], anf: [0, 0], board: [0, 0], build: [0, 0] };
+      for (const d of deals) {
+        const k = PH[d.stage]; if (!k) continue;
+        if (k === "build") { const b = ["closedwon", "1432137869"].map((s) => d.entered[s]).filter((t: any) => t != null); if (!b.length || Math.min(...b) < y0) continue; }
+        snap[k][0]++; snap[k][1] += d.amount || 0;
+      }
+      snaps[now.toISOString().slice(0, 7)] = { ...snap, at: now.toISOString() };
+      await store.setJSON("snaps", snaps);
+    } catch (e: any) { console.log(`hs-pipeline snaps skipped: ${e?.message || e}`); }
+    const data = { ok: true, ready: true, asOf: Date.now(), stages, deals, skipDays, leadsOk, peopleOk, snaps };
     await store.setJSON("result", { at: Date.now(), data });
     await store.delete("pulling").catch(() => {});
     console.log(`hs-pipeline deals=${deals.length} awarded=${awarded.length} companies=${coIds.length} contacts=${ppl.length} leadsOk=${leadsOk} peopleOk=${peopleOk} ms=${Date.now() - t0}`);

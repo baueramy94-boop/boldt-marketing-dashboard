@@ -159,6 +159,7 @@ tr.future td{color:var(--muted)}
 .gb-m:hover .gb-l,.gb-m:focus .gb-l{color:var(--ink)}
 .gb-tip{position:absolute;top:6px;left:calc(100% + 6px);min-width:180px;background:var(--ink);color:#fff;border-radius:8px;padding:9px 11px;font-size:12px;line-height:1.5;opacity:0;pointer-events:none;transform:translateX(-4px);transition:opacity .18s,transform .18s;z-index:5;box-shadow:0 8px 22px rgba(0,0,0,.18)}
 .gb-m.gb-r .gb-tip{left:auto;right:calc(100% + 6px);transform:translateX(4px)}
+#roi-phases .gb-tip{min-width:0;width:max-content;max-width:210px}@media(max-width:600px){#roi-phases .gb-tip{max-width:140px;font-size:11px}}#roi-phases .gb-tip span>span{white-space:normal}
 .gb-tip b{display:block;font-size:12.5px;margin-bottom:3px}
 .gb-tip span{display:flex;justify-content:space-between;gap:12px}
 .gb-tip span i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
@@ -1714,7 +1715,7 @@ R.roi=()=>{
   const rows=[["Marketing spend","spend",v=>$(v),$(ytdSp)],["Advertising spend","ad",v=>$(v),$(ytdAd)],["Cost per MQL","cpMql",v=>$(v,2),$(ytdSp/s.ytd,2)],["Ad spend per MQL","adMql",v=>$(v,2),$(ytdAd/s.ytd,2)],
     ["Cost per SQL","cpSql",v=>$(v,2),$(ytdSp/ytdSql,2)],["Ad spend per SQL","adSql",v=>$(v,2),$(ytdAd/ytdSql,2)],["Subscriber to MQL","subMql",v=>P(v,2),LIVE(SUBN?P(s.ytd/SUBN,2):"–")],["MQL to SQL","mqlSql",v=>P(v,2),P(ytdSql/sum(mq.slice(0,SQLN())),2)],
     ["MQL to awarded","mqlAw",v=>P(v,2),LIVE(PR&&s.ytd?P(PR.length/s.ytd,2):"–")],["SQL to awarded","sqlAw",v=>P(v,2),LIVE(PR&&ytdSql?P(PR.length/ytdSql,2):"–")],["Cost per awarded project","cpAw",v=>$(v,2),LIVE(PR&&PR.length?$(ytdSp/PR.length,2):"–")],["Ad spend per awarded project","adAw",v=>$(v,2),LIVE(PR&&PR.length?$(ytdAd/PR.length,2):"–")],["Awarded ROI","awRoi",v=>N(v,1)+"x",LIVE(PR?xR(roiOf(ret(PR),ytdSp)):"")],["Awarded ROAS","awRoas",v=>N(v,1)+"x",LIVE(PR?xR(roiOf(ret(PR),ytdAd)):"")]];
-  h+=`${roiProjects(G,ytdSp,ytdAd,rate,val,ret,roiOf,tot,ohYtd,OH)}${salesInsights(PR,ytdSp,rate,roiOf)}<div class="panel"><h3>Year over year</h3><p class="sub">2024 and 2025 from the Healthcare ROI tab; 2026 is year to date</p><div class="tbl-wrap"><table><thead><tr><th class="l">Measure</th><th>2024</th><th>2025</th><th>2026 YTD</th></tr></thead><tbody>
+  h+=`${roiProjects(G,ytdSp,ytdAd,rate,val,ret,roiOf,tot,ohYtd,OH)}${phaseCharts(G)}${salesInsights(PR,ytdSp,rate,roiOf)}<div class="panel"><h3>Year over year</h3><p class="sub">2024 and 2025 from the Healthcare ROI tab; 2026 is year to date</p><div class="tbl-wrap"><table><thead><tr><th class="l">Measure</th><th>2024</th><th>2025</th><th>2026 YTD</th></tr></thead><tbody>
     ${rows.map(([n,k,f,v26])=>{const [a,b]=yr(k,f);return `<tr><td class="l">${n}</td><td>${a}</td><td>${b}</td><td>${v26}</td></tr>`;}).join("")}</tbody></table></div>
     </div>`;
   const g=L.goals, sq25=D.sql2025, mq25=L.mql2025;
@@ -1761,6 +1762,45 @@ document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest
   if(ds.roiSave){const row=t.closest("tr"),v=k=>row.querySelector(`[data-rf="${k}"]`).value;const fields={name:v("name"),stage:v("stage"),reached:v("reached"),amount:+v("amount")};
     t.disabled=true;t.textContent="Saving…";post({action:"edit",id:ds.roiSave,fields}).then(j=>{if(!j.ok)throw j;ROI_EDIT="";roiApply(j);}).catch(()=>{t.disabled=false;t.textContent="Try again";});return;}
   if(ds.roiReset){t.disabled=true;post({action:"reset",id:ds.roiReset}).then(j=>{if(!j.ok)throw j;roiApply(j);}).catch(()=>{t.disabled=false;});}});
+
+/* Deal phases chart (Nov 24, 2026): 2026 projects by phase (same projects as "ROI by phase"), deals reaching each phase by
+   month (stage entry dates from /api/hs-pipeline, removed projects left out) and, once two months are saved, open deals by
+   phase at each month end (snaps). Deals / Value toggle. */
+let PH_VAL=false;
+const PH_COL=()=>({lead:css("--c-budget"),verbal:css("--mk-web"),anf:css("--c-hc"),board:css("--c-ga"),build:css("--c-sl")});
+function phaseCharts(G){
+  plLoad();
+  const id="roi-phases";
+  if(!G)return "";
+  const C=PH_COL(),V=PH_VAL,fv=v=>V?$m(v):N(v);
+  const seg=`<div class="seg" role="group" aria-label="Show" style="margin:4px 0 10px"><button type="button" data-phv="0" class="${V?"":"on"}" aria-pressed="${!V}">Deals</button><button type="button" data-phv="1" class="${V?"on":""}" aria-pressed="${V}">Project value</button></div>`;
+  // A. 2026 projects by phase
+  const now=ROI_PHASES.map(([k,n])=>{const a=G.all.filter(p=>ROI_PHASE(p.stage)===k);return {k,n,c:a.length,v:sum(a.map(p=>p.amount))};});
+  const mx=Math.max(1,...now.map(r=>V?r.v:r.c));
+  const A=`<div class="hbars">${now.map(r=>`<div class="hb"><span class="hb-l">${esc(r.n)}</span><span class="hb-t"><i style="width:${(V?r.v:r.c)/mx*100}%;background:${C[r.k]}"></i></span><b class="num">${V?$m(r.v):N(r.c)}<br><span class="note" style="margin:0">${V?N(r.c)+" deal"+(r.c===1?"":"s"):$m(r.v)}</span></b></div>`).join("")}</div>`;
+  // B. Deals reaching each phase, by month
+  let B=`<p class="note">${PL_ERR||"Loading from HubSpot…"}</p>`, S="";
+  if(PL){
+    const yr=(ROIL&&ROIL.year)||new Date().getFullYear(), live=new Date(), last=live.getFullYear()>yr?11:live.getMonth();
+    const rm=new Set(((ROIL&&ROIL.removed)||[]).map(p=>p.id)), amt={};(G.all||[]).forEach(p=>amt[p.id]=p.amount);
+    const KEY={lead:["qualifiedtobuy"],verbal:["presentationscheduled"],anf:["decisionmakerboughtin"],board:["contractsent"],build:["closedwon","1432137869"]};
+    const labels=M().slice(0,last+1), ser={};
+    ROI_PHASES.forEach(([k])=>ser[k]=labels.map(()=>0));
+    PL.deals.forEach(d=>{if(rm.has(d.id))return;ROI_PHASES.forEach(([k])=>{const ts=KEY[k].map(s=>d.entered[s]).filter(t=>t!=null);if(!ts.length)return;const t=new Date(Math.min(...ts));
+      if(t.getUTCFullYear()!==yr)return;const m=t.getUTCMonth();if(m>last)return;ser[k][m]+=V?(amt[d.id]??d.amount??0)/1e6:1;});});
+    const series=ROI_PHASES.map(([k,n])=>({name:n,color:C[k],values:ser[k].map(v=>V?Math.round(v*10)/10:v)}));
+    const totals=labels.map((_,i)=>sum(series.map(x=>x.values[i])));
+    B=sbars({labels,series,totals,h:240,totalLabel:V?"$M":"Deals",hideZero:true,faded:labels.map((_,i)=>i===live.getMonth()&&live.getFullYear()===yr)});
+    // C. Open deals by phase at month end (saved from Nov 2026 on)
+    const SN=PL.snaps||{},ks=Object.keys(SN).sort();
+    if(ks.length>=2){const lb=ks.map(k=>M()[+k.slice(5)-1]+" "+k.slice(2,4));
+      const sr=ROI_PHASES.map(([k,n])=>({name:n,color:C[k],values:ks.map(m=>{const x=(SN[m]||{})[k]||[0,0];return V?Math.round(x[1]/1e5)/10:x[0];})}));
+      S=`<h4 class="mini-h">Pipeline by phase at month end</h4><p class="note" style="margin:0 0 6px">Open deals in each phase at the end of each month${V?", project value in $M":""}. Closed / In Construction counts projects that entered construction that year.</p>${sbars({labels:lb,series:sr,totals:lb.map((_,i)=>sum(sr.map(x=>x.values[i]))),h:220,totalLabel:V?"$M":"Deals",hideZero:true})}`;}
+  }
+  return `<div class="panel" id="${id}"><h3>Deal phases over time</h3><p class="sub">Sales Pipeline deals by phase, from HubSpot. Hover a month to see each phase.</p>${seg}${legend(ROI_PHASES.map(([k,n])=>({name:n,color:C[k],box:1})))}
+    <div class="grid g-2" style="gap:18px;margin-top:8px"><div><h4 class="mini-h">2026 projects by phase</h4><p class="note" style="margin:0 0 6px">The same projects as ROI by phase, where each one stands today</p>${A}</div>
+    <div><h4 class="mini-h">Deals reaching each phase, by month</h4><p class="note" style="margin:0 0 6px">2026, by the month a deal moved into each phase${V?", project value in $M":""}. A deal that moves through several phases counts once in each.</p>${B}</div></div>${S}</div>`;}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-phv]");if(!b)return;const v=b.dataset.phv==="1";if(v===PH_VAL)return;PH_VAL=v;const el=document.getElementById("roi-phases");if(el)el.outerHTML=phaseCharts(ROIL?{all:ROIL.projects}:null);});
 
 /* Sales insights (/api/hs-pipeline): marketing influence on 2026 projects, time in each phase, projects that move forward vs die
    before groundbreaking, and open pipeline. */
