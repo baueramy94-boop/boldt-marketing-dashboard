@@ -1,7 +1,7 @@
 import type { Config } from "@netlify/functions";
 import { getStore } from "@netlify/blobs";
 
-// Awarded and in-construction projects for the ROI tab, live from the HubSpot Sales Pipeline.
+// Sales Pipeline projects for the ROI tab by phase (Lead, Verbal Award, Awarded Not Financed, Board Approval, In Construction), live from HubSpot.
 // GET  /api/hs-roi -> { ok, asOf, year, rate, overheadMonthly, projects: [{ id, name, stage, group, amount, reached, month }],
 //                       removed: [{ ...project, by, at }], subscribers: [count at each month end, or null for future months] }
 // POST /api/hs-roi { action: remove | restore, id } -> remove a project from ROI or bring it back (shared, Blobs key "removed")
@@ -10,6 +10,8 @@ import { getStore } from "@netlify/blobs";
 // Rules (Amy, Nov 19, 2026):
 //  - Sales Pipeline deals in Awarded Not Financed / Pre-Development, Board Approval, Closed / In Construction or In Construction.
 //  - A deal counts for the year when it first reached one of those stages in that year (or entered construction that year).
+//  - Nov 24, 2026: deals now in Lead or Opportunity / Verbal Award are included too (group "lead" / "verbal"), counted for the
+//    year they entered their current stage (or were created, if HubSpot has no stage date). The page works out ROI by phase.
 //  - Return = RATE x deal amount (project value). ROI and ROAS are worked out on the page with the workbook formulas.
 //  - Projects removed on the ROI tab are kept in Blobs (store "hs-roi", key "removed") and can be restored there. The first
 //    removal (VMFH / Intuitive Puyallup, the Board Approval copy of VMFH Puyallup / Intuitive) is seeded from DEFAULT_REMOVED.
@@ -20,9 +22,10 @@ import { getStore } from "@netlify/blobs";
 
 const API = "https://api.hubapi.com";
 const PIPELINE = "default";                    // Sales Pipeline
+const EARLY = ["qualifiedtobuy", "presentationscheduled"];  // Lead, Opportunity / Verbal Award (not awarded yet)
 const AWARDED = ["decisionmakerboughtin", "contractsent"];   // Awarded Not Financed / Pre-Development, Board Approval
 const BUILD = ["closedwon", "1432137869"];                   // Closed / In Construction, In Construction
-const LABEL: Record<string, string> = { decisionmakerboughtin: "Awarded Not Financed / Pre-Development", contractsent: "Board Approval", closedwon: "Closed / In Construction", "1432137869": "In Construction" };
+const LABEL: Record<string, string> = { qualifiedtobuy: "Lead", presentationscheduled: "Opportunity / Verbal Award", decisionmakerboughtin: "Awarded Not Financed / Pre-Development", contractsent: "Board Approval", closedwon: "Closed / In Construction", "1432137869": "In Construction" };
 const RATE = 0.10;
 const DEFAULT_REMOVED: Record<string, any> = { "64836372519": { by: "Amy", at: "2026-11-19T19:00:00Z", note: "Duplicate of VMFH Puyallup / Intuitive" } };
 const BOLDT_DOMAINS = ["boldt.com", "boldthealthcarerealestate.com"];
@@ -53,7 +56,8 @@ async function state(store: any) {
   const [removed, edits] = await Promise.all([removedList(store), store.get("edits", { type: "json" }).catch(() => null)]);
   return { removed, edits: (edits || {}) as Record<string, any> };
 }
-const GROUP_OF = (label: string) => (/construction/i.test(label) ? "construction" : "awarded");
+const GROUP_OF = (label: string) => (/construction/i.test(label) ? "construction" : label === "Lead" ? "lead" : /verbal/i.test(label) ? "verbal" : "awarded");
+const VERSION = 2;   // bump when the cached pull changes shape (2 = Lead and Verbal Award added)
 // Apply the shared removed list and dashboard edits at read time, so changes show up at once (the HubSpot pull stays cached).
 function shape(data: any, st: { removed: Record<string, any>; edits: Record<string, any> }) {
   const removed = st.removed;
@@ -101,7 +105,7 @@ export default async (req: Request, context: any) => {
   }
   const fresh = new URL(req.url).searchParams.get("fresh") === "1";
   let cached: any = await store.get("result", { type: "json" }).catch(() => null);
-  if (cached && !Array.isArray(cached.data?.all)) cached = null;   // older cache format
+  if (cached && (!Array.isArray(cached.data?.all) || cached.data.v !== VERSION)) cached = null;   // older cache format
   if (cached && !fresh && Date.now() - cached.at < 10 * 60 * 1000) return json(shape(cached.data, await state(store)));
   const lock: any = await store.get("pulling", { type: "json" }).catch(() => null);
   if (lock && Date.now() - lock.at < 20000) {
@@ -112,11 +116,11 @@ export default async (req: Request, context: any) => {
   }
   await store.setJSON("pulling", { at: Date.now() }).catch(() => {});
   try {
-    const stages = [...AWARDED, ...BUILD];
-    const props = ["dealname", "dealstage", "amount", "amount_in_home_currency", "createdate", ...stages.map((s) => `hs_v2_date_entered_${s}`)];
+    const stages = [...AWARDED, ...BUILD], pull = [...EARLY, ...stages];
+    const props = ["dealname", "dealstage", "amount", "amount_in_home_currency", "createdate", ...pull.map((s) => `hs_v2_date_entered_${s}`)];
     const deals: any[] = []; let after: string | undefined;
     for (let p = 0; p < 10; p++) {
-      const d: any = await search(token, "deals", { limit: 200, after, properties: props, filterGroups: [{ filters: [{ propertyName: "pipeline", operator: "EQ", value: PIPELINE }, { propertyName: "dealstage", operator: "IN", values: stages }] }] });
+      const d: any = await search(token, "deals", { limit: 200, after, properties: props, filterGroups: [{ filters: [{ propertyName: "pipeline", operator: "EQ", value: PIPELINE }, { propertyName: "dealstage", operator: "IN", values: pull }] }] });
       deals.push(...(d.results || []));
       after = d.paging?.next?.after; if (!after) break;
     }
@@ -125,6 +129,13 @@ export default async (req: Request, context: any) => {
     const all: any[] = [];
     for (const d of deals) {
       const p = d.properties || {}, id = String(d.id), stage = String(p.dealstage);
+      if (EARLY.includes(stage)) {
+        // Lead / Verbal Award: the date it entered its current stage, or its create date.
+        const t = ms(p[`hs_v2_date_entered_${stage}`]), when = isNaN(t) ? ms(p.createdate) : t;
+        if (!inYear(when)) continue;
+        all.push({ id, name: String(p.dealname || "").trim(), stage: LABEL[stage], group: stage === "qualifiedtobuy" ? "lead" : "verbal", amount: Number(p.amount_in_home_currency || p.amount || 0), reached: when, month: new Date(when).getUTCMonth() });
+        continue;
+      }
       const entered = stages.map((s) => ms(p[`hs_v2_date_entered_${s}`])).filter((t) => !isNaN(t));
       const first = entered.length ? Math.min(...entered) : ms(p.createdate);
       const group = BUILD.includes(stage) ? "construction" : "awarded";
@@ -162,7 +173,7 @@ export default async (req: Request, context: any) => {
       const prevSubs: any = await store.get("subscribers", { type: "json" }).catch(() => null);
       subscribers = prevSubs && prevSubs.year === year ? prevSubs.counts : null;
     }
-    const data = { ok: true, ready: true, asOf: Date.now(), year, rate: RATE, overheadMonthly: OVERHEAD, all, subscribers };
+    const data = { ok: true, ready: true, v: VERSION, asOf: Date.now(), year, rate: RATE, overheadMonthly: OVERHEAD, all, subscribers };
     await store.setJSON("result", { at: Date.now(), data });
     await store.delete("pulling").catch(() => {});
     return json(shape(data, await state(store)));
