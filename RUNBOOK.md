@@ -327,7 +327,8 @@ After the marketing report is saved, write the sales write-up for the month just
 - "Projects counted" is grouped by phase. Its date is the award date, or for Lead and Verbal Award, the date the deal entered that stage. Stage edits can move a project into any phase (dashboard only).
 - Data health (for Amy's note, not the dashboard): Prime Healthcare - UPREIT is a $1B Lead and makes up about two thirds of Lead value; Penn Medicine Washington Township and MaineHealth / Intuitive - Fee have no amount; Gulfport MOB and Penn Medicine moved back from Verbal Award to Lead.
 
-### Deal phases over time (Nov 24, 2026)
+### Deal phases over time (Nov 24, 2026; removed from the page the same day at Amy's request)
+- `hs-pipeline` still saves the month-end `snaps`, so the chart can come back with history if wanted.
 - Panel "Deal phases over time" on the ROI tab, after ROI by phase, with a Deals / Project value toggle and one color per phase.
 - 2026 projects by phase: the same projects as ROI by phase (so removals and edits apply), count and value per phase.
 - Deals reaching each phase, by month: from `/api/hs-pipeline` stage entry dates, 2026, removed projects left out. A deal counts once in each phase it moved into that month. The current month is shown lighter.
